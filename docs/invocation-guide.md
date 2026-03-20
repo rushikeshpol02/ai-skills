@@ -15,11 +15,7 @@ git clone https://github.com/<your-username>/ai-skills.git ~/ai-skills
 ### Step 2: Copy skills into Cursor's skills folder
 
 ```bash
-# Product & requirements skills
 cp -r ~/ai-skills/cursor/skills/* ~/.cursor/skills/
-
-# Cursor meta-skills
-cp -r ~/ai-skills/cursor/skills-cursor/* ~/.cursor/skills-cursor/
 ```
 
 > If `~/.cursor/skills/` does not exist yet, create it first: `mkdir -p ~/.cursor/skills`
@@ -33,10 +29,7 @@ Close and reopen Cursor. Skills are loaded at agent startup — no other configu
 ```bash
 cd ~/ai-skills
 git pull
-
-# Re-copy updated skills
 cp -r cursor/skills/* ~/.cursor/skills/
-cp -r cursor/skills-cursor/* ~/.cursor/skills-cursor/
 ```
 
 ---

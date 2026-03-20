@@ -25,14 +25,6 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - [github-issue-classifier](#github-issue-classifier) — Standalone
 - [generate-pm-jd](#generate-pm-jd) — Standalone
 
-**Cursor Meta-Skills**
-- [create-skill](#create-skill)
-- [create-rule](#create-rule)
-- [create-subagent](#create-subagent)
-- [update-cursor-settings](#update-cursor-settings)
-- [migrate-to-skills](#migrate-to-skills)
-- [shell](#shell)
-
 ---
 
 ## Pipeline Skills (Group 1)
@@ -504,54 +496,3 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Related skills:** None — fully standalone
 
----
-
-## Cursor Meta-Skills
-
----
-
-### create-skill
-
-**Purpose:** Guides you through authoring a new `SKILL.md` file. Gathers purpose, scope, trigger scenarios, domain knowledge, output format preferences, and existing patterns before generating the skill file.
-
-**When to use:** When you want to create a new agent skill.
-
----
-
-### create-rule
-
-**Purpose:** Creates Cursor rules for persistent AI guidance across all projects or for specific file patterns. Rules go in `.cursor/rules/` or `AGENTS.md`.
-
-**When to use:** When you want coding standards, project conventions, or file-specific AI behavior to persist automatically.
-
----
-
-### create-subagent
-
-**Purpose:** Creates new subagent configurations for Cursor's Task tool.
-
-**When to use:** When you want to define a specialized subagent type with specific capabilities.
-
----
-
-### update-cursor-settings
-
-**Purpose:** Modifies Cursor / VSCode user settings in `settings.json`. Handles editor settings, themes, font size, tab size, format on save, auto save, keybindings, and other preferences.
-
-**When to use:** When you want to change IDE settings.
-
----
-
-### migrate-to-skills
-
-**Purpose:** Migrates existing configurations, workflows, or instructions into the skills format.
-
-**When to use:** When you have an existing workflow documented elsewhere and want to convert it to an invocable skill.
-
----
-
-### shell
-
-**Purpose:** Command execution specialist configurations for the Cursor shell subagent.
-
-**When to use:** For specialized shell command execution tasks.

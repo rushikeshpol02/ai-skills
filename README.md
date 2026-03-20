@@ -15,8 +15,7 @@ Agent skills are instruction files (`SKILL.md`) stored in `~/.cursor/skills/`. W
 ```
 ai-skills/
 ├── cursor/
-│   ├── skills/              Product & requirements skills (13 skills)
-│   └── skills-cursor/       Cursor meta-skills for managing the IDE (6 skills)
+│   └── skills/              Product & requirements skills (13 skills)
 ├── claude/                  Placeholder for future Claude skills
 └── docs/
     ├── workflow-guide.md    How skills relate to each other + pipeline diagram
@@ -34,11 +33,8 @@ ai-skills/
 # Clone this repo
 git clone https://github.com/<your-username>/ai-skills.git
 
-# Copy Cursor product skills
+# Copy skills into Cursor's skills folder
 cp -r ai-skills/cursor/skills/* ~/.cursor/skills/
-
-# Copy Cursor meta-skills
-cp -r ai-skills/cursor/skills-cursor/* ~/.cursor/skills-cursor/
 ```
 
 ### Option B — Symlink (keeps skills in sync with repo automatically)
@@ -46,13 +42,11 @@ cp -r ai-skills/cursor/skills-cursor/* ~/.cursor/skills-cursor/
 ```bash
 git clone https://github.com/<your-username>/ai-skills.git ~/ai-skills
 
-# Back up existing skill folders if needed
+# Back up existing skills folder if needed
 mv ~/.cursor/skills ~/.cursor/skills.bak
-mv ~/.cursor/skills-cursor ~/.cursor/skills-cursor.bak
 
 # Symlink
 ln -s ~/ai-skills/cursor/skills ~/.cursor/skills
-ln -s ~/ai-skills/cursor/skills-cursor ~/.cursor/skills-cursor
 ```
 
 After installation, restart Cursor. Skills are available immediately in any Cursor project.
@@ -79,16 +73,6 @@ After installation, restart Cursor. Skills are available immediately in any Curs
 | [github-issue-classifier](cursor/skills/github-issue-classifier/SKILL.md) | Classify GitHub issues into epics/stories/tasks/defects and build a milestone hierarchy | Standalone |
 | [generate-pm-jd](cursor/skills/generate-pm-jd/SKILL.md) | Generate standardized Product Manager job descriptions (L3/L4 × Traditional / AI Builder) | Standalone |
 
-### Cursor Meta-Skills (`cursor/skills-cursor/`)
-
-| Skill | One-liner |
-|-------|-----------|
-| [create-skill](cursor/skills-cursor/create-skill/SKILL.md) | Guide through authoring a new SKILL.md file |
-| [create-rule](cursor/skills-cursor/create-rule/SKILL.md) | Create Cursor rules for persistent AI guidance |
-| [create-subagent](cursor/skills-cursor/create-subagent/SKILL.md) | Create new subagent configurations |
-| [update-cursor-settings](cursor/skills-cursor/update-cursor-settings/SKILL.md) | Modify Cursor/VSCode settings.json |
-| [migrate-to-skills](cursor/skills-cursor/migrate-to-skills/SKILL.md) | Migrate existing configurations to skills format |
-| [shell](cursor/skills-cursor/shell/SKILL.md) | Command execution specialist configurations |
 
 ---
 
@@ -111,5 +95,4 @@ The `claude/` directory is reserved for Claude agent skills (`.claude/commands/`
 To add a new skill:
 1. Create a folder under `cursor/skills/<skill-name>/`
 2. Add a `SKILL.md` with a valid YAML frontmatter block (`name`, `description`)
-3. Use the [create-skill](cursor/skills-cursor/create-skill/SKILL.md) meta-skill to get guided help authoring it
-4. Update [docs/skill-catalog.md](docs/skill-catalog.md) with the new entry
+3. Update [docs/skill-catalog.md](docs/skill-catalog.md) with the new entry
