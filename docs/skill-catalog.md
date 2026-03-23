@@ -496,3 +496,51 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Related skills:** None — fully standalone
 
+---
+
+### client-ready-requirements
+
+**Mode:** Standalone
+
+**Purpose:** Transforms an internal feature requirements document (produced by the requirements pipeline) into a client-safe version for all stakeholder types — business, product, UX, technology, and executive — in a single shared document. Strips internal scaffolding without changing any functional requirement content.
+
+**When to use:**
+- Before sharing a requirements document with a client or external stakeholder
+- After completing the requirements pipeline and needing a clean deliverable
+- When preparing for a stakeholder review across mixed audiences
+
+**What it removes or transforms:**
+
+| Internal Content | Transformation |
+|-----------------|----------------|
+| `(Source: SRC-N)` citations | Removed |
+| `(Source: Implicit)` markers | Removed; uncertain statements converted to [TBD] |
+| Internal assumption/constraint codes (H1, D14, C9, etc.) | Removed from body text |
+| Pipeline process metadata in header | Removed; Audience field updated |
+| Stage artifact references in body | Removed |
+| Figma node IDs | Replaced with "current app design" |
+| Struck-through resolved OQ rows | Removed |
+| "Contradicted" / "BLOCKER" language | Reframed as plain risk language |
+| Implementation notes inside requirements | Wrapped in `> Engineering Note:` callout |
+| Change history — internal validation details | Stripped to clean version table |
+| Related Documents — internal stage files | Removed; external links and sister features kept |
+
+**What it adds:**
+
+A **Sources & Reference Materials** section at the end, listing all input documents used. Format per entry: `Display Name (Type, Month Year)` — falling back to name + type or name + date when full info is unavailable. Grouped by: Meeting Records → Discovery Sessions → Client Documents → Design References → Related Feature Documents.
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Internal requirements document | Yes | `Feature-Requirements-[Feature].md` |
+| Stage 1 intake file | Yes | Maps SRC codes to readable document names and dates |
+
+**Output:**
+| File | Description |
+|------|-------------|
+| `Client-Requirements-[Feature].md` | Saved in same folder as input; identical structure, internal metadata removed |
+
+**Core constraint:** Requirement statements are never changed — only citations and codes are stripped. `[TBD]` items are always preserved.
+
+**Related skills:** `generate-requirements` and `requirements-pipeline` (produce the input); `validate-requirements` and `document-audit` (run before this skill to ensure the input is accurate)
+

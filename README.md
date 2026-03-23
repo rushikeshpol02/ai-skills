@@ -72,6 +72,7 @@ After installation, restart Cursor. Skills are available immediately in any Curs
 | [jtbd-generator](cursor/skills/jtbd-generator/SKILL.md) | Produce a Jobs to Be Done analysis with MoSCoW prioritization (Ulwick's ODI framework) | Standalone |
 | [github-issue-classifier](cursor/skills/github-issue-classifier/SKILL.md) | Classify GitHub issues into epics/stories/tasks/defects and build a milestone hierarchy | Standalone |
 | [generate-pm-jd](cursor/skills/generate-pm-jd/SKILL.md) | Generate standardized Product Manager job descriptions (L3/L4 × Traditional / AI Builder) | Standalone |
+| [client-ready-requirements](cursor/skills/client-ready-requirements/SKILL.md) | Transform an internal requirements doc into a client-safe version for all stakeholder types | Standalone |
 
 
 ---

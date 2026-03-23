@@ -4,3 +4,5 @@ __pycache__/
 *.py[cod]
 *.pyo
 .cursor-managed-skills-manifest.json
+skill-eval/.venv/
+skill-eval/.env
