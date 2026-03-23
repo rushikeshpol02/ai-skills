@@ -1,6 +1,6 @@
 ---
 name: validate-requirements
-description: "Validates requirements documents for semantic accuracy using 10 checks across 4 dimensions: truth (source accuracy, inference detection, over-generalization, actor capability), purity (requirement vs solution vs design), actionability (testability, ambiguity), and completeness (assumption dependencies, negative paths, scope boundaries). Produces a dual output: concise chat summary + full markdown report file. Use after generating requirements, before sharing with stakeholders, when suspecting inaccuracies, or as a periodic quality sweep."
+description: "Validates requirements documents for semantic accuracy using 11 checks across 4 dimensions: truth (source accuracy, inference detection, over-generalization, actor capability), purity (requirement vs solution vs design), actionability (testability, ambiguity), and completeness (assumption dependencies, negative paths, scope boundaries, intra-document section consistency). Produces a dual output: concise chat summary + full markdown report file. Use after generating requirements, before sharing with stakeholders, when suspecting inaccuracies, or as a periodic quality sweep."
 ---
 
 # Validate Requirements — Semantic Accuracy Skill
@@ -28,6 +28,7 @@ Gather these before starting:
 1. **Requirements document** — the file to validate (REQUIRED)
 2. **Source documents folder** — meeting summaries, client docs, design descriptions, transcripts (REQUIRED for Checks 1, 2, 4, 10)
 3. **Sibling requirements docs** — other feature requirement docs in the same folder (OPTIONAL — needed for Check 5: Scope Boundary)
+4. **Stage User Flows artifact** — `Stage6_User_Flows.md` or equivalent stage artifact (OPTIONAL — needed for Check 9, item 5: User Flows cross-check). If not provided, scan for it in the project's Artifacts or stage folders. If found, use it. If not found, note it as unavailable and skip item 5 only.
 
 If source documents are not available, Checks 1 (Source Accuracy) and 4 (Over-Generalization) will be marked SKIPPED with a note explaining why.
 
@@ -193,6 +194,7 @@ For every happy path described in user flows or FRs:
    - User abandons the flow
    - Concurrent/conflicting actions
    - Timeout / service unavailability
+5. **Intra-document consistency** — see Check 11, which covers all derivative sections (User Flows, Visual States, Error Handling, Assumptions, Open Questions, Dependencies, Executive Summary, Risk Analysis) and cross-document stage artifacts (Stage4, Stage6) in a single sweep.
 
 ---
 
@@ -209,6 +211,38 @@ For each actor referenced in the document:
 
 ---
 
+### Check 11: Intra-Document Section Consistency
+
+**Dimension: Is it complete and safe?**
+
+A requirements document is not a collection of independent sections — every section is a view of the same feature and must tell a consistent story. This check verifies that all derivative and upstream sections within the document are consistent with the Functional Requirements.
+
+**Run this check after any FR addition, modification, or removal is identified in Checks 1–10. Also run it as a standalone sweep.**
+
+For each section present in the document, check consistency against the FRs:
+
+| Section | Relationship | What to check |
+|---------|-------------|---------------|
+| **User Flows / UX Flows** | DERIVED | Does it describe every behavior defined in the FRs? Does it omit any? Are all alternative paths and error paths present in the FRs represented here (even if summarised)? |
+| **Visual States** | DERIVED | Does it have an entry for every distinct state implied by the FRs? Are any states now obsolete due to removed FRs? |
+| **Error Handling** | DERIVED | Does it cover the failure mode of every FR? Are any rows left over from removed FRs? |
+| **Executive Summary** | DERIVED | Does it still accurately describe the scope of the feature as defined by the FRs? Did the scope grow or shrink without the summary being updated? |
+| **Assumptions** | UPSTREAM / BIDIRECTIONAL | Does each FR have a traceable assumption if it depends on an unconfirmed premise? Are any assumptions now resolved or invalidated by current FR content? |
+| **Open Questions** | UPSTREAM / BIDIRECTIONAL | Are any `[TBD]` markers in the FRs already answered elsewhere in the document? Are there new unresolved decisions introduced by the FRs that are not captured as OQs? |
+| **Dependencies** | UPSTREAM / BIDIRECTIONAL | Does every external system, team, or data source referenced in the FRs appear in the Dependencies section? Are any listed dependencies now unreferenced? |
+| **Risk Analysis / Known Risks** | DERIVED | Does the risk profile reflect the current FR set? Are risks from removed FRs still present? Are new risks from added FRs missing? |
+
+**Also check stage artifacts** (if available in the project):
+- **Stage4 Scenario Matrix** — does every FR have at least one test scenario? Are scenarios present for removed FRs?
+- **Stage6 User Flows** — the canonical user flow artifact. Does it reflect the latest FR content? If Stage6 is more detailed than the FR doc's User Flows summary, flag the FR doc as a DERIVED gap. If they contradict each other, flag as Critical.
+
+For each gap found: record the section, the specific inconsistency, and classify as:
+- **Gap** — the section is missing coverage of an existing FR
+- **Should Fix** — the section is stale or inconsistent but not factually misleading
+- **Critical** — the section actively contradicts the FRs
+
+---
+
 ## Execution Workflow
 
 ### Phase 1: Setup
@@ -217,10 +251,11 @@ For each actor referenced in the document:
 2. Identify and read all source documents (from the provided folder path)
 3. Identify sibling requirements docs (if any, in the same folder)
 4. Build a source index: map each SRC-N to its file and key content
+5. Locate stage artifacts: scan for `Stage4_Scenario_Matrix.md` and `Stage6_User_Flows.md` (or equivalent) in the project's Artifacts or stage folders. Note whether each is found or unavailable — Check 11 will use them.
 
 ### Phase 2: Run Checks
 
-Run all 10 checks in order. For each check:
+Run all 11 checks in order. For each check:
 - Record each finding with: location in doc (section + line), the problematic text, the verdict, and the recommendation
 - Classify severity:
   - **Critical** — factually wrong or misleading (must fix before sharing)
@@ -256,6 +291,7 @@ Format:
 | 8. Assumption-Req Dependency | [N] | PASS / FAIL |
 | 9. Negative Path Coverage | [N] | PASS / FAIL |
 | 10. Actor Capability | [N] | PASS / FAIL |
+| 11. Intra-Document Consistency | [N] | PASS / FAIL |
 
 ### Top Issues
 1. [Most critical finding — brief description]
@@ -288,7 +324,7 @@ Format:
 **Document:** [filename]
 **Validated on:** [date]
 **Sources checked:** [N] source documents
-**Checks run:** 10
+**Checks run:** 11
 
 | Check | Findings | Status |
 |-------|----------|--------|
@@ -302,6 +338,7 @@ Format:
 | 8. Assumption-Req Dependency | [N] | PASS / FAIL |
 | 9. Negative Path Coverage | [N] | PASS / FAIL |
 | 10. Actor Capability | [N] | PASS / FAIL |
+| 11. Intra-Document Consistency | [N] | PASS / FAIL |
 
 ---
 

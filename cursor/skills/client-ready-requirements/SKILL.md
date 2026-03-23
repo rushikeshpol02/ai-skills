@@ -59,6 +59,7 @@ Work section by section and apply every rule below. Never change requirement con
 | `(Source: Implicit)`, `(Source: Implicit — ...)` | Remove; if the statement is uncertain, convert to `[TBD]` | "Implicit" signals an unconfirmed inference — undermines confidence |
 | `(Source: User-confirmed)` | Remove | Plain assertions need no citation |
 | Inline codes in body text: `(Assumption H2 — blocker)`, `(H1)`, `(D14)`, `(C9)`, `(M1)` etc. | Remove the code; if risk context matters, retain as plain English | Opaque to all client stakeholders |
+| Assumptions table — `#` column contains risk-tier codes (`H1`, `H2`, `M1`, `L4`, etc.) | Replace with plain sequential numbers (`1`, `2`, `3`, `4`) | Risk-tier prefixes (H/M/L) are internal pipeline classification; meaningless to clients |
 | Header line: `Pipeline: Generated from Stages 1–N...` | Remove | Internal process metadata |
 | Header line: `Audience: Product managers, developers, architects, QA engineers` | Replace with: `Audience: Business, Product, UX, Technology, Executive` | Correct the audience |
 | Header line: `Source rule: All business rules cite source IDs...` | Remove | Internal methodology note |
@@ -69,7 +70,8 @@ Work section by section and apply every rule below. Never change requirement con
 | Dependencies table — `BLOCKER — data not available` | Replace with `Required before development — resolution in progress` | "Blocker" is alarming without context |
 | Implementation/engineering notes inside requirement body (e.g. "Local caching is one approach...") | Wrap in `> **Engineering Note:** [text]` callout | Business/exec skip callouts; tech reads them |
 | Change History rows — validation finding IDs (SF-N, V-N), validation report references, "Pipeline (Rushi Pol)" | Strip to: Version \| Date \| Author name \| Plain-English change summary | Internal audit trail |
-| Related Documents section — Stage 1–8 pipeline artifact rows | Remove these rows; keep only Figma links and sister feature documents | Internal stage files are not shared |
+| Related Documents section — Stage 1–8 pipeline artifact rows | Remove these rows entirely | Internal stage files are not shared |
+| Related Documents section — sister feature documents referenced by internal file path | Remove these rows; a client cannot open an internal `.md` path. Only list a sister feature if a client-ready version of that document exists and has an accessible link. | Internal drafts are not client-accessible |
 
 ---
 
@@ -94,29 +96,30 @@ At the end of the document, after all other sections, add:
 The following inputs were used to develop this requirements document.
 
 ### Meeting Records
-- [Display Name] (Meeting Record, [Month Year])
+- [Display Name] (Meeting Record, [Day Month Year])
 
 ### Discovery Sessions
-- [Display Name] (Discovery Session, [Month Year])
+- [Display Name] (Discovery Session, [Day Month Year])
 
 ### Client Documents
-- [Display Name] (Client Document, [Month Year])
+- [Display Name] (Client Document, [Day Month Year if known])
 
 ### Design References
-- [Display Name] (Design Reference, [Month Year])
+- [Display Name] (Design Reference, [Day Month Year if known])
 
-### Related Feature Documents
-- [Feature Requirements: Name]
 ```
 
 **Section order:** Meeting Records → Discovery Sessions → Client Documents → Design References → Related Feature Documents
 
 **Omit any section that has no entries.**
 
+**Design references (Figma links) belong in Related Documents (§11), not in Sources.** They are active references for implementers, not just research inputs. Do not list Figma links in the Sources section.
+
 **Formatting rules per entry:**
-- Full info available → `[Display Name] (Type, Month Year)` — Option C
-- Date not available → `[Display Name] (Type)` — fall back to Option B
-- Type not determinable → `[Display Name] (Month Year)` — fall back to Option B
+- Full info available → `[Display Name] (Type, Day Month Year)` e.g., `(Meeting Record, January 7, 2026)`
+- Date not available → `[Display Name] (Type)`
+- Type not determinable → `[Display Name] (Day Month Year)`
+- Use the exact date from the Stage 1 `Date` column — do not round to month/year if a full date is present
 - Never use raw filenames if a display name is available from Stage 1
 - Never include internal stage artifact files (Stage 1–8 pipeline outputs) here
 
@@ -168,3 +171,4 @@ Transformations applied:
 3. **Never fabricate display names.** If a SRC code has no Stage 1 entry, use the filename as-is.
 4. **Keep document structure.** Same section numbers and headings as the input. Do not reorganize.
 5. **One pass.** Apply all transformations before saving. Do not create intermediate versions.
+6. **No em dashes.** Do not use "—" anywhere in the output. Replace with a comma, colon, or rewrite the sentence. Exception: if the source document contains an em dash inside a quoted string (e.g., notification text like "Your schedule was updated — check now"), preserve it exactly as written since that is requirement content.

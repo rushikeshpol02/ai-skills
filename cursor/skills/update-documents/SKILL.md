@@ -76,6 +76,7 @@ If the user adds or modifies changes, update the table and re-present for confir
    - Position in dependency chain (if any)
 3. If documents have a dependency chain (e.g., "Stage 2 informs Stage 5 which informs the requirements doc"), establish the update order: **upstream first, downstream last.**
 4. If no dependency chain exists, order alphabetically or by the user's preference.
+5. **Proactively scan for derived artifacts.** For every `Feature-Requirements-*.md` (or equivalent internal requirements doc) in scope, check whether a corresponding `Client-Requirements-*.md` (or client-ready derivative) exists in the same or a sibling folder. If found, add it to the dependency chain as the **last** downstream document. A client-ready doc is always downstream of its internal source — changes to the internal doc must propagate there last.
 
 Present the document list and proposed update order to the user for confirmation. This is informational — not a mandatory stop — but the user may adjust scope.
 
@@ -92,6 +93,27 @@ For each change in the change set:
    - Terminology change → all sections (full document scan)
    - Scope change → executive summary, scope, feature lists, requirements, future enhancements, assumptions, success metrics
    - New information → depends on content; identify the most contextually appropriate sections
+
+   **Intra-Document Section Consistency Sweep (mandatory when any FR is added, modified, or removed):**
+
+   A requirements document is not a collection of independent sections. Every section is a view of the same feature and must tell a consistent story. When any Functional Requirement is touched, run this sweep across the same document before moving on to other documents:
+
+   | Section | Relationship to FRs | Check |
+   |---------|---------------------|-------|
+   | **User Flows / UX Flows** | DERIVED — narrative of how FRs play out | Does it describe the new or changed behavior? Does it reflect removed behavior? |
+   | **Visual States** | DERIVED — UI states for each FR | Does it have a state entry for the new condition? Is any state now obsolete? |
+   | **Error Handling** | DERIVED — failure modes of FRs | Does it cover the new failure path? Is any row now outdated? |
+   | **Executive Summary** | DERIVED — scope description | Does it still accurately represent the full feature? Did scope expand or contract? |
+   | **Assumptions** | UPSTREAM / BIDIRECTIONAL — premises FRs rest on | Does the new FR rest on a new unrecorded assumption? Does it invalidate or confirm an existing one? |
+   | **Open Questions** | UPSTREAM / BIDIRECTIONAL — unresolved decisions FRs depend on | Does the new FR resolve a `[TBD]` or OQ? Does it introduce a new one? |
+   | **Dependencies** | UPSTREAM / BIDIRECTIONAL — what the FR requires to exist | Does the new FR introduce a new system, team, or data dependency not yet listed? |
+   | **Risk Analysis / Known Risks** | DERIVED — what could go wrong | Does the change alter the risk profile? Add or remove a risk? |
+
+   For each section found in the document, add it as DERIVED (if it needs updating to reflect the FR change) or flag it as POTENTIAL (if the need is ambiguous) in the change manifest. Do not silently skip any section.
+
+   Also check the following stage artifacts, if in scope or if they exist in the project:
+   - **Stage4 Scenario Matrix** — does the new FR have scenario coverage?
+   - **Stage6 User Flows** — does the canonical user flow artifact reflect the change?
 
 2. **Search all in-scope documents** for:
    - **DIRECT matches** — text that explicitly states the incorrect information or uses the old term
