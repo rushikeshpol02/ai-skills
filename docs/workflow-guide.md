@@ -10,7 +10,7 @@ All 13 product skills fall into three groups:
 
 | Group | Skills | Description |
 |-------|--------|-------------|
-| **1 — Full Pipeline** | generate-detailed-requirements (orchestrator) + 6 called skills | End-to-end requirements generation from raw inputs |
+| **1 — Full Pipeline** | requirements-pipeline (orchestrator) + 6 called skills | End-to-end requirements generation from raw inputs |
 | **2 — Post-Pipeline** | review-findings, update-documents | Review and propagate changes after docs are created |
 | **3 — Standalone** | rest-api-contract-generator, jtbd-generator, github-issue-classifier, generate-pm-jd | Independent skills with no pipeline relationship |
 
@@ -18,7 +18,7 @@ All 13 product skills fall into three groups:
 
 ## Group 1: The Full Requirements Pipeline
 
-`generate-detailed-requirements` is the master orchestrator. It runs a 9-stage pipeline and calls six other skills at specific stages. Each of those skills can also be run independently.
+`requirements-pipeline` is the master orchestrator. It runs a 9-stage pipeline and calls six other skills at specific stages. Each of those skills can also be run independently.
 
 ```mermaid
 flowchart TD
@@ -34,7 +34,7 @@ flowchart TD
         DTC[design-to-context]
     end
 
-    subgraph orchestrator [generate-detailed-requirements]
+    subgraph orchestrator [requirements-pipeline]
         S2[Stage 2: Interpretation Checkpoint]
         S3[Stage 3: Variables and Constraints]
         S4[Stage 4: Scenario Matrix]
@@ -95,7 +95,7 @@ flowchart LR
     A[Messy inputs:\ntranscripts, rough ideas,\ndesigns, hypotheses]
     B[Well-defined inputs:\nPRD, Swagger spec,\nconfirmed designs]
 
-    GDR[generate-detailed-requirements\nFull 9-stage pipeline\nStages 2-6 are manual checkpoints]
+    GDR[requirements-pipeline\nFull 9-stage pipeline\nStages 2-6 are manual checkpoints]
     GR[generate-requirements\n3-workflow sub-chain\nSynthesis → Generation → Validation]
 
     A --> GDR
@@ -103,7 +103,7 @@ flowchart LR
     GDR -->|"Stage 7 calls"| GR
 ```
 
-**Use `generate-detailed-requirements` when:**
+**Use `requirements-pipeline` when:**
 - Starting from rough ideas, brainstorming sessions, or meeting notes
 - Inputs are incomplete or contradictory and need clarification
 - You want scenario matrices and assumptions analysis before writing requirements
@@ -172,7 +172,7 @@ flowchart LR
 ```mermaid
 flowchart TD
     subgraph pipeline [Requirements Pipeline - Group 1]
-        GDR[generate-detailed-requirements\nOrchestrator]
+        GDR[requirements-pipeline\nOrchestrator]
         TMN[transcript-to-meeting-notes]
         DTC[design-to-context]
         IA[identify-assumptions]
@@ -211,7 +211,7 @@ flowchart TD
 
 | Situation | Start Here |
 |-----------|-----------|
-| "I have a meeting transcript and some rough ideas for a feature" | `generate-detailed-requirements` |
+| "I have a meeting transcript and some rough ideas for a feature" | `requirements-pipeline` |
 | "I have a Figma link and a PRD, I need requirements" | `generate-requirements` |
 | "I have a design with no other context" | `design-to-context` first, then `generate-requirements` |
 | "I have a transcript from a discovery call" | `transcript-to-meeting-notes` first, then feed output to `generate-requirements` |

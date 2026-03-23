@@ -22,7 +22,7 @@ Read all available inputs:
 - Meeting transcripts or summaries (if available)
 - Any constraints, variables, or rules already identified
 
-If running as part of the `generate-detailed-requirements` pipeline, these inputs are passed from Stage 4 (Scenario Matrix).
+If running as part of the `requirements-pipeline`, these inputs are passed from Stage 4 (Scenario Matrix).
 
 ---
 

@@ -7,7 +7,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 ## Table of Contents
 
 **Pipeline Skills (Group 1)**
-- [generate-detailed-requirements](#generate-detailed-requirements) — Pipeline Orchestrator
+- [requirements-pipeline](#requirements-pipeline) — Pipeline Orchestrator
 - [generate-requirements](#generate-requirements) — Pipeline Stage / Standalone
 - [design-to-context](#design-to-context) — Pipeline Stage / Standalone
 - [transcript-to-meeting-notes](#transcript-to-meeting-notes) — Pipeline Stage / Standalone
@@ -31,7 +31,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 ---
 
-### generate-detailed-requirements
+### requirements-pipeline
 
 **Mode:** Pipeline Orchestrator
 
@@ -73,7 +73,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - Stage 9a: `validate-requirements`
 - Stage 9b: `document-audit`
 
-**Related skills:** All pipeline skills
+**Related skills:** All pipeline skills — `generate-requirements`, `design-to-context`, `transcript-to-meeting-notes`, `identify-assumptions`, `validate-requirements`, `document-audit`
 
 ---
 
@@ -87,7 +87,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - Inputs are well-defined: clear PRD, confirmed Figma designs, and/or Swagger spec
 - You need requirements generated quickly (Quick Mode: ~20 min)
 - You're creating the final requirements document from already-analyzed inputs
-- Called by `generate-detailed-requirements` at Stage 7
+- Called by `requirements-pipeline` at Stage 7
 
 **Modes:**
 | Mode | Use When | Outputs |
@@ -116,7 +116,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Workflow sub-chain:** `01-synthesize.md` → `02-generate.md` → `03-validate.md`
 
-**Related skills:** `generate-detailed-requirements` (calls this), `design-to-context`, `transcript-to-meeting-notes`, `validate-requirements`
+**Related skills:** `requirements-pipeline` (calls this), `design-to-context`, `transcript-to-meeting-notes`, `validate-requirements`
 
 ---
 
@@ -129,7 +129,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 **When to use:**
 - You have Figma screens or design mockups and need to document them
 - You want to feed design context into a requirements pipeline
-- Called by `generate-detailed-requirements` at Stage 1 for design inputs
+- Called by `requirements-pipeline` at Stage 1 for design inputs
 
 **Output formats:**
 | Format | Use When | File Produced |
@@ -148,7 +148,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Figma MCP:** If a Figma URL is provided and the Figma MCP is available, the skill calls `get_design_context` to retrieve screenshots and metadata automatically.
 
-**Related skills:** `generate-detailed-requirements` (calls this), `generate-requirements`
+**Related skills:** `requirements-pipeline` (calls this), `generate-requirements`
 
 ---
 
@@ -161,7 +161,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 **When to use:**
 - You have a meeting transcript and need a structured summary
 - You want to extract decisions, assumptions, and open questions from a call
-- Called by `generate-detailed-requirements` at Stage 1 for transcript inputs
+- Called by `requirements-pipeline` at Stage 1 for transcript inputs
 
 **Meeting types:**
 | Type | Indicators | Topic Internal Structure |
@@ -178,7 +178,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - Meeting summary saved to workspace (named based on meeting date/title)
 - Sections: Decisions table, topic-by-topic findings, know/don't-know analysis, assumptions, open questions, next steps
 
-**Related skills:** `generate-detailed-requirements` (calls this), `generate-requirements`, `identify-assumptions`
+**Related skills:** `requirements-pipeline` (calls this), `generate-requirements`, `identify-assumptions`
 
 ---
 
@@ -191,7 +191,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 **When to use:**
 - Stress-testing a feature idea before writing requirements
 - Preparing for stakeholder review
-- Called by `generate-detailed-requirements` at Stage 5
+- Called by `requirements-pipeline` at Stage 5
 
 **Risk areas:**
 | Area | What It Covers |
@@ -212,7 +212,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - Assumptions register grouped by priority (HIGH / MEDIUM / LOW), then by risk area
 - Each assumption includes: RISK AREA, STATUS, EVIDENCE, VALIDATE WITH, BY WHEN, RISK IF WRONG, SUGGESTED TEST
 
-**Related skills:** `generate-detailed-requirements` (calls this), `transcript-to-meeting-notes` (produces simpler assumption format that this skill enriches)
+**Related skills:** `requirements-pipeline` (calls this), `transcript-to-meeting-notes` (produces simpler assumption format that this skill enriches)
 
 ---
 
@@ -255,7 +255,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - Chat summary of critical findings
 - `Validation-Report-[Feature].md` — full report with Critical / Should Fix / Verify / Gaps findings
 
-**Related skills:** `generate-detailed-requirements` (calls this), `review-findings` (processes this skill's report), `document-audit` (structural counterpart)
+**Related skills:** `requirements-pipeline` (calls this), `review-findings` (processes this skill's report), `document-audit` (structural counterpart)
 
 ---
 
@@ -268,7 +268,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 **When to use:**
 - After incorporating new information or multiple rounds of editing
 - As a final quality gate before sharing any document
-- Called by `generate-detailed-requirements` at Stage 9b (after `validate-requirements`)
+- Called by `requirements-pipeline` at Stage 9b (after `validate-requirements`)
 - After `update-documents` propagates changes (in the verify step)
 
 **Domain-agnostic:** Works on requirements docs, PRDs, meeting notes, specs — any structured document.
@@ -285,7 +285,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - HIGH-confidence fixes applied automatically
 - MEDIUM-confidence findings presented for user decision
 
-**Related skills:** `generate-detailed-requirements` (calls this), `validate-requirements` (semantic counterpart), `review-findings` (processes this skill's report), `update-documents`
+**Related skills:** `requirements-pipeline` (calls this), `validate-requirements` (semantic counterpart), `review-findings` (processes this skill's report), `update-documents`
 
 ---
 

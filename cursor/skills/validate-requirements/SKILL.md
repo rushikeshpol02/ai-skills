@@ -350,7 +350,7 @@ Format:
 | Context | How it's called |
 |---|---|
 | **Standalone** | Run against any requirements doc + its source folder |
-| **Pipeline (Stage 9a)** | Called by `generate-detailed-requirements` before `document-audit` (Stage 9b) |
+| **Pipeline (Stage 9a)** | Called by `requirements-pipeline` before `document-audit` (Stage 9b) |
 | **After updates** | Can be called by `update-documents` in its Phase 3 verify step (alongside `document-audit`) |
 | **Interactive resolution** | After report is generated, user invokes `review-findings` with the report file to walk through findings and collect decisions |
 

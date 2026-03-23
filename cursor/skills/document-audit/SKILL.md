@@ -142,7 +142,7 @@ Compile all findings into a summary:
 
 ## Step 7: Apply Fixes (if requested)
 
-If the user asks to fix issues (or if running as part of the `generate-detailed-requirements` pipeline):
+If the user asks to fix issues (or if running as part of the `requirements-pipeline`):
 
 1. Fix all HIGH confidence findings automatically
 2. Present MEDIUM findings for user confirmation before fixing

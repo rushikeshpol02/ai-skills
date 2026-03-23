@@ -1,6 +1,6 @@
 ---
-name: generate-detailed-requirements
-description: "Orchestrates a multi-stage requirements pipeline from diverse inputs — rough ideas, transcripts, designs, legal docs, hypotheses. Walks through intake, interpretation checkpoint, brainstorm and variable mapping, scenario matrix, assumptions, user flows, requirements generation, risk analysis, and document audit. Calls complementary skills at each stage. Use when asked to: build detailed requirements from scratch, refine a feature spec iteratively, or run a full requirements pipeline."
+name: requirements-pipeline
+description: "A 9-stage discovery and analysis pipeline that takes messy, early-stage inputs — rough ideas, transcripts, designs, legal docs, hypotheses — and produces a production-ready requirements document. Handles brainstorming, scenario mapping, assumption analysis, user flows, and risk analysis with mandatory human checkpoints. Calls complementary skills at each stage. Use when asked to: run the requirements pipeline, build requirements from scratch, start from rough ideas or a transcript, or work through a feature from discovery to requirements."
 ---
 
 # Generate Detailed Requirements — Pipeline Orchestrator

@@ -84,7 +84,7 @@ Cursor auto-detects skills from the content of your message. You do not need to 
 | What you say | Skill triggered |
 |-------------|----------------|
 | "Generate requirements for this feature" | `generate-requirements` |
-| "I have rough ideas and a transcript, help me build requirements from scratch" | `generate-detailed-requirements` |
+| "I have rough ideas and a transcript, help me build requirements from scratch" | `requirements-pipeline` |
 | "Summarize this meeting transcript" | `transcript-to-meeting-notes` |
 | "Analyze this Figma link and document the flow" | `design-to-context` |
 | "What are the risky assumptions for this feature?" | `identify-assumptions` |
@@ -102,18 +102,18 @@ Cursor auto-detects skills from the content of your message. You do not need to 
 
 ## Per-Skill Trigger Prompts
 
-### generate-detailed-requirements
+### requirements-pipeline
 
 Best for messy, early-stage inputs:
 
 ```
 I want to build requirements for [Feature Name].
 I have [a transcript / rough ideas / a Figma link / a legal doc / some meeting notes].
-Use generate-detailed-requirements to walk me through the full pipeline.
+Use requirements-pipeline to walk me through the full pipeline.
 ```
 
 ```
-Run generate-detailed-requirements. I'll describe the feature now: [description]
+Run requirements-pipeline. I'll describe the feature now: [description]
 ```
 
 ### generate-requirements
@@ -298,7 +298,7 @@ Generate a PM job posting. I'll answer your questions.
 
 ## Pipeline Chaining — Running the Full Pipeline in One Conversation
 
-### Option A: Start from scratch with generate-detailed-requirements
+### Option A: Start from scratch with requirements-pipeline
 
 This runs all 9 stages in one session. Expect multiple checkpoints where the agent will pause and ask for your input.
 
@@ -309,7 +309,7 @@ Here's what I have:
 - Design: [Figma URL or image]
 - Description: [paste notes or rough ideas]
 
-Run generate-detailed-requirements.
+Run requirements-pipeline.
 ```
 
 The agent will:
