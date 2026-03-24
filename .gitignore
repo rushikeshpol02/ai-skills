@@ -6,3 +6,9 @@ __pycache__/
 .cursor-managed-skills-manifest.json
 skill-eval/.venv/
 skill-eval/.env
+
+# Internal-only skills (not ready for public repo)
+cursor/skills/rest-api-contract-generator/
+cursor/skills/jtbd-generator/
+cursor/skills/generate-pm-jd/
+cursor/skills/github-issue-classifier/
