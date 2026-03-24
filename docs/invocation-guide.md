@@ -96,6 +96,7 @@ Cursor auto-detects skills from the content of your message. You do not need to 
 | "Create a Jobs to Be Done analysis" | `jtbd-generator` |
 | "Classify these GitHub issues into epics and stories" | `github-issue-classifier` |
 | "Write a PM job description for an L3" | `generate-pm-jd` |
+| "Prepare this requirements doc for the client / strip internal references" | `client-ready-requirements` |
 | "Help me create a new skill" | `create-skill` |
 
 ---
@@ -294,6 +295,23 @@ Create a PM JD for an L4 AI Builder PM.
 Generate a PM job posting. I'll answer your questions.
 ```
 
+### client-ready-requirements
+
+```
+Use client-ready-requirements on [path to Feature-Requirements-*.md].
+Stage 1 intake is at [path to Stage1_Intake_Classification.md].
+```
+
+```
+Prepare [requirements file path] for client review.
+Strip internal references and add a sources section.
+Stage 1 file: [path]
+```
+
+```
+Run client-ready-requirements on all requirement docs in [folder path].
+```
+
 ---
 
 ## Pipeline Chaining — Running the Full Pipeline in One Conversation
@@ -346,6 +364,10 @@ Step 5 — Review findings:
 
 Step 6 — Apply fixes:
 "Update the requirements doc at [path] based on these decisions: [summary of decisions]"
+
+Step 7 — Produce client-ready version:
+"Run client-ready-requirements on [requirements file path].
+Stage 1 intake: [path]"
 ```
 
 ### Option C: Quick turnaround (well-defined inputs)

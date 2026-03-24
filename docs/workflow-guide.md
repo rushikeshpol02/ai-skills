@@ -6,13 +6,13 @@ How the skills relate to each other, which ones form a pipeline, which are stand
 
 ## Skill Groups
 
-All 13 product skills fall into three groups:
+All 14 product skills fall into three groups:
 
 | Group | Skills | Description |
 |-------|--------|-------------|
 | **1 — Full Pipeline** | requirements-pipeline (orchestrator) + 6 called skills | End-to-end requirements generation from raw inputs |
 | **2 — Post-Pipeline** | review-findings, update-documents | Review and propagate changes after docs are created |
-| **3 — Standalone** | rest-api-contract-generator, jtbd-generator, github-issue-classifier, generate-pm-jd | Independent skills with no pipeline relationship |
+| **3 — Standalone** | rest-api-contract-generator, jtbd-generator, github-issue-classifier, generate-pm-jd, client-ready-requirements | Independent skills with no pipeline relationship |
 
 ---
 
@@ -156,6 +156,7 @@ flowchart LR
     JTBD[jtbd-generator\nJobs to Be Done analysis\nwith MoSCoW prioritization]
     GIC[github-issue-classifier\nClassify GitHub issues\ninto epics / stories / tasks / defects]
     PMJ[generate-pm-jd\nPM job descriptions\nL3/L4 x Traditional / AI Builder]
+    CRR[client-ready-requirements\nTransform internal requirements\ninto client-safe deliverable]
 ```
 
 | Skill | Use When |
@@ -164,6 +165,7 @@ flowchart LR
 | **jtbd-generator** | You want to define scope through user jobs (ODI framework) — for discovery, stakeholder alignment, or MVP scoping |
 | **github-issue-classifier** | You have a GitHub issue dump from the Github-Issue-Extractor tool and need to categorize and hierarchy-map it |
 | **generate-pm-jd** | You need to write a Product Manager job description for a client engagement at Robots & Pencils |
+| **client-ready-requirements** | You have a completed internal requirements doc and need a clean version to share with client stakeholders |
 
 ---
 
@@ -191,6 +193,7 @@ flowchart TD
         JTBD[jtbd-generator]
         GIC[github-issue-classifier]
         PMJ[generate-pm-jd]
+        CRR[client-ready-requirements]
     end
 
     GDR -->|"Stage 1"| TMN
@@ -221,3 +224,4 @@ flowchart TD
 | "I need to define MVP scope through user needs" | `jtbd-generator` |
 | "I have a GitHub issue dump I need to make sense of" | `github-issue-classifier` |
 | "I need to write a PM job description" | `generate-pm-jd` |
+| "I need to share requirements with a client or stakeholders" | `client-ready-requirements` |

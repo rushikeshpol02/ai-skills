@@ -15,7 +15,7 @@ Agent skills are instruction files (`SKILL.md`) stored in `~/.cursor/skills/`. W
 ```
 ai-skills/
 ├── cursor/
-│   └── skills/              Product & requirements skills (13 skills)
+│   └── skills/              Product & requirements skills (14 skills)
 ├── claude/                  Placeholder for future Claude skills
 └── docs/
     ├── workflow-guide.md    How skills relate to each other + pipeline diagram

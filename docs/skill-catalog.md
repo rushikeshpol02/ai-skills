@@ -24,6 +24,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - [jtbd-generator](#jtbd-generator) — Standalone
 - [github-issue-classifier](#github-issue-classifier) — Standalone
 - [generate-pm-jd](#generate-pm-jd) — Standalone
+- [client-ready-requirements](#client-ready-requirements) — Standalone
 
 ---
 
@@ -353,6 +354,10 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Mandatory checkpoints:** Change verification (Step 2) and change manifest approval (Phase 2)
 
+**Additional behaviors:**
+- **Client-ready doc detection:** Automatically scans for a corresponding `Client-Requirements-*.md` alongside any `Feature-Requirements-*.md` in scope and adds it as the last downstream document in the change chain.
+- **Intra-document consistency sweep:** When any Functional Requirement is added, modified, or removed, runs a mandatory sweep across all derived sections in the same document (User Flows, Visual States, Error Handling, Executive Summary, Assumptions, Open Questions, Dependencies, Risk Analysis) and checks Stage 4/6 artifacts if in scope.
+
 **Related skills:** `review-findings` (produces structured decisions as input), `document-audit` (runs as final step)
 
 ---
@@ -527,7 +532,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **What it adds:**
 
-A **Sources & Reference Materials** section at the end, listing all input documents used. Format per entry: `Display Name (Type, Month Year)` — falling back to name + type or name + date when full info is unavailable. Grouped by: Meeting Records → Discovery Sessions → Client Documents → Design References → Related Feature Documents.
+A **Sources & Reference Materials** section at the end, listing all input documents used. Format per entry: `Display Name (Type, Day Month Year)` e.g. `(Meeting Record, January 7, 2026)` — falling back to name + type (no date) or name + date (no type) when full info is unavailable. Figma design links are placed in Related Documents, not Sources. Grouped by: Meeting Records → Discovery Sessions → Client Documents → Related Feature Documents.
 
 **Inputs:**
 | Input | Required | Notes |
