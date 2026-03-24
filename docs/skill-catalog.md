@@ -18,13 +18,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 **Post-Pipeline Skills (Group 2)**
 - [review-findings](#review-findings) — Post-Pipeline
 - [update-documents](#update-documents) — Post-Pipeline
-
-**Standalone Skills (Group 3)**
-- [rest-api-contract-generator](#rest-api-contract-generator) — Standalone
-- [jtbd-generator](#jtbd-generator) — Standalone
-- [github-issue-classifier](#github-issue-classifier) — Standalone
-- [generate-pm-jd](#generate-pm-jd) — Standalone
-- [client-ready-requirements](#client-ready-requirements) — Standalone
+- [client-ready-requirements](#client-ready-requirements) — Post-Pipeline
 
 ---
 
@@ -362,157 +356,16 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 ---
 
-## Standalone Skills (Group 3)
-
----
-
-### rest-api-contract-generator
-
-**Mode:** Standalone
-
-**Purpose:** Generates a complete, implementation-ready REST API contract document. Optionally reviews existing codebase or Swagger files to extract your team's API patterns before generating, ensuring the contract matches your conventions.
-
-**When to use:**
-- You need a standalone API contract for a new or modified endpoint
-- You want a contract that matches your existing Swagger conventions and error shapes
-- You need a quick API spec without running a full requirements pipeline
-
-**4-step workflow:**
-1. Gather required context (method, path, consumer, inputs, success response, error cases)
-2. Optionally review existing codebase/Swagger for team patterns
-3. Generate contract applying found patterns over generic best practices
-4. Mandatory quality check before delivering
-
-**Inputs:**
-| Input | Required | Notes |
-|-------|----------|-------|
-| Feature purpose (plain English) | Yes | |
-| HTTP method | Yes | GET / POST / PUT / PATCH / DELETE |
-| Endpoint path | Yes | Or asks to propose one |
-| Consumer | Yes | Frontend, mobile, another service |
-| Request inputs (path params, query params, body fields) | Yes | |
-| Success response definition | Yes | |
-| Known error cases | Yes | |
-| Existing Swagger / codebase files | Optional | Used to match team patterns |
-
-**Outputs:**
-- `API-Contract-[Feature].md` — complete contract with endpoint definition, request/response schemas, error responses, and notes
-
-**Related skills:** `generate-requirements` (also produces API contracts in Comprehensive mode)
-
----
-
-### jtbd-generator
-
-**Mode:** Standalone
-
-**Purpose:** Generates a structured Jobs to Be Done (JTBD) analysis following Anthony Ulwick's Outcome-Driven Innovation framework. Produces a hierarchical table (Theme → Core Job → Job Step → Desired Outcome) with MoSCoW prioritization, designed for stakeholder alignment and MVP scoping.
-
-**When to use:**
-- Defining MVP scope through user jobs (not features)
-- Preparing for stakeholder review or design vision alignment
-- Understanding what users are trying to accomplish before prescribing solutions
-- Scoping phases of a product
-
-**Core principle:** Jobs are solution-agnostic — describe what the user is trying to accomplish, never how the product solves it.
-
-**Prerequisite gate:** At least one input with user context is required. Technical specs alone (database schema, infrastructure docs) do not qualify.
-
-**Inputs:**
-| Input | Minimum Quality Bar |
-|-------|---------------------|
-| Requirements doc / PRD | Must describe what users need to do |
-| Meeting notes / transcript | Must contain discussion of user problems or workflows |
-| GitHub issues / backlog | At least 5 related issues to identify patterns |
-| Design files | Must show user-facing flows |
-| Verbal description | Must describe at least one user and what they're trying to accomplish |
-
-**Outputs:**
-- `JTBD-Analysis-[Name].md` — hierarchical JTBD table with MoSCoW prioritization and phase summary
-
-**Related skills:** `generate-requirements` (JTBD output can serve as input), `identify-assumptions`
-
----
-
-### github-issue-classifier
-
-**Mode:** Standalone
-
-**Purpose:** Classifies GitHub issues (stored as local markdown files from the Github-Issue-Extractor tool) into epics, user stories, tasks, and defects. Produces two reports: a flat classification and a full milestone hierarchy.
-
-**When to use:**
-- Analyzing and categorizing a GitHub repository's issue backlog
-- Building a hierarchy view for sprint planning or roadmap discussions
-- Identifying which issues are epics vs stories vs tasks
-
-**Modes:**
-| Mode | Output |
-|------|--------|
-| Mode A — Classify All | Flat list of every non-DONE issue by type (Epic / User Story / Task / Defect) with status |
-| Mode B — Hierarchy View | Full repo organized as Milestone → Epic → Story/Task → Defect |
-
-**Prerequisite:** Issues must be extracted first using the Github-Issue-Extractor tool, which produces markdown files in `Github-Issue-Extractor/issues/<owner>-<repo>/`.
-
-**Inputs:**
-| Input | Required |
-|-------|----------|
-| Issue markdown files from Github-Issue-Extractor | Yes |
-| Python venv (PyYAML) activated | Yes |
-
-**Outputs:**
-- `issues/<owner>-<repo>/reports/classification-YYYY-MM-DD.md` (Mode A)
-- `issues/<owner>-<repo>/reports/hierarchy-YYYY-MM-DD.md` (Mode B)
-- Optional: `release-candidates-*.md` for release-scoped reports
-
-**Related skills:** None — fully standalone
-
----
-
-### generate-pm-jd
-
-**Mode:** Standalone
-
-**Purpose:** Generates standardized Product Manager job descriptions for Robots & Pencils (R&P) client engagements. Supports four variants across two seniority levels and two PM types.
-
-**When to use:**
-- Writing a job description for a Product Manager or Product Owner role at R&P
-- Customizing a PM JD for a specific client engagement
-
-**Four variants:**
-| | Traditional PM | AI Builder PM |
-|--|---------------|---------------|
-| **L3** | L3 Traditional PM JD | L3 AI Builder PM JD |
-| **L4** | L4 Traditional PM JD | L4 AI Builder PM JD |
-
-**Three-phase workflow:**
-1. Gather context (role level, PM type, client context, engagement details)
-2. Render interactive skill checklist (presented via AskQuestion)
-3. Generate complete JD in markdown from selections
-
-**Inputs:**
-| Input | Required |
-|-------|----------|
-| Seniority level (L3 or L4) | Yes |
-| PM type (Traditional or AI Builder) | Yes |
-| Client / engagement context | Optional (customizes the JD) |
-
-**Outputs:**
-- Complete PM job description in markdown
-
-**Related skills:** None — fully standalone
-
----
-
 ### client-ready-requirements
 
-**Mode:** Standalone
+**Mode:** Post-Pipeline
 
 **Purpose:** Transforms an internal feature requirements document (produced by the requirements pipeline) into a client-safe version for all stakeholder types — business, product, UX, technology, and executive — in a single shared document. Strips internal scaffolding without changing any functional requirement content.
 
 **When to use:**
+- After the internal requirements document is complete and validated (`validate-requirements` + `document-audit` have been run)
 - Before sharing a requirements document with a client or external stakeholder
-- After completing the requirements pipeline and needing a clean deliverable
-- When preparing for a stakeholder review across mixed audiences
+- When preparing for a stakeholder review across mixed audiences (business, product, UX, technology, executive)
 
 **What it removes or transforms:**
 
@@ -547,5 +400,5 @@ A **Sources & Reference Materials** section at the end, listing all input docume
 
 **Core constraint:** Requirement statements are never changed — only citations and codes are stripped. `[TBD]` items are always preserved.
 
-**Related skills:** `generate-requirements` and `requirements-pipeline` (produce the input); `validate-requirements` and `document-audit` (run before this skill to ensure the input is accurate)
+**Related skills:** `validate-requirements` and `document-audit` (run before this skill to ensure the input is accurate); `update-documents` (run first to propagate any corrections); `generate-requirements` and `requirements-pipeline` (produce the input document)
 

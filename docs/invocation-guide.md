@@ -92,10 +92,6 @@ Cursor auto-detects skills from the content of your message. You do not need to 
 | "Audit this document for stale markers and contradictions" | `document-audit` |
 | "Walk me through the findings in this validation report" | `review-findings` |
 | "A decision changed — update all the docs" | `update-documents` |
-| "Generate an API contract for this endpoint" | `rest-api-contract-generator` |
-| "Create a Jobs to Be Done analysis" | `jtbd-generator` |
-| "Classify these GitHub issues into epics and stories" | `github-issue-classifier` |
-| "Write a PM job description for an L3" | `generate-pm-jd` |
 | "Prepare this requirements doc for the client / strip internal references" | `client-ready-requirements` |
 | "Help me create a new skill" | `create-skill` |
 
@@ -242,57 +238,6 @@ Update all documents in [folder path].
 ```
 New information from the design review: [describe what changed].
 Propagate it across: [list docs].
-```
-
-### rest-api-contract-generator
-
-```
-Generate an API contract for a [GET/POST/PUT/DELETE] endpoint that [does X].
-Consumer: [frontend / mobile / service].
-```
-
-```
-Create an API contract for [endpoint path].
-Here are the inputs and expected response: [describe].
-I want you to review our existing Swagger first: [file path]
-```
-
-### jtbd-generator
-
-```
-Generate a Jobs to Be Done analysis for [Feature/Product Name].
-Context: [point to PRD / meeting notes / describe the feature]
-```
-
-```
-Create a JTBD with MoSCoW prioritization for [Feature Name].
-Inputs: [file paths or description]
-```
-
-### github-issue-classifier
-
-```
-Classify all issues in Github-Issue-Extractor/issues/[owner]-[repo]/.
-Use Mode A (flat classification).
-```
-
-```
-Build a hierarchy view for Github-Issue-Extractor/issues/[owner]-[repo]/.
-Mode B — organize by milestone → epic → story/task.
-```
-
-### generate-pm-jd
-
-```
-Write a PM job description for an L3 Traditional PM for a [client type] engagement.
-```
-
-```
-Create a PM JD for an L4 AI Builder PM.
-```
-
-```
-Generate a PM job posting. I'll answer your questions.
 ```
 
 ### client-ready-requirements

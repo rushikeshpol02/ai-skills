@@ -15,7 +15,7 @@ Agent skills are instruction files (`SKILL.md`) stored in `~/.cursor/skills/`. W
 ```
 ai-skills/
 ├── cursor/
-│   └── skills/              Product & requirements skills (14 skills)
+│   └── skills/              Product & requirements skills (10 skills)
 ├── claude/                  Placeholder for future Claude skills
 └── docs/
     ├── workflow-guide.md    How skills relate to each other + pipeline diagram
@@ -68,11 +68,7 @@ After installation, restart Cursor. Skills are available immediately in any Curs
 | [document-audit](cursor/skills/document-audit/SKILL.md) | Scan any document for stale markers, contradictions, and broken cross-references | Pipeline Stage / Standalone |
 | [review-findings](cursor/skills/review-findings/SKILL.md) | Walk through audit or validation report findings interactively and collect decisions | Post-Pipeline |
 | [update-documents](cursor/skills/update-documents/SKILL.md) | Propagate a change (fact, scope, terminology) across multiple related documents | Post-Pipeline |
-| [rest-api-contract-generator](cursor/skills/rest-api-contract-generator/SKILL.md) | Generate a complete REST API contract from a feature spec or Swagger file | Standalone |
-| [jtbd-generator](cursor/skills/jtbd-generator/SKILL.md) | Produce a Jobs to Be Done analysis with MoSCoW prioritization (Ulwick's ODI framework) | Standalone |
-| [github-issue-classifier](cursor/skills/github-issue-classifier/SKILL.md) | Classify GitHub issues into epics/stories/tasks/defects and build a milestone hierarchy | Standalone |
-| [generate-pm-jd](cursor/skills/generate-pm-jd/SKILL.md) | Generate standardized Product Manager job descriptions (L3/L4 × Traditional / AI Builder) | Standalone |
-| [client-ready-requirements](cursor/skills/client-ready-requirements/SKILL.md) | Transform an internal requirements doc into a client-safe version for all stakeholder types | Standalone |
+| [client-ready-requirements](cursor/skills/client-ready-requirements/SKILL.md) | Transform an internal requirements doc into a client-safe version for all stakeholder types | Post-Pipeline |
 
 
 ---

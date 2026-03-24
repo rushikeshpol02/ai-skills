@@ -6,13 +6,12 @@ How the skills relate to each other, which ones form a pipeline, which are stand
 
 ## Skill Groups
 
-All 14 product skills fall into three groups:
+All 10 product skills fall into two groups:
 
 | Group | Skills | Description |
 |-------|--------|-------------|
 | **1 — Full Pipeline** | requirements-pipeline (orchestrator) + 6 called skills | End-to-end requirements generation from raw inputs |
-| **2 — Post-Pipeline** | review-findings, update-documents | Review and propagate changes after docs are created |
-| **3 — Standalone** | rest-api-contract-generator, jtbd-generator, github-issue-classifier, generate-pm-jd, client-ready-requirements | Independent skills with no pipeline relationship |
+| **2 — Post-Pipeline** | review-findings, update-documents, client-ready-requirements | Review, propagate changes, and deliver client-ready output after docs are created |
 
 ---
 
@@ -119,7 +118,7 @@ flowchart LR
 
 ## Group 2: Post-Pipeline Chain
 
-After requirements documents are created, this two-skill chain handles reviews and cross-document propagation.
+After requirements documents are created, this three-skill chain handles reviews, cross-document propagation, and client delivery.
 
 ```mermaid
 flowchart LR
@@ -127,16 +126,19 @@ flowchart LR
     DA[document-audit\nproduces Audit-Report.md]
     RF[review-findings\ninteractive walkthrough\ncollects user decisions]
     UD[update-documents\npropagates changes\nacross multiple docs]
+    CRR[client-ready-requirements\nstrips internal metadata\nproduces client deliverable]
 
     VR --> RF
     DA --> RF
     RF --> UD
+    UD --> CRR
 ```
 
 | Skill | Trigger |
 |-------|---------|
 | **review-findings** | After `validate-requirements` or `document-audit` produces a report — walk through findings and decide what to fix |
 | **update-documents** | After `review-findings` collects decisions, or when any stakeholder feedback / design change needs to cascade across multiple docs |
+| **client-ready-requirements** | After internal requirements are finalized and validated — produce a clean version to share with client stakeholders |
 
 ### When to Use Each Post-Pipeline Skill
 
@@ -144,30 +146,10 @@ flowchart LR
 
 **`update-documents`** — Use this when a confirmed change (corrected fact, scope cut, renamed concept, new decision) needs to be reflected across multiple related documents simultaneously. It shows you a change manifest for approval before touching any file.
 
----
-
-## Group 3: Standalone Skills
-
-These four skills have no dependency on the pipeline and are invoked directly.
-
-```mermaid
-flowchart LR
-    RAC[rest-api-contract-generator\nAPI contract from feature spec\nor Swagger]
-    JTBD[jtbd-generator\nJobs to Be Done analysis\nwith MoSCoW prioritization]
-    GIC[github-issue-classifier\nClassify GitHub issues\ninto epics / stories / tasks / defects]
-    PMJ[generate-pm-jd\nPM job descriptions\nL3/L4 x Traditional / AI Builder]
-    CRR[client-ready-requirements\nTransform internal requirements\ninto client-safe deliverable]
-```
-
-| Skill | Use When |
-|-------|----------|
-| **rest-api-contract-generator** | You need a standalone API contract for a feature — not as part of a full requirements pipeline |
-| **jtbd-generator** | You want to define scope through user jobs (ODI framework) — for discovery, stakeholder alignment, or MVP scoping |
-| **github-issue-classifier** | You have a GitHub issue dump from the Github-Issue-Extractor tool and need to categorize and hierarchy-map it |
-| **generate-pm-jd** | You need to write a Product Manager job description for a client engagement at Robots & Pencils |
-| **client-ready-requirements** | You have a completed internal requirements doc and need a clean version to share with client stakeholders |
+**`client-ready-requirements`** — Use this when the internal requirements document is complete and validated and you need to share it with the client. It strips all internal metadata (SRC codes, pipeline stage markers, assumption codes) without changing any requirement content, and adds a formatted Sources & Reference Materials section.
 
 ---
+
 
 ## Full Skill Relationship Map
 
@@ -186,13 +168,6 @@ flowchart TD
     subgraph postpipeline [Post-Pipeline - Group 2]
         RF[review-findings]
         UD[update-documents]
-    end
-
-    subgraph standalone [Standalone - Group 3]
-        RAC[rest-api-contract-generator]
-        JTBD[jtbd-generator]
-        GIC[github-issue-classifier]
-        PMJ[generate-pm-jd]
         CRR[client-ready-requirements]
     end
 
@@ -206,6 +181,7 @@ flowchart TD
     VR --> RF
     DA --> RF
     RF --> UD
+    UD --> CRR
 ```
 
 ---
@@ -220,8 +196,4 @@ flowchart TD
 | "I have a transcript from a discovery call" | `transcript-to-meeting-notes` first, then feed output to `generate-requirements` |
 | "I need to validate an existing requirements doc" | `validate-requirements` → `review-findings` |
 | "A decision changed and I need to update 4 docs" | `update-documents` |
-| "I need an API contract for a new endpoint" | `rest-api-contract-generator` |
-| "I need to define MVP scope through user needs" | `jtbd-generator` |
-| "I have a GitHub issue dump I need to make sense of" | `github-issue-classifier` |
-| "I need to write a PM job description" | `generate-pm-jd` |
-| "I need to share requirements with a client or stakeholders" | `client-ready-requirements` |
+| "Internal requirements are done — I need a clean version for the client" | `client-ready-requirements` |
