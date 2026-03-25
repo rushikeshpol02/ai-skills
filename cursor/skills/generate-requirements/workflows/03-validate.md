@@ -2,8 +2,10 @@
 
 **Called from:** `workflows/02-generate.md` after user confirms
 **Final step — no further workflows**
-**Reads:** All documents in `requirements/[feature-name]/`
-**Output:** `requirements/[feature-name]/Validation-Report-[Feature-Name].md`
+**Reads:** All documents in `[output-folder]/Generated/Internal/`
+**Output:** `[output-folder]/Generated/Report/Validation-Report-[Feature-Name].md`
+
+> `[output-folder]` is the path provided by the user during SKILL.md intake. It is NOT a hardcoded path.
 
 ---
 
@@ -16,12 +18,10 @@ Determine readiness for story creation. Identify and route remaining gaps.
 
 ## 📖 Step 1: Identify Documents to Validate
 
-Check which files exist in `requirements/[feature-name]/`:
-- [ ] `Feature-Requirements-[Feature-Name].md` — MANDATORY
-- [ ] `API-Contract-[Feature-Name].md` — validate if exists
-- [ ] `System-Flow-[Feature-Name].md` — validate if exists
+Read the Feature Requirements document:
+- `[output-folder]/Generated/Internal/Feature-Requirements-[Feature-Name].md` — MANDATORY
 
-Read all present documents completely before scoring.
+Read the document completely before scoring.
 
 ---
 
@@ -133,36 +133,6 @@ For each `(Source: SRC-N)` citation in the document, verify the source actually 
 
 ---
 
-## 🔗 Step 4: Cross-Document Alignment *(Skip if only 1 document)*
-
-### Feature Requirements ↔ API Contract
-| Check | Status | Notes |
-|-------|--------|-------|
-| All APIs mentioned in Requirements are in Contract | ✅/❌ | |
-| Request/response structures align | ✅/❌ | |
-| Error handling consistent | ✅/❌ | |
-| Business rules reflected in API validation | ✅/❌ | |
-
-### Feature Requirements ↔ System Flow
-| Check | Status | Notes |
-|-------|--------|-------|
-| All systems in Requirements appear in Flow | ✅/❌ | |
-| Data flow transformations consistent | ✅/❌ | |
-| Integration points match | ✅/❌ | |
-| Operation sequence consistent | ✅/❌ | |
-
-### API Contract ↔ System Flow *(if both exist)*
-| Check | Status | Notes |
-|-------|--------|-------|
-| APIs in Contract are used in Flow | ✅/❌ | |
-| Request/response structures match flow | ✅/❌ | |
-| API error codes handled in flow | ✅/❌ | |
-
-**Alignment threshold:**
-- 0–1 minor misalignments → ✅ PASS
-- 2–3 misalignments → ⚠️ WARNING
-- 4+ or critical misalignment → ❌ FAIL
-
 ---
 
 ## 📊 Step 5: Compute Overall Score
@@ -194,10 +164,8 @@ For each `(Source: SRC-N)` citation in the document, verify the source actually 
 # Requirements Validation Report: [Feature Name]
 
 **Date:** [Date]
-**Documents validated:**
+**Document validated:**
 - Feature Requirements: ✅/❌
-- API Contract: ✅/❌/N/A
-- System Flow: ✅/❌/N/A
 
 ---
 
@@ -206,7 +174,7 @@ For each `(Source: SRC-N)` citation in the document, verify the source actually 
 **Summary:**
 - Completeness: [X]% ([N] contexts complete)
 - Source integrity: [N] fabricated items / [N] critical TBDs
-- Alignment: [N] cross-document issues
+- Internal consistency: [N] issues
 - Readiness: ✅ Ready / ⚠️ Proceed with caution / ❌ Not ready
 
 ---
@@ -236,16 +204,6 @@ For each `(Source: SRC-N)` citation in the document, verify the source actually 
 - 🟢 Optional [N]: [list]
 
 **Source attribution:** ✅ Adequate / ⚠️ Some missing / ❌ Poor
-
----
-
-## Cross-Document Alignment
-
-| Check | Status | Issues |
-|-------|--------|--------|
-| Requirements ↔ API Contract | ✅/⚠️/❌/N/A | |
-| Requirements ↔ System Flow | ✅/⚠️/❌/N/A | |
-| API Contract ↔ System Flow | ✅/⚠️/❌/N/A | |
 
 ---
 
@@ -280,7 +238,7 @@ For each `(Source: SRC-N)` citation in the document, verify the source actually 
 **Validation completed:** [timestamp]
 ```
 
-**Save file:** `requirements/[feature-name]/Validation-Report-[Feature-Name].md`
+**Save file:** `[output-folder]/Generated/Report/Validation-Report-[Feature-Name].md`
 
 ---
 
@@ -295,16 +253,14 @@ Present validation report to user:
 
 [Key findings in 2-3 sentences]
 
-📄 Report saved: requirements/[feature-name]/Validation-Report-[Feature-Name].md
+📄 Report saved: [output-folder]/Generated/Report/Validation-Report-[Feature-Name].md
 
 ---
 
-**All files in your requirements folder:**
+**All files in your output folder ([output-folder]):**
 - Context-Summary-[Feature].md
-- Feature-Requirements-[Feature].md
-- API-Contract-[Feature].md (if generated)
-- System-Flow-[Feature].md (if generated)
-- Validation-Report-[Feature].md
+- Generated/Internal/Feature-Requirements-[Feature].md
+- Generated/Report/Validation-Report-[Feature].md
 
 ---
 
@@ -323,6 +279,6 @@ Present validation report to user:
 | Validate ALL applicable contexts (mark N/A if not applicable) | Skip context validation |
 | Check for fabricated data in every section | Accept unsourced data as valid |
 | Count and categorize ALL [TBD] markers | Ignore TBDs |
-| Verify cross-document consistency | Assume documents align |
+| Verify internal document consistency | Assume sections within the document align |
 | Save report before presenting | Display only in chat |
 | Wait for user response | Auto-proceed or suggest story creation without user intent |

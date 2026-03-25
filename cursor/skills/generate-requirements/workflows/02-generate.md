@@ -2,27 +2,27 @@
 
 **Called from:** `workflows/01-synthesize.md` after user approves Context Summary
 **Next step:** `workflows/03-validate.md` after documents are generated
-**Reads:** `requirements/[feature-name]/Context-Summary-[Feature-Name].md`
+**Reads:** `[output-folder]/Context-Summary-[Feature-Name].md`
 **Outputs:**
-- `requirements/[feature-name]/Feature-Requirements-[Feature-Name].md` (always)
-- `requirements/[feature-name]/API-Contract-[Feature-Name].md` (if APIs in scope, Comprehensive)
-- `requirements/[feature-name]/System-Flow-[Feature-Name].md` (if integrations in scope, Comprehensive)
+- `[output-folder]/Generated/Internal/Feature-Requirements-[Feature-Name].md`
+
+> `[output-folder]` is the path provided by the user during SKILL.md intake. It is NOT a hardcoded path.
 
 ---
 
 ## 🎯 Purpose
 
-Convert the validated Context Summary into 1–3 polished requirement documents.
-All documents are saved as files. Mode and scope were determined in SKILL.md.
+Convert the validated Context Summary into a polished Feature Requirements document.
+The document is saved as a file. Mode and scope were determined in SKILL.md.
 
 ---
 
 ## 🔧 Execution Mode Rules
 
-| Mode | Documents | Word limits | Attribution |
-|------|-----------|-------------|-------------|
-| **Quick** | Feature Requirements only | 1,500–2,000 words | Tier 1 only |
-| **Comprehensive** | Requirements + API Contract (if APIs) + System Flow (if integrations) | Requirements: 2,500–3,000 / API: 1,000–1,500 / Flow: 800–1,200 | Tier 1 + Tier 2 (60%+) |
+| Mode | Analysis Depth | Word Limit | Attribution |
+|------|---------------|------------|-------------|
+| **Quick** | 3 contexts (Business, Product, UX) | 1,500-2,000 words | Tier 1 only |
+| **Comprehensive** | 6 contexts (+ Persona, Technical, Compliance) | 2,500-3,000 words | Tier 1 + Tier 2 (60%+) |
 
 ---
 
@@ -30,7 +30,7 @@ All documents are saved as files. Mode and scope were determined in SKILL.md.
 
 Read the saved Context Summary file:
 ```
-requirements/[feature-name]/Context-Summary-[Feature-Name].md
+[output-folder]/Context-Summary-[Feature-Name].md
 ```
 
 Validate before proceeding:
@@ -43,18 +43,11 @@ If the file is missing or incomplete, ask the user to re-run Workflow 1 or provi
 
 ---
 
-## 📊 Step 2: Determine Required Documents
+## 📊 Step 2: Confirm Scope
 
-**Quick Mode:** Always generate Feature Requirements only. Skip steps 4 and 5.
+This workflow generates one document: **Feature Requirements**. The depth of analysis depends on the mode (Quick: 3 contexts, Comprehensive: 6 contexts) determined in SKILL.md.
 
-**Comprehensive Mode — use this decision matrix:**
-
-| Technical Context includes… | Generate |
-|------------------------------|---------|
-| No APIs, no integrations (UI only) | Feature Requirements only |
-| APIs (new or modified) | Feature Requirements + API Contract |
-| Integrations (external systems) | Feature Requirements + System Flow |
-| APIs + Integrations | Feature Requirements + API Contract + System Flow |
+> **Note:** API Contracts and System Flows are generated separately after requirements are finalized, using dedicated skills (`rest-api-contract-generator`, etc.).
 
 State upfront which documents you'll generate:
 ```
@@ -199,143 +192,13 @@ For each requirement use this structure:
 
 ---
 
-**Save file:** `requirements/[feature-name]/Feature-Requirements-[Feature-Name].md`
+**Save file:** `[output-folder]/Generated/Internal/Feature-Requirements-[Feature-Name].md`
 
 ---
 
-## 🔌 Step 4: Generate API Contract *(Comprehensive mode, APIs in scope only)*
+## ✅ Step 4: Inline Quality Check
 
-**Choose approach based on complexity:**
-
-- **Simple API (1–3 endpoints, well-understood):** Generate inline using `templates/api-contract.md`
-- **Complex API (4+ endpoints, or existing patterns need matching):** Consider using the `rest-api-contract-generator` skill for deeper pattern analysis. Say: "For detailed API contract generation that matches your existing codebase patterns, you can also run the `rest-api-contract-generator` skill separately."
-
-**Generate using `templates/api-contract.md` as structure reference.**
-
-**Sections:**
-
-### API Overview
-- Summary (2–3 sentences)
-- Endpoints table: `| Endpoint | Method | Purpose | Auth Required |`
-
-### Authentication & Authorization
-- Auth type (Bearer/JWT/API Key)
-- Authorization rules (role/permission matrix)
-- Cross-context visibility rules (who can access what)
-
-### Endpoint Details (one section per endpoint)
-For each endpoint:
-```
-**Endpoint:** `[METHOD] /api/[path]`
-**Purpose:** [business purpose]
-
-Request:
-- Headers
-- Query Parameters: | Parameter | Type | Required | Description | Validation |
-- Request Body: | Field | Type | Required | Description | Validation |
-
-Responses:
-- 200 OK: [structure]
-- 422 Validation Error: [error shape]
-- 401 / 403 / 500 / 503 / 504: [standard errors]
-
-Validation errors table:
-| Error Message | Field | Condition |
-
-Performance:
-- Timeout: [X] min
-- Rate limiting: [X] req/min
-- Expected response: [small/medium/large dataset times]
-
-cURL example
-```
-
-### Error Handling
-- Standard error response structure (match existing patterns from Step 0.5 if available)
-- HTTP status codes table
-- Retry strategy: retryable (503, 504) vs non-retryable (400, 401, 403, 422, 500)
-
-### Security
-- Input validation rules
-- Data protection (HTTPS, token encryption)
-- Rate limiting details
-
-### Performance Benchmarks
-```
-| Scenario | Expected Time | Max Acceptable Time |
-```
-
-**Naming rule:** Follow existing Swagger conventions extracted in Step 0.5. If no existing patterns, use camelCase for fields and kebab-case for paths.
-
-**TBD rule:** Mark unknown values as `[TBD — confirm with [Engineer / Architect]]`
-
-**Save file:** `requirements/[feature-name]/API-Contract-[Feature-Name].md`
-
----
-
-## 🔄 Step 5: Generate System Flow *(Comprehensive mode, integrations in scope only)*
-
-**Generate using `templates/system-flow.md` as structure reference.**
-
-**Sections:**
-
-### Overview
-- Summary (2–3 sentences of end-to-end flow)
-- Systems involved table: `| System | Role | Owner | Technology |`
-
-### High-Level Flow Diagram (ASCII)
-```
-[User] → [System A] → [System B] → [Output]
-```
-
-### Step-by-Step Flow
-For each step:
-```
-**Step N: [Action Name]**
-Actor/System: [who does this]
-Actions:
-- [Action 1]
-- [Action 2]
-Output: [what happens next]
-```
-
-### Alternative Flows
-- Alt Flow 1: No data scenario
-- Alt Flow 2: Timeout scenario
-- Alt Flow 3: Service unavailable
-
-### Error Handling
-```
-| Error | Cause | Response | Recovery |
-```
-
-### Integration Points (one per external system)
-```
-**[System Name]**
-- Interface: [API / SDK / DB]
-- Auth: [method]
-- Data: [what data flows]
-- SLA: [uptime %]
-- Owner: [team/contact]
-```
-
-### Data Transformations
-```
-| Source Field | Destination Field | Transformation |
-```
-
-### Performance Benchmarks
-```
-| Scenario | Expected Time | Bottleneck | Mitigation |
-```
-
-**Save file:** `requirements/[feature-name]/System-Flow-[Feature-Name].md`
-
----
-
-## ✅ Step 6: Inline Quality Check
-
-Before presenting documents to user, run these checks on EACH generated document:
+Before presenting the document to the user, run these checks:
 
 **Completeness:**
 - [ ] All required sections present
@@ -346,11 +209,6 @@ Before presenting documents to user, run these checks on EACH generated document
 - [ ] Plain English throughout (no code, no jargon without explanation)
 - [ ] All requirements are specific and testable ("System must X within Y seconds")
 - [ ] No vague language ("should consider", "might", "probably")
-
-**Alignment (if multiple docs):**
-- [ ] All APIs mentioned in Feature Requirements also appear in API Contract
-- [ ] All integrations in Feature Requirements also appear in System Flow
-- [ ] No contradictions between documents
 
 **Requirement Purity:**
 - [ ] No FR contains implementation mechanisms (HOW) — solutions belong in Implementation Notes
@@ -363,27 +221,32 @@ Before presenting documents to user, run these checks on EACH generated document
 - [ ] Statements tagged `(Source: Implicit)` are genuinely logical derivations, not gap-fills that should be `[TBD]`
 - [ ] No scoped statement has been over-generalized (source says "X in context A" but doc says "X everywhere")
 
+**Table Formatting:**
+- [ ] Every priority/risk/severity indicator uses a labeled format, never a bare dot:
+  - `🔴 Critical` not `🔴`
+  - `🟡 Important` not `🟡`
+  - `🟢 Nice to have` not `🟢`
+- [ ] Tables are sorted by highest priority/risk/severity first:
+  - **Open Questions** -- sorted by priority (🔴 Critical → 🟡 Important → 🟢 Nice to have). Resolved questions sink to the bottom.
+  - **Dependencies** -- sorted by risk (🔴 Critical → 🟡 Medium → 🟢 Low)
+  - **Assumptions** -- sorted by risk tier (H = High → M = Medium → L = Low)
+  - **Risks** -- sorted by impact (highest first)
+
 **Fix any failures before presenting.** Do not present documents with known quality failures.
 
 ---
 
-## 💬 Step 7: Present Documents
+## 💬 Step 5: Present Document
 
 Present to user:
 
 ```markdown
-✅ Generated [N] document(s):
+✅ Generated Feature Requirements:
 
-1. **Feature Requirements** → requirements/[feature]/Feature-Requirements-[Feature].md
-   - [X] functional requirements
-   - [N] TBDs flagged
-   - Word count: ~[N]
-
-2. **API Contract** → requirements/[feature]/API-Contract-[Feature].md (if applicable)
-   - [N] endpoints documented
-
-3. **System Flow** → requirements/[feature]/System-Flow-[Feature].md (if applicable)
-   - [N] integration points
+**Feature Requirements** → [output-folder]/Generated/Internal/Feature-Requirements-[Feature].md
+- [X] functional requirements
+- [N] TBDs flagged
+- Word count: ~[N]
 
 ---
 
@@ -402,7 +265,7 @@ Present to user:
 
 ---
 
-## 🔄 After User Replies
+## 🔄 Step 6: After User Replies
 
 **If "validate" or "yes":**
 ```
@@ -417,11 +280,12 @@ workflows/03-validate.md
 ```
 ✅ Requirements generation complete.
 
-Files saved to: requirements/[feature-name]/
+Files saved to: [output-folder]/Generated/Internal/
 
 Next steps:
-- Review documents with stakeholders
+- Review document with stakeholders
 - Fill in [TBD] items with relevant teams
+- When requirements are finalized, generate API Contracts using `rest-api-contract-generator`
 - Use these requirements to generate user stories (Story Creation workflow)
 ```
 
@@ -431,8 +295,7 @@ Next steps:
 
 | ✅ Do | ❌ Don't |
 |-------|---------|
-| Save each file before presenting | Display only in chat |
-| Match existing Swagger patterns for API naming | Use generic REST naming if Swagger exists |
+| Save the file before presenting | Display only in chat |
 | Run inline quality check before presenting | Present documents with known failures |
 | Flag all TBDs with stakeholder routing | Leave TBDs without context |
 | Keep within word limits | Write exhaustive documents beyond limits |

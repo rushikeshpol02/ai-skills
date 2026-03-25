@@ -10,7 +10,7 @@ description: "A 9-stage discovery and analysis pipeline that takes messy, early-
 Orchestrates a full requirements pipeline from messy, diverse inputs to a production-ready requirements document. It coordinates multiple skills and enforces quality gates between stages.
 
 **What makes this different from `generate-requirements`:**
-- `generate-requirements` takes well-defined inputs (PRDs, Swagger, designs) and generates structured docs.
+- `generate-requirements` takes well-defined inputs (PRDs, designs, transcripts) and generates a structured Feature Requirements document.
 - This skill handles the **earlier, messier phase** — rough ideas, brainstorming, scenario mapping, stakeholder feedback loops — and builds up to the point where `generate-requirements` can take over for the final doc.
 
 **Core principles:**
@@ -53,9 +53,40 @@ Stage 9b: Document Audit (calls document-audit skill)
 
 ## Stage 1: Intake & Classification
 
-### 1.1 Scan for inputs
+### 1.1 Scan for inputs and load project context
 
 Before asking the user anything, scan the workspace for available files using Glob and Read tools.
+
+**Check for `project-context.md` in the workspace root.**
+
+**IF found:** Read it completely and extract:
+- Tech stack (frontend, backend, DB, mobile)
+- API conventions (auth, naming, error shape)
+- Defined personas (names, roles, pain points)
+- System components and integrations
+- Known limitations and constraints
+- Compliance baseline
+- Glossary / terminology
+
+Announce what was loaded:
+```
+Project context loaded from project-context.md:
+- Stack: [stack summary]
+- Personas: [list]
+- Systems: [list]
+- Constraints: [count] known
+
+This context will be applied throughout all pipeline stages.
+```
+
+This pre-loaded context informs:
+- Stage 2 (Interpretation) -- known actors and systems don't need re-discovery
+- Stage 3 (Variables/Constraints) -- pre-populated with known constraints
+- Stage 4 (Scenarios) -- system-level edge cases already known
+- Stage 6 (User Flows) -- personas and system interactions pre-loaded
+- Stage 7 (Requirements) -- passed directly to `generate-requirements`
+
+**IF not found:** Proceed without it. The pipeline will discover context from inputs. At the end of the pipeline (after Stage 9b), offer to create `project-context.md` from everything learned during this session.
 
 ### 1.2 Classify each input
 
@@ -66,7 +97,7 @@ Before asking the user anything, scan the workspace for available files using Gl
 | High-level requirements, ideas, hypotheses | User describes in chat or provides rough notes; no formal structure | Capture directly — processed in Stage 3 |
 | Legal docs, policy docs, reference material | Formal language, regulatory content, compliance references | Read and extract key rules, constraints, thresholds |
 | Existing requirements doc (for iterative update) | Structured doc with sections like Scope, Assumptions, Dependencies | Read as baseline — delta updates only |
-| Swagger / OpenAPI spec | `.yaml`, `.json` with endpoint definitions | Pass through to `generate-requirements` in Stage 7 |
+| Swagger / OpenAPI spec | `.yaml`, `.json` with endpoint definitions | Read and extract integration points, data models, constraints. API contracts are generated separately after requirements are finalized using `rest-api-contract-generator`. |
 
 ### 1.3 Assign source IDs and report
 
@@ -87,10 +118,29 @@ Processing order: [list in priority order]
 
 Run complementary skills on their respective inputs:
 - Transcripts → `transcript-to-meeting-notes` → produces structured meeting summary
-- Designs → `design-to-context` → produces user flow doc or context summary
+- Designs (Figma URLs, FigJam URLs, screenshots, images) → `design-to-context` → produces a Context Summary, Design Description, or User Flow Document
 - All other inputs → read and extract key information directly
 
 **Save all processed outputs to workspace before proceeding.**
+
+### 1.4.1 Processing Verification Gate (MANDATORY)
+
+Before moving to Step 1.5, verify that every input classified for skill processing in Step 1.2 has a corresponding saved output file. Present a checklist:
+
+```
+Processing verification:
+- [SRC-1] transcript.vtt → ✅ Produced: Meeting-Summary-[name].md
+- [SRC-2] figma.com/board/... → ✅ Produced: Context-Summary-[name].md
+- [SRC-3] screenshot.png → ❌ NOT PROCESSED — design-to-context was not run
+```
+
+**Rules:**
+- Every input routed to a skill MUST have a saved output file. A URL or filename alone is not a processed output.
+- If any input shows ❌, run the skill on it immediately before proceeding. Do NOT treat unprocessed inputs as valid sources -- a URL without a processed output means the content was never actually read or analyzed.
+- If a skill cannot process an input (e.g., Figma MCP is unavailable, image is unreadable), flag it explicitly: `[SRC-N] ⚠️ COULD NOT PROCESS — [reason]. Content is unavailable for analysis. Any citations to SRC-N will be unverifiable.` Present this to the user and ask how to proceed (provide alternative input, skip, or proceed with gap).
+- Do NOT proceed to Step 1.5 until all routed inputs are either ✅ processed or ⚠️ explicitly flagged with user acknowledgment.
+
+**Why this matters:** Without this gate, URLs and filenames get assigned source IDs and cited throughout the pipeline as if their content was analyzed, when in reality the content was never fetched or read. This leads to unverifiable citations, fabricated interpretations of what the source "says," and findings like "SRC-N is unverifiable" surfacing much later in validation (Stage 9a) -- wasting significant rework effort.
 
 ### 1.5 Current State Discovery (MANDATORY)
 
@@ -209,15 +259,16 @@ Show the complete variables list and ask:
 
 Cross-reference variables to identify all meaningful combinations:
 
-| Scenario ID | [Variable 1] | [Variable 2] | [Variable N] | Expected Behavior | Notes |
-|---|---|---|---|---|---|
-| S1 | [value] | [value] | [value] | [What happens] | |
+| Scenario ID | [Variable 1] | [Variable 2] | [Variable N] | Expected Behavior | Priority | Notes |
+|---|---|---|---|---|---|---|
+| S1 | [value] | [value] | [value] | [What happens] | 🔴 Critical | |
 
 **Rules:**
 - Include happy path scenarios first
 - Include boundary conditions (minimum, maximum, just-above, just-below thresholds)
 - Include error scenarios (invalid inputs, timeouts, missing data)
 - Include edge cases (concurrent actions, interrupted flows, partial data)
+- Sort scenarios: happy paths first, then by priority (🔴 Critical → 🟡 Important → 🟢 Edge case)
 
 ### 4.2 Identify edge cases
 
@@ -246,7 +297,11 @@ Show the full scenario matrix and edge case list. Ask:
 - All processed inputs from Stage 1
 - Any assumptions already surfaced by `transcript-to-meeting-notes` (if transcripts were processed in Stage 1). Note: meeting notes produce a simpler 3-field assumption format (STATUS, VALIDATE WITH / BY WHEN, RISK IF WRONG). The `identify-assumptions` skill will enrich these with RISK AREA, EVIDENCE, and SUGGESTED TEST fields, and may identify additional assumptions not discussed in the meeting.
 
-**Present all assumptions to the user.** Group by priority (HIGH / MEDIUM / LOW), then by risk area (Value, Usability, Viability, Feasibility) within each group.
+**Present all assumptions to the user.** Group by priority (HIGH / MEDIUM / LOW), then by risk area (Value, Usability, Viability, Feasibility) within each group. Highest risk first.
+
+**Table formatting rule (applies to all tables in all pipeline artifacts):**
+- Every priority/risk/severity indicator must include a label, never a bare dot: `🔴 Critical` not `🔴`, `🟡 Important` not `🟡`, `🟢 Low` not `🟢`
+- Tables must be sorted by highest priority/risk/severity first. Resolved items sink to the bottom.
 
 **Wait for user to confirm, correct, or add assumptions before proceeding.**
 
@@ -302,16 +357,20 @@ After drafting user flows but before finalizing them, run a classification pass 
 
 ## Stage 7: Requirements Document Generation
 
-**Read and follow the `generate-requirements` skill** with:
-- All processed inputs from Stage 1
-- Current state description from Stage 1.5 (if available)
-- Scenario matrix from Stage 4
-- Assumptions from Stage 5
-- User flows from Stage 6 (after purity filter applied in Step 6.5)
+**Call the `generate-requirements` skill, skipping its intake step (SKILL.md Steps 1-3).** The pipeline has already gathered all required context. Go directly to Workflow 1 (`workflows/01-synthesize.md`).
 
-The skill handles its own 3-workflow pipeline (synthesize → generate → validate).
+**Pipeline provides these values (do not re-ask the user):**
+- **Feature name:** determined in Stage 1
+- **Mode:** always **Comprehensive** (6 contexts) -- the pipeline is the thorough path
+- **Inputs:** all processed inputs from Stage 1, scenario matrix from Stage 4, assumptions from Stage 5, user flows from Stage 6 (after purity filter)
+- **Output folder:** ask the user for the output folder path at this point, if not already provided. This is the only question asked at Stage 7.
+- **Project context:** loaded from Stage 1.1 (if `project-context.md` existed)
+- **Current state:** from Stage 1.5 (if available)
+- **New or existing:** determined in Stage 1.5
 
-**Important:** Pass the scenario matrix and assumptions as explicit inputs — they contain information that may not be in the original source documents.
+The skill then runs its 3-workflow pipeline (synthesize → generate → validate) with all context pre-loaded.
+
+**Important:** Pass the scenario matrix and assumptions as explicit inputs -- they contain information that may not be in the original source documents.
 
 **Source traceability:** Instruct the skill to tag every requirement, decision, assumption, and key fact in the output document with its source. Use the source IDs assigned in Stage 1 (e.g., `(Source: SRC-1, Decision 3)`). Requirements that synthesize multiple inputs should list all sources.
 
@@ -380,6 +439,22 @@ This skill checks structural integrity:
 
 ---
 
+## After Stage 9b: Update or Create Project Context
+
+After the pipeline completes, offer to create or update the project context:
+
+```
+This pipeline run discovered new project-level context (personas, systems,
+constraints, terminology). To capture it for future sessions, run
+/project-context to create or update your project-context.md.
+
+This is optional but recommended -- it saves significant re-discovery time.
+```
+
+The `/project-context` skill handles both first-time creation and incremental updates with source confirmation and conflict detection. Do NOT attempt to create or update `project-context.md` inline -- always redirect to the skill.
+
+---
+
 ## Critical Rules
 
 1. **Never skip the interpretation checkpoint (Stage 2).** Misunderstanding inputs wastes more time than confirming understanding.
@@ -395,3 +470,4 @@ This skill checks structural integrity:
 11. **Inferred content must be flagged.** `[INFERRED]` is better than confident-sounding fabrication. When filling a gap, tag it explicitly so the user can verify or reject it. Never present an inference as a stated fact.
 12. **Source citations must be accurate.** When citing `(Source: SRC-N)`, verify the source actually contains the claimed information. Do not cite a source for content it does not contain. Run the source verification pass in Stage 7.
 13. **Scoped statements stay scoped.** If a source says "X in context A", do not generalize to "X everywhere" without additional sourcing or explicit `[INFERRED — generalized from SRC-N context A]` tagging.
+14. **Table indicators must be labeled and sorted.** Never use a bare dot (`🔴`) without a label (`🔴 Critical`). All tables with priority, risk, or severity columns must be sorted highest first. Resolved items sink to the bottom.

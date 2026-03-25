@@ -50,7 +50,7 @@ The skill will:
 1. Scan your workspace for PRDs, Swagger files, designs
 2. Ask a few intake questions (feature name, mode, inputs)
 3. Run Workflow 1 → 2 → 3 automatically, waiting for your approval at each step
-4. Save all outputs to `requirements/[feature-name]/`
+4. Save all outputs to the output folder you specify during intake
 
 ---
 
@@ -59,21 +59,22 @@ The skill will:
 After running, your workspace will contain:
 
 ```
-requirements/
-└── [feature-name]/
-    ├── Context-Summary-[Feature].md        ← Internal analysis (not for sharing)
-    ├── Feature-Requirements-[Feature].md   ← Always generated
-    ├── API-Contract-[Feature].md           ← If APIs in scope (Comprehensive)
-    ├── System-Flow-[Feature].md            ← If integrations in scope (Comprehensive)
-    └── Validation-Report-[Feature].md      ← Quality gate report
+[output-folder]/
+├── Context-Summary-[Feature].md                        ← Internal analysis (not for sharing)
+├── Generated/
+│   ├── Internal/
+│   │   └── Feature-Requirements-[Feature].md           ← Requirements document
+│   └── Report/
+│       └── Validation-Report-[Feature].md              ← Quality gate report
 ```
 
 ---
 
 ## Tips
 
-- **Quick Mode:** For MVPs and small features. Generates Feature Requirements only.
-- **Comprehensive Mode:** For production features with APIs or integrations. Generates up to 3 docs.
+- **Quick Mode:** For MVPs and small features. Lightweight analysis (3 contexts).
+- **Comprehensive Mode:** For production features with complex interactions, compliance concerns, or integrations. Full analysis (6 contexts).
+- **API Contracts and System Flows** are generated separately after requirements are finalized, using `rest-api-contract-generator`.
 - **Resume:** If you have an existing Context Summary, you can start from Workflow 2 directly.
 - **Design files:** Provide Figma URLs or upload images — analyzed automatically in Workflow 1.
 - **Swagger:** Upload your existing OpenAPI spec — patterns extracted and applied to API Contract.

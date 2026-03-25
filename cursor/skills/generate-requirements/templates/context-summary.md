@@ -6,7 +6,7 @@
 **Feature:** [Name]
 **Date:** [YYYY-MM-DD]
 **Mode:** [Quick / Comprehensive]
-**Output folder:** requirements/[feature-name]/
+**Output folder:** [output-folder]/
 
 ---
 

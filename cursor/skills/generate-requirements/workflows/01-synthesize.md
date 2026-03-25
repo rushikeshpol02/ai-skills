@@ -2,7 +2,9 @@
 
 **Called from:** `SKILL.md` after intake
 **Next step:** `workflows/02-generate.md` after user approves Context Summary
-**Output file:** `requirements/[feature-name]/Context-Summary-[Feature].md`
+**Output file:** `[output-folder]/Context-Summary-[Feature].md`
+
+> `[output-folder]` is the path provided by the user during SKILL.md intake. It is NOT a hardcoded path.
 
 ---
 
@@ -17,8 +19,8 @@ This file is saved to the workspace so Workflow 2 can read it even if the chat c
 
 | Mode | Contexts | Questions | Attribution | Time |
 |------|----------|-----------|-------------|------|
-| **Quick** | Business, Product, UX only | Max 2 | Tier 1 only | ~10 min |
-| **Comprehensive** | All 6 contexts | Max 3 | Tier 1 + Tier 2 (60%+ target) | ~20 min |
+| **Quick** | Business, Product, UX only | Max 2 (RED gaps only) | Tier 1 only | ~10 min |
+| **Comprehensive** | All 6 contexts | No limit (all RED gaps) | Tier 1 + Tier 2 (60%+ target) | ~20 min |
 
 Mode was determined in SKILL.md. Do not re-ask.
 
@@ -192,7 +194,7 @@ For every context, classify each item:
 
 | Severity | Color | Rule | Example |
 |----------|-------|------|---------|
-| Blocks generation | 🔴 RED | 5+ RED gaps → stop and request input | Performance timeout not specified |
+| Blocks generation | 🔴 RED | Quick: 5+ RED gaps → stop and request input. Comprehensive/pipeline: present all RED gaps, work through with user. | Performance timeout not specified |
 | Reduces quality | 🟡 YELLOW | Document gap, proceed with caution | Persona not confirmed by research |
 | Nice to have | 🟢 GREEN | Document gap, proceed normally | Future enhancement scope |
 
@@ -202,12 +204,12 @@ For every context, classify each item:
 ```
 
 **Question rule:**
-- Quick mode: Ask max **2 critical questions** (RED gaps only)
-- Comprehensive mode: Ask max **3 critical questions** (RED gaps only)
-- Group related questions; don't ask one at a time
+- **Quick mode:** Ask max **2 critical questions** (RED gaps only)
+- **Comprehensive mode:** No question limit. Ask about all RED gaps. Group related questions together rather than asking one at a time.
+- **When called from `/requirements-pipeline`:** Most RED gaps should already be resolved by Stage 2. Ask about any that remain without a cap.
 - Provide context for WHY each question is needed
 
-**Improvement over original:** If 5+ RED gaps exist, do NOT attempt generation. Report blockers and ask user to provide more input or reduce scope.
+**Improvement over original:** If 5+ RED gaps exist in Quick mode, do NOT attempt generation. Report blockers and ask user to provide more input or reduce scope. In Comprehensive mode or pipeline calls, present all RED gaps and work through them with the user.
 
 ---
 
@@ -227,7 +229,7 @@ Before generating Context Summary, verify coverage:
 
 Using the template at `templates/context-summary.md`, generate a Context Summary with all extracted information.
 
-**File naming:** `requirements/[feature-name]/Context-Summary-[Feature-Name].md`
+**File naming:** `[output-folder]/Context-Summary-[Feature-Name].md`
 
 **Improvement over original:** Save this file immediately. Don't just display it in chat. The next workflow reads it from the file.
 
@@ -245,7 +247,7 @@ Present the synthesis to the user:
 **Feature:** [name]
 **Mode:** [Quick / Comprehensive]
 **Inputs processed:** [list]
-**File saved:** requirements/[feature-name]/Context-Summary-[Feature-Name].md
+**File saved:** [output-folder]/Context-Summary-[Feature-Name].md
 
 ---
 
@@ -279,7 +281,7 @@ Ready to proceed to document generation?
 3. Confirm:
 ```
 ✅ Context Summary finalized.
-📄 Saved: requirements/[feature-name]/Context-Summary-[Feature-Name].md
+📄 Saved: [output-folder]/Context-Summary-[Feature-Name].md
 
 Starting Workflow 2: Document Generation...
 ```
@@ -298,6 +300,6 @@ workflows/02-generate.md
 | Track source for every piece of info | Fabricate data, business rules, or field names |
 | Flag TBDs with stakeholder routing | Skip Step 0.5 when Swagger + modify keywords detected |
 | Save Context Summary to file | Just display in chat without saving |
-| Ask max 2-3 questions at once | Ask all questions upfront in a long list |
-| Stop if 5+ RED gaps unresolved | Proceed with major unknown blockers |
+| Quick: Ask max 2 questions. Comprehensive: ask all RED gaps, grouped. | Ask all questions upfront in a long ungrouped list |
+| Quick: Stop if 5+ RED gaps unresolved. Comprehensive: work through all RED gaps with user. | Proceed with major unknown blockers |
 | Wait for user approval before proceeding | Auto-proceed to Workflow 2 |

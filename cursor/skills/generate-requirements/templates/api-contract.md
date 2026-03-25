@@ -243,9 +243,9 @@ curl -X [METHOD] "https://api.example.com/api/[path]" \
 
 | Document | Location |
 |----------|----------|
-| Feature Requirements | requirements/[feature]/Feature-Requirements-[feature].md |
-| System Flow | requirements/[feature]/System-Flow-[feature].md |
+| Feature Requirements | [path to finalized Feature Requirements document] |
 | Swagger/OpenAPI | [path] |
+| [Other related docs] | [path or URL] |
 
 ---
 

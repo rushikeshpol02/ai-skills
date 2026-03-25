@@ -251,13 +251,20 @@
 
 ## 12. Assumptions & Dependencies
 
-**Assumptions:**
-- [Assumption 1]
+**Assumptions (sorted by risk tier, highest first):**
 
-**Dependencies:**
+| # | Assumption | Status | Source |
+|---|------------|--------|--------|
+| H1 | [High-risk assumption] | [Status] | [SRC-N] |
+| M1 | [Medium-risk assumption] | [Status] | [SRC-N] |
+| L1 | [Low-risk assumption] | [Status] | [SRC-N] |
+
+**Dependencies (sorted by risk, highest first):**
 | Dependency | Owner | Status | Risk |
 |------------|-------|--------|------|
-| [Item] | [Team] | [Status] | HIGH/MED/LOW |
+| [Item] | [Team] | [Status] | 🔴 Critical |
+| [Item] | [Team] | [Status] | 🟡 Medium |
+| [Item] | [Team] | [Status] | 🟢 Low |
 
 ---
 
@@ -265,18 +272,20 @@
 
 | Document | Location | Status |
 |----------|----------|--------|
-| API Contract | requirements/[feature]/API-Contract-[feature].md | [status] |
-| System Flow | requirements/[feature]/System-Flow-[feature].md | [status] |
 | Design Files | [Figma URL] | [status] |
-| Swagger/OpenAPI | [path] | [status] |
+| [Other related docs] | [path or URL] | [status] |
 
 ---
 
 ## 14. Open Questions / TBD Items
 
+*Sorted by priority, highest first.*
+
 | # | Question | Priority | Stakeholder | Target Date |
 |---|----------|----------|-------------|-------------|
-| 1 | [TBD item] | 🔴/🟡/🟢 | [PM/Architect/Designer/Legal] | [date] |
+| 1 | [TBD item] | 🔴 Critical | [PM/Architect/Designer/Legal] | [date] |
+| 2 | [TBD item] | 🟡 Important | [PM/Architect/Designer/Legal] | [date] |
+| 3 | [TBD item] | 🟢 Nice to have | [PM/Architect/Designer/Legal] | [date] |
 
 ---
 

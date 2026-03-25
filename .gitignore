@@ -12,3 +12,5 @@ cursor/skills/rest-api-contract-generator/
 cursor/skills/jtbd-generator/
 cursor/skills/generate-pm-jd/
 cursor/skills/github-issue-classifier/
+cursor/skills/generate-uat/
+cursor/skills/project-context/

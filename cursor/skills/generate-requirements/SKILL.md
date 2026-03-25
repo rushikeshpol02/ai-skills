@@ -1,6 +1,6 @@
 ---
 name: generate-requirements
-description: "Generates complete Agile requirements documentation from any combination of inputs — PRDs, design files/Figma URLs, Swagger/OpenAPI specs, meeting transcripts, or verbal descriptions. Produces Feature Requirements, API Contract (if APIs involved), and System Flow (if integrations involved). Runs in Quick mode for MVPs/small features (1 doc, ~20 min) or Comprehensive mode for production/API work (2-3 docs, ~45 min). Use when asked to: generate requirements, write a feature spec, create a PRD, document a feature, analyze designs for requirements, or produce an API contract from a PRD."
+description: "Generates Feature Requirements documentation from any combination of inputs -- PRDs, design files/Figma URLs, meeting transcripts, or verbal descriptions. Focuses exclusively on requirements; API contracts and system flows are generated separately after requirements are finalized. Runs in Quick mode (3 contexts, ~15 min) for MVPs/small features or Comprehensive mode (6 contexts, ~30 min) for production/complex features. Use when asked to: generate requirements, write a feature spec, create a PRD, or document a feature."
 ---
 
 # Generate Requirements — Entry Orchestrator
@@ -11,13 +11,31 @@ This skill generates production-ready Agile requirements documentation from mess
 It orchestrates three sequential workflows, each saved as a file, so context survives across long sessions.
 
 **What you'll get:**
-- `Context-Summary-[Feature].md` — internal analysis artifact (saved to workspace)
-- `Feature-Requirements-[Feature].md` — always generated
-- `API-Contract-[Feature].md` — if APIs are in scope (Comprehensive mode)
-- `System-Flow-[Feature].md` — if integrations are in scope (Comprehensive mode)
-- `Validation-Report-[Feature].md` — quality gate report
+- `[output-folder]/Context-Summary-[Feature].md` — internal analysis artifact
+- `[output-folder]/Generated/Internal/Feature-Requirements-[Feature].md` — always generated
+- `[output-folder]/Generated/Report/Validation-Report-[Feature].md` — quality gate report
+
+`[output-folder]` is provided by the user during intake (Step 2). There is no default — always ask.
+
+> **Note:** This skill focuses on Feature Requirements only. API Contracts and System Flows are generated separately after requirements are finalized, using `/rest-api-contract-generator` and a dedicated system flow skill respectively.
 
 **Core principle: Truth over completeness.** Mark unknowns as [TBD]. Never fabricate data.
+
+---
+
+## 🔗 When Called from `/requirements-pipeline` (Stage 7)
+
+When this skill is invoked from the `/requirements-pipeline`, **skip Steps 1-3 entirely** (workspace scan, project context loading, intake questions, pre-flight checks). The pipeline has already completed all of this.
+
+The pipeline provides:
+- **Feature name** -- from Stage 1
+- **Mode** -- always Comprehensive
+- **All inputs** -- processed and verified in Stages 1-6 (including scenario matrix, assumptions, user flows)
+- **Output folder** -- asked by the pipeline at Stage 7 if not already known
+- **Project context** -- loaded by the pipeline at Stage 1.1 if `project-context.md` exists
+- **Current state** -- from pipeline Stage 1.5
+
+Go directly to **Step 4** (Start Synthesis Workflow) with all values pre-loaded, then read `workflows/01-synthesize.md`.
 
 ---
 
@@ -51,7 +69,7 @@ ls [workspace]/requirements/   # check for existing project context and prior se
 
 Look for:
 - `project-context.md` — **project-level context file** (pre-populates most questions if present)
-- `requirements/*/Context-Summary-*.md` — prior session summaries (useful for resume)
+- `**/Context-Summary-*.md` — prior session summaries (useful for resume)
 - `*.md`, `*.pdf`, `*.docx` — likely PRDs or specs
 - `*.yaml`, `*.json`, `*.yml` — likely Swagger/OpenAPI specs
 - `*.png`, `*.jpg`, `*.figma` — likely design files
@@ -130,9 +148,13 @@ I have your project context. For this feature, I need:
    - B) Modifying an existing feature
 
 4. **Scope?**
-   - A) Quick Mode — MVP/small change (1 doc)
-   - B) Comprehensive Mode — production/API changes (2-3 docs)
+   - A) Quick Mode — lightweight analysis, 3 contexts (Business, Product, UX). Best for MVPs, small changes, internal tools.
+   - B) Comprehensive Mode — full analysis, 6 contexts (adds Persona, Technical, Compliance). Best for production features, complex integrations, compliance-sensitive work.
    - C) Suggest based on inputs
+
+5. **Output folder** — Where should generated documents be saved?
+   Provide the path to the folder (e.g., `Product Artifacts/Feature Requirements/MyFeature`).
+   The skill will create `Generated/Internal/` and `Generated/Report/` subdirectories inside it.
 ```
 
 **IF project-context.md was NOT loaded**, ask the full set:
@@ -154,16 +176,20 @@ To generate requirements, I need a few details:
    - B) Modifying an existing feature
 
 4. **Scope?**
-   - A) Quick Mode — MVP/prototype/internal tool (1 doc, ~20 min)
-   - B) Comprehensive Mode — production/API changes/integrations (2-3 docs, ~45 min)
+   - A) Quick Mode — lightweight analysis, 3 contexts (Business, Product, UX). Best for MVPs, small changes, internal tools. (~15 min)
+   - B) Comprehensive Mode — full analysis, 6 contexts (adds Persona, Technical, Compliance). Best for production features, complex integrations, compliance-sensitive work. (~30 min)
    - C) Not sure — I'll suggest based on your inputs
+
+5. **Output folder** — Where should generated documents be saved?
+   Provide the path to the folder (e.g., `Product Artifacts/Feature Requirements/MyFeature`).
+   The skill will create `Generated/Internal/` and `Generated/Report/` subdirectories inside it.
 ```
 
 **Mode inference (if user selects C):**
-- Swagger provided + "modify/enhance/update" → Comprehensive
-- API endpoints mentioned → Comprehensive
-- Simple UI-only feature, no APIs → Quick
-- Production deadline / external integration → Comprehensive
+- Multiple actors, complex interactions, compliance concerns → Comprehensive
+- External system integrations or dependencies → Comprehensive
+- Simple UI-only feature, single actor, low risk → Quick
+- Production deadline / enterprise context → Comprehensive
 - State recommendation: "Based on your inputs, I recommend [Mode] because [reason]. Confirm?"
 
 ---
@@ -177,16 +203,24 @@ Before starting synthesis, confirm:
 | Feature name captured | User input | Required — ask |
 | At least 1 input source | User input or workspace scan | Required — verbal description qualifies |
 | Mode determined | Inferred or confirmed | Required — infer or ask |
+| Output folder confirmed | User input | Required — ask. No default; user must provide the path. |
 | Project context loaded? | project-context.md | If found: pre-populated. If not: proceed without it |
 | Design files provided? | Workspace or user | Note: "I'll analyze designs in Workflow 1" |
 | Transcript provided? | Workspace or user | Note: "I'll extract decisions from transcript in Workflow 1" |
-| Swagger + "modify" keywords? | User input | Note: "Step 0.5 (verify existing) will run in Workflow 1" |
 
-**Output folder:**
+**Output folder structure:**
+
+The user provides `[output-folder]` during intake. The skill creates subdirectories inside it:
 ```
-requirements/[Feature-Name]/
+[output-folder]/
+├── Context-Summary-[Feature].md          ← analysis artifact
+├── Generated/
+│   ├── Internal/
+│   │   └── Feature-Requirements-[Feature].md   ← requirements document
+│   └── Report/
+│       └── Validation-Report-[Feature].md      ← quality gate
 ```
-All generated files go here. The project-context.md stays in the workspace root (not inside the feature folder).
+Create the `Generated/Internal/` and `Generated/Report/` subdirectories when saving files. The project-context.md stays in the workspace root (not inside the feature folder).
 
 ---
 
@@ -201,7 +235,9 @@ Feature: [name]
 Mode: [Quick / Comprehensive]
 Inputs: [list]
 Project context: ✅ Loaded ([N] contexts pre-populated) / ❌ Not found (starting fresh)
-Output folder: requirements/[feature-name]/
+Output folder: [output-folder]/
+  Internal docs → [output-folder]/Generated/Internal/
+  Reports       → [output-folder]/Generated/Report/
 
 Starting Workflow 1: Context Synthesis...
 ```
@@ -210,6 +246,7 @@ Pass the following to Workflow 1:
 - Feature name
 - Mode (Quick / Comprehensive)
 - Input sources list
+- Output folder path (user-provided)
 - Project context (if loaded) — mark which contexts are pre-populated vs need feature-specific input
 - Whether "verify existing" (Step 0.5) should run
 
@@ -241,7 +278,8 @@ These existing skills can assist with specific inputs before running this workfl
 |-----------|-----------------|
 | User has a meeting recording or .vtt transcript | `transcript-to-meeting-notes` — process first, use output as PRD input |
 | User has Figma URL or design screenshots | Design analysis is built into this skill's Workflow 1 |
-| User only needs a standalone API contract | `rest-api-contract-generator` — use directly instead of this skill |
+| Requirements are finalized and need API contracts | `rest-api-contract-generator` — run after requirements are stable |
+| Requirements are finalized and need system flow docs | Future: `system-flow-generator` — run after requirements are stable |
 
 ---
 
@@ -249,31 +287,17 @@ These existing skills can assist with specific inputs before running this workfl
 
 ## 🔄 After All Workflows Complete: Update Project Context
 
-When Workflow 3 (Validation) finishes, check if `project-context.md` needs updating:
+When Workflow 3 (Validation) finishes, offer to create or update the project context:
 
-**IF project-context.md existed and new information was discovered:**
 ```
-💡 I learned some new things during this session that aren't in your project-context.md:
-- [New integration found: System X]
-- [New persona identified: Role Y]
-- [Existing API convention clarified: error shape updated]
+To capture what was learned in this session (new personas, systems,
+constraints, terminology), run /project-context to create or update
+your project-context.md.
 
-Want me to update project-context.md with these? (yes / no / review first)
+This is optional but recommended -- it saves time on future sessions.
 ```
 
-**IF project-context.md did NOT exist:**
-```
-💡 Want me to create a project-context.md from what I learned in this session?
-   It will save time on future features by pre-loading your stack, personas,
-   API conventions, and integrations automatically.
-
-   I'll create it from: tech stack, API conventions, personas, system components,
-   compliance baseline, and browser/device support found during synthesis.
-
-   (yes / no)
-```
-
-If user says yes: generate `project-context.md` in the workspace root using `templates/project-context.md` as structure, populated with everything learned this session.
+The `/project-context` skill handles both first-time creation and incremental updates with source confirmation and conflict detection. Do NOT attempt to create or update `project-context.md` inline.
 
 ---
 

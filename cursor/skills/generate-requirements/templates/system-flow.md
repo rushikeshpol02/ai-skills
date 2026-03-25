@@ -269,8 +269,8 @@
 
 | Document | Location |
 |----------|----------|
-| Feature Requirements | requirements/[feature]/Feature-Requirements-[feature].md |
-| API Contract | requirements/[feature]/API-Contract-[feature].md |
+| Feature Requirements | [path to finalized Feature Requirements document] |
+| API Contract | [path to API Contract, if generated] |
 | Architecture Diagram | [link] |
 
 ---
