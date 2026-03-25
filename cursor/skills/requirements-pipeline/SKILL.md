@@ -38,7 +38,7 @@ Stage 6: User Flows — Step-by-step for each actor
          Includes Requirement Purity Filter (Step 6.5)
      ↓
 Stage 7: Requirements Document (calls generate-requirements skill)
-         Includes Source Verification Pass
+         Reads stage artifacts 2-6 only (not original sources)
      ↓
 Stage 8: Risk Analysis
      ↓
@@ -51,116 +51,77 @@ Stage 9b: Document Audit (calls document-audit skill)
 
 ---
 
-## Stage 1: Intake & Classification
+## Output Folder & Artifact Registry
 
-### 1.1 Scan for inputs and load project context
+### Output folder (ask in Stage 1)
 
-Before asking the user anything, scan the workspace for available files using Glob and Read tools.
+At the start of Stage 1, before processing any inputs, ask the user:
 
-**Check for `project-context.md` in the workspace root.**
+> "Where should I save the pipeline output? Please provide a folder path (e.g., `/path/to/project/output`). I'll create subfolders for stage artifacts and final deliverables."
 
-**IF found:** Read it completely and extract:
-- Tech stack (frontend, backend, DB, mobile)
-- API conventions (auth, naming, error shape)
-- Defined personas (names, roles, pain points)
-- System components and integrations
-- Known limitations and constraints
-- Compliance baseline
-- Glossary / terminology
+**If the user provides a path:** Use it as `[output]` for the rest of the pipeline.
+**If the user says "here" or points to the workspace root:** Use the workspace root as `[output]`.
+**If called from another skill that already set an output path:** Use that path without re-asking.
 
-Announce what was loaded:
+### Folder structure
+
 ```
-Project context loaded from project-context.md:
-- Stack: [stack summary]
-- Personas: [list]
-- Systems: [list]
-- Constraints: [count] known
-
-This context will be applied throughout all pipeline stages.
+[output]/
+├── stage_output/                          ← Pipeline working artifacts
+│   ├── Stage1-Intake.md
+│   ├── Stage2-Interpretation.md
+│   ├── Stage3-Variables-Actors.md
+│   ├── Stage4-Scenarios-Matrix.md
+│   ├── Stage5-Assumptions.md
+│   ├── Stage6-User-Flows.md
+│   ├── Stage8-Risk-Analysis.md
+│   ├── Stage9a-Accuracy-Review.md
+│   └── Stage9b-Document-Audit.md
+├── source_summaries/                      ← Processed inputs from Stage 1
+│   ├── [Meeting]_Summary_[date].md
+│   ├── Context-Summary-[Design].md
+│   └── ...
+├── [Feature]-Requirements.md              ← Final requirements (internal)
+└── [Feature]-Requirements-Client.md       ← Client-ready version (if requested)
 ```
 
-This pre-loaded context informs:
-- Stage 2 (Interpretation) -- known actors and systems don't need re-discovery
-- Stage 3 (Variables/Constraints) -- pre-populated with known constraints
-- Stage 4 (Scenarios) -- system-level edge cases already known
-- Stage 6 (User Flows) -- personas and system interactions pre-loaded
-- Stage 7 (Requirements) -- passed directly to `generate-requirements`
+Create the `stage_output/` and `source_summaries/` subfolders at the start of Stage 1 (use `mkdir -p`).
 
-**IF not found:** Proceed without it. The pipeline will discover context from inputs. At the end of the pipeline (after Stage 9b), offer to create `project-context.md` from everything learned during this session.
+### Stage Artifact Registry
 
-### 1.2 Classify each input
+Every stage MUST save its output to a markdown file before proceeding to the next stage. This is not optional. **Never present stage output only in chat.** Chat output is ephemeral and lost when context fills up; files persist across the entire pipeline.
 
-| Input Type | How to Identify | Route To |
+| Stage | Save To | What It Contains |
 |---|---|---|
-| Meeting transcript (.vtt, .md, .txt, .docx) | Filename contains "transcript", "meeting", "notes"; content has speaker names + timestamps | `transcript-to-meeting-notes` skill |
-| Design file / Figma / FigJam URL | Image files, `figma.com` URLs | `design-to-context` skill |
-| High-level requirements, ideas, hypotheses | User describes in chat or provides rough notes; no formal structure | Capture directly — processed in Stage 3 |
-| Legal docs, policy docs, reference material | Formal language, regulatory content, compliance references | Read and extract key rules, constraints, thresholds |
-| Existing requirements doc (for iterative update) | Structured doc with sections like Scope, Assumptions, Dependencies | Read as baseline — delta updates only |
-| Swagger / OpenAPI spec | `.yaml`, `.json` with endpoint definitions | Read and extract integration points, data models, constraints. API contracts are generated separately after requirements are finalized using `rest-api-contract-generator`. |
+| 1 | `[output]/stage_output/Stage1-Intake.md` | Source registry, input classification, processing verification, current state summary |
+| 2 | `[output]/stage_output/Stage2-Interpretation.md` | STATED facts, INFERRED items, actors, constraints, decisions, open items |
+| 3 | `[output]/stage_output/Stage3-Variables-Actors.md` | Variables table, constraints table, actor interaction map |
+| 4 | `[output]/stage_output/Stage4-Scenarios-Matrix.md` | Full scenario matrix with edge cases and boundary conditions |
+| 5 | `[output]/stage_output/Stage5-Assumptions.md` | All assumptions grouped by priority and risk area |
+| 6 | `[output]/stage_output/Stage6-User-Flows.md` | User flows with purity filter classification |
+| 7 | `[output]/[Feature]-Requirements.md` | Feature requirements document *(produced by `generate-requirements` skill)* |
+| 8 | `[output]/stage_output/Stage8-Risk-Analysis.md` | Tigers / Paper Tigers / Elephants analysis |
+| 9a | `[output]/stage_output/Stage9a-Accuracy-Review.md` | Accuracy review report *(produced by `validate-requirements` skill)* |
+| 9b | `[output]/stage_output/Stage9b-Document-Audit.md` | Document audit report *(produced by `document-audit` skill)* |
 
-### 1.3 Assign source IDs and report
-
-Every input gets a short **source ID** used throughout the pipeline for traceability.
-
-```
-Inputs identified:
-- [SRC-1] [filename] → [classification] → [will be processed by: skill name or "directly"]
-- [SRC-2] [filename] → [classification] → [will be processed by: ...]
-- [SRC-3] User-provided context → [rough ideas / hypotheses / requirements]
-
-Processing order: [list in priority order]
-```
-
-**Source ID format:** `SRC-N` for files and user input. Within processed outputs, use finer-grained tags: `SRC-1, Decision 3` or `SRC-2, Screen 4`. For facts surfaced during analysis (not in any input), use `Implicit`.
-
-### 1.4 Process routed inputs
-
-Run complementary skills on their respective inputs:
-- Transcripts → `transcript-to-meeting-notes` → produces structured meeting summary
-- Designs (Figma URLs, FigJam URLs, screenshots, images) → `design-to-context` → produces a Context Summary, Design Description, or User Flow Document
-- All other inputs → read and extract key information directly
-
-**Save all processed outputs to workspace before proceeding.**
-
-### 1.4.1 Processing Verification Gate (MANDATORY)
-
-Before moving to Step 1.5, verify that every input classified for skill processing in Step 1.2 has a corresponding saved output file. Present a checklist:
-
-```
-Processing verification:
-- [SRC-1] transcript.vtt → ✅ Produced: Meeting-Summary-[name].md
-- [SRC-2] figma.com/board/... → ✅ Produced: Context-Summary-[name].md
-- [SRC-3] screenshot.png → ❌ NOT PROCESSED — design-to-context was not run
-```
+**Processed inputs** from Stage 1 (meeting summaries, design context docs) save to `[output]/source_summaries/`.
 
 **Rules:**
-- Every input routed to a skill MUST have a saved output file. A URL or filename alone is not a processed output.
-- If any input shows ❌, run the skill on it immediately before proceeding. Do NOT treat unprocessed inputs as valid sources -- a URL without a processed output means the content was never actually read or analyzed.
-- If a skill cannot process an input (e.g., Figma MCP is unavailable, image is unreadable), flag it explicitly: `[SRC-N] ⚠️ COULD NOT PROCESS — [reason]. Content is unavailable for analysis. Any citations to SRC-N will be unverifiable.` Present this to the user and ask how to proceed (provide alternative input, skip, or proceed with gap).
-- Do NOT proceed to Step 1.5 until all routed inputs are either ✅ processed or ⚠️ explicitly flagged with user acknowledgment.
+- Save the file FIRST, then present a brief summary in chat (max 10-15 lines) with the file path.
+- At checkpoint stages (2, 5, 9), tell the user to review the file and confirm. Do NOT dump the full content into chat.
+- If a stage needs user confirmation, the file is the artifact they review — not a chat message.
+- Each file should end with a `## Next Stage` pointer (e.g., "→ Stage 3: Brainstorm").
 
-**Why this matters:** Without this gate, URLs and filenames get assigned source IDs and cited throughout the pipeline as if their content was analyzed, when in reality the content was never fetched or read. This leads to unverifiable citations, fabricated interpretations of what the source "says," and findings like "SRC-N is unverifiable" surfacing much later in validation (Stage 9a) -- wasting significant rework effort.
+---
 
-### 1.5 Current State Discovery (MANDATORY)
+## Stage 1: Intake & Classification
 
-Before proceeding to Stage 2, determine whether this feature is new or enhances something that already exists.
+Read the file:
 
-**Ask the user:**
-- "Is this a new feature (greenfield) or an enhancement to something that already exists?"
-- If enhancement: "What exists today? Describe or provide: existing screens, current capabilities, known limitations. Figma links, screenshots, or verbal description all work."
+    stages/01-intake.md
 
-**If the user provides current-state inputs:**
-- Process Figma links or screenshots through `design-to-context` to produce a current-state design description
-- Assign a source ID (e.g., `SRC-CS-1`) and save the output
-- This becomes the baseline for identifying what is EXISTING vs NEW in the requirements
-
-**If no current-state information is available:**
-- Flag it explicitly: `[CURRENT STATE UNKNOWN — do not assume what exists today]`
-- Carry this flag into Stage 2 so the interpretation checkpoint surfaces it
-- Do NOT invent or assume current capabilities, pain points about current tools, or "before" scenarios
-
-**Why this matters:** Without confirmed current state, the pipeline will fabricate a plausible "before" scenario (e.g., assuming users have no existing tool when they do). This leads to incorrect pain points, wrong framing (new feature vs. enhancement), and requirements that ignore existing capabilities.
+Follow that file's instructions completely from start to finish.
+When Stage 1 is complete, return here and proceed to Stage 2.
 
 ---
 
@@ -214,6 +175,14 @@ Every fact, constraint, and decision must carry its source ID.
 - Rejected inferences are removed.
 - Unresolved inferences become `[TBD]` — they must NOT be written as confident fact in later stages.
 
+### Save Stage 2 artifact
+
+**Save to:** `[output]/stage_output/Stage2-Interpretation.md`
+
+Include: all sections above (Problem/Feature, Current State, STATED facts, INFERRED items, Actors, Constraints, Open items, Decisions). End with an `## ACTION REQUIRED` section listing what the user needs to confirm/reject.
+
+**In chat, present only:** A brief summary (file path, count of STATED facts, count of INFERRED items needing review, count of open items) and ask the user to review the file.
+
 **STOP and WAIT for user confirmation.** Do not proceed to Stage 3 until the user confirms or corrects.
 
 ---
@@ -248,6 +217,12 @@ Show the complete variables list and ask:
 - Are any variables missing?
 - Are the values/ranges correct?
 - Are there any constraints I haven't captured?
+
+### Save Stage 3 artifact
+
+**Save to:** `[output]/stage_output/Stage3-Variables-Actors.md`
+
+Include: variables table, constraints table, actor interaction map. End with `## Next Stage → Stage 4: Scenario Matrix`.
 
 **Wait for user confirmation before proceeding.**
 
@@ -285,7 +260,7 @@ Show the full scenario matrix and edge case list. Ask:
 - Any edge cases you've seen in practice?
 - Which scenarios are highest priority?
 
-**Save the scenario matrix as a workspace file:** `[Feature]-Scenarios-Matrix.md`
+**Save to:** `[output]/stage_output/Stage4-Scenarios-Matrix.md`
 
 ---
 
@@ -302,6 +277,12 @@ Show the full scenario matrix and edge case list. Ask:
 **Table formatting rule (applies to all tables in all pipeline artifacts):**
 - Every priority/risk/severity indicator must include a label, never a bare dot: `🔴 Critical` not `🔴`, `🟡 Important` not `🟡`, `🟢 Low` not `🟢`
 - Tables must be sorted by highest priority/risk/severity first. Resolved items sink to the bottom.
+
+### Save Stage 5 artifact
+
+**Save to:** `[output]/stage_output/Stage5-Assumptions.md`
+
+Include: all assumptions grouped by priority (HIGH/MEDIUM/LOW) then by risk area, with STATUS, VALIDATE WITH, BY WHEN, RISK IF WRONG, and any enrichment from the `identify-assumptions` skill. End with `## ACTION REQUIRED` section.
 
 **Wait for user to confirm, correct, or add assumptions before proceeding.**
 
@@ -336,7 +317,7 @@ If multiple flows exist, explain why they are ordered this way. Consider:
 
 Show each flow and ask for feedback before proceeding to full requirements generation.
 
-**Save user flows as a workspace file:** `[Feature]-User-Flows.md`
+**Save to:** `[output]/stage_output/Stage6-User-Flows.md`
 
 ### 6.5 Requirement Purity Filter
 
@@ -362,23 +343,22 @@ After drafting user flows but before finalizing them, run a classification pass 
 **Pipeline provides these values (do not re-ask the user):**
 - **Feature name:** determined in Stage 1
 - **Mode:** always **Comprehensive** (6 contexts) -- the pipeline is the thorough path
-- **Inputs:** all processed inputs from Stage 1, scenario matrix from Stage 4, assumptions from Stage 5, user flows from Stage 6 (after purity filter)
-- **Output folder:** ask the user for the output folder path at this point, if not already provided. This is the only question asked at Stage 7.
+- **Inputs (stage artifacts only, read in order):**
+  - Stage 2: Interpretation Checkpoint (confirmed facts, rejected inferences, decisions, actors, constraints, open items)
+  - Stage 3: Variables, Constraints, Actors (variables table, constraints table, actor interaction map)
+  - Stage 4: Scenario Matrix (all scenarios with edge cases and boundary conditions)
+  - Stage 5: Assumptions (validated assumptions with risk areas)
+  - Stage 6: User Flows (flows after purity filter)
+- **Output folder:** use `[output]` path established in Stage 1. Do NOT re-ask.
 - **Project context:** loaded from Stage 1.1 (if `project-context.md` existed)
 - **Current state:** from Stage 1.5 (if available)
 - **New or existing:** determined in Stage 1.5
 
 The skill then runs its 3-workflow pipeline (synthesize → generate → validate) with all context pre-loaded.
 
-**Important:** Pass the scenario matrix and assumptions as explicit inputs -- they contain information that may not be in the original source documents.
+**Why stage artifacts only (not original source documents):** Stage artifacts are curated, user-confirmed, and corrected versions of the raw inputs. They contain rejected inferences (guardrails against re-introducing errors), confirmed decisions, and structured analysis that the originals lack. Re-reading original sources at this stage risks picking up information that was already discussed and rejected during Stages 2-6. Source-level verification against originals is handled separately by Stage 9a (validate-requirements, Checks 1, 2, and 4).
 
-**Source traceability:** Instruct the skill to tag every requirement, decision, assumption, and key fact in the output document with its source. Use the source IDs assigned in Stage 1 (e.g., `(Source: SRC-1, Decision 3)`). Requirements that synthesize multiple inputs should list all sources.
-
-**Source verification pass (MANDATORY after generation):** After the requirements document is generated, perform a source verification pass:
-- For each `(Source: SRC-N)` citation, go back to the actual source and verify it contains the claimed information.
-- Check for **over-generalization** — if a source says "X in context A", the requirement must not say "X in all contexts" without additional sourcing.
-- Check for **misattribution** — if a source is cited but does not actually contain the claimed fact, flag it as `[SOURCE UNVERIFIED — SRC-N does not contain this claim]`.
-- Any requirement tagged `(Source: Implicit)` should be reviewed: is it truly a logical derivation, or is it a gap-fill that should be `[TBD]`?
+**Source traceability:** Instruct the skill to carry forward the source IDs from stage artifacts (e.g., `(Source: SRC-1, Decision 3)`). These IDs were assigned in Stage 1 and flow through all stage artifacts. Requirements that synthesize multiple stage inputs should list all sources.
 
 **Requirement purity enforcement:** Instruct the skill to apply these language rules:
 - Requirements describe WHAT (capability), never HOW (implementation) or WHAT IT LOOKS LIKE (UI pattern).
@@ -400,6 +380,12 @@ Produce a Tigers / Paper Tigers / Elephants analysis:
 - **Elephants** — Obvious problems everyone sees but no one has addressed
 
 **Merge relevant risks back into the requirements document's Risks section.**
+
+### Save Stage 8 artifact
+
+**Save to:** `[output]/stage_output/Stage8-Risk-Analysis.md`
+
+Include: Tigers / Paper Tigers / Elephants analysis, and a summary of which risks were merged back into the requirements document.
 
 ---
 
@@ -459,15 +445,16 @@ The `/project-context` skill handles both first-time creation and incremental up
 
 1. **Never skip the interpretation checkpoint (Stage 2).** Misunderstanding inputs wastes more time than confirming understanding.
 2. **Never skip the quality gates (Stage 9a + 9b).** Stage 9a catches semantic inaccuracies; Stage 9b catches structural issues. Both are required.
-3. **Save artifacts at every stage.** Long sessions lose context. Files persist.
+3. **Save artifacts at every stage — see Stage Artifact Registry.** Long sessions lose context. Files persist. Never present stage output only in chat. Save the file first, then summarize briefly in chat with the file path.
 4. **Mark unknowns honestly.** `[TBD]` is always better than invented data.
 5. **Domain-agnostic.** Never assume a specific tech stack, industry, or platform unless the user's inputs specify one.
 6. **One stage at a time.** Complete each stage fully before starting the next. Wait for user confirmation at checkpoints.
-7. **Consolidate inputs upfront.** Process all available inputs in Stage 1 before doing any analysis. Do not process inputs one at a time across multiple rounds.
+7. **Consolidate inputs upfront.** Process all user-confirmed inputs (from the three-tier scoping gate) in Stage 1 before doing any analysis. Do not process inputs one at a time across multiple rounds.
 8. **Source traceability everywhere.** Every requirement, assumption, decision, and constraint in the final document must carry a source tag (`Source: SRC-N, section/decision` or `Source: Implicit`). If you can't trace a statement to an input, tag it as Implicit — this flags it for extra validation.
 9. **Never invent the current state.** If existing product capabilities are unknown, tag them as `[CURRENT STATE UNKNOWN]` — do not fabricate a plausible "before" scenario. Always ask about existing product in Step 1.5.
 10. **Requirements describe WHAT, never HOW or WHAT IT LOOKS LIKE.** If you catch yourself writing an implementation mechanism (solution) or a UI layout/navigation pattern (design decision), reframe it as the underlying need or flag it as a design decision / open question.
 11. **Inferred content must be flagged.** `[INFERRED]` is better than confident-sounding fabrication. When filling a gap, tag it explicitly so the user can verify or reject it. Never present an inference as a stated fact.
-12. **Source citations must be accurate.** When citing `(Source: SRC-N)`, verify the source actually contains the claimed information. Do not cite a source for content it does not contain. Run the source verification pass in Stage 7.
+12. **Source citations must be accurate.** When citing `(Source: SRC-N)`, carry forward the source ID from stage artifacts faithfully. Source-level verification against original documents is performed in Stage 9a (validate-requirements, Checks 1, 2, and 4).
 13. **Scoped statements stay scoped.** If a source says "X in context A", do not generalize to "X everywhere" without additional sourcing or explicit `[INFERRED — generalized from SRC-N context A]` tagging.
 14. **Table indicators must be labeled and sorted.** Never use a bare dot (`🔴`) without a label (`🔴 Critical`). All tables with priority, risk, or severity columns must be sorted highest first. Resolved items sink to the bottom.
+15. **Scope inputs to user-provided context.** Never scan the full workspace by default. Use the three-tier scoping gate in Stage 1.1: (1) user-provided files are always included, (2) same-folder discovery with user selection, (3) workspace-wide keyword search only on explicit request. Files not selected by the user are never read.

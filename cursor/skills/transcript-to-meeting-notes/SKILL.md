@@ -5,6 +5,51 @@ description: "Converts meeting transcripts (.vtt, .docx, .md, .txt) into structu
 
 # transcript-to-meetingNotes
 
+## Step 0: Assess size and decide whether to delegate
+
+Before reading the transcript, determine whether to process it in the current context or delegate to a subagent. Reading a long transcript consumes context that cannot be reclaimed — and for multi-stage workflows (like the requirements pipeline), that context is needed for later stages.
+
+### When to delegate to a subagent
+
+| Condition | Action |
+|-----------|--------|
+| **Called from another skill or pipeline** (e.g., `requirements-pipeline`, `generate-requirements`) | **ALWAYS delegate.** The caller's context is precious — it has 9+ stages ahead. Even a short transcript consumes significant context. |
+| **Called standalone AND transcript > 500 lines** | **Delegate.** A 1-hour meeting is ~500-1000 lines. Anything longer will dominate the context window. |
+| **Called standalone AND transcript ≤ 500 lines** | **Process directly.** Short transcripts are fine in-context. Proceed to Step 1. |
+
+**How to check line count without reading the file:** Run `wc -l <filepath>` in the shell. This returns the line count without loading the content into context.
+
+### How to delegate
+
+Launch a `generalPurpose` Task subagent with a prompt that includes:
+
+**a) The transcript file path** and the **save path** for the output (following the naming convention in Step 5).
+
+**b) The full skill instructions** — copy Steps 1–5 below AND the template from [templates.md](templates.md) into the subagent prompt. The subagent does not have access to skill files.
+
+**c) Any caller-provided context** — e.g., "this is a discovery session about meal break attestation", "focus on decisions about the approval workflow", participant roles if known.
+
+**d) This return instruction** (include verbatim in the subagent prompt):
+
+```
+After saving the summary file, return ONLY the following (max 15 lines):
+- File path where the summary was saved
+- Session date and duration
+- Participant count and names
+- Meeting type (Discovery / Engineering)
+- Number of decisions captured
+- Number of topics documented
+- 3-5 headline findings (one line each, most important first)
+- Number of open questions by severity (🔴/🟡/🟢)
+- Number of assumptions needing validation
+```
+
+### What the main context receives
+
+Only the brief digest above — never the raw transcript. The main agent can then read the saved summary file if it needs specific details for later stages.
+
+---
+
 ## Step 1: Determine meeting type
 
 Read the transcript and identify which type applies. This determines **topic internal structure only** — the overall document structure is the same for both.
