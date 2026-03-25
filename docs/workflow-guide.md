@@ -82,7 +82,7 @@ flowchart TD
 | 4 | Scenario matrix — all combinations, edge cases, boundary conditions | `[Feature]-Scenarios-Matrix.md` |
 | 5 | Risky assumptions identified per perspective (PM / Designer / Engineer) | Assumptions register |
 | 6 | Step-by-step user flows per actor + purity filter (requirement vs solution vs design) | `[Feature]-User-Flows.md` |
-| 7 | Feature Requirements, API Contract (if applicable), System Flow (if applicable) | `Feature-Requirements-[Feature].md`, optionally `API-Contract-[Feature].md`, `System-Flow-[Feature].md` |
+| 7 | Feature Requirements document generated (API contracts and system flows are separate, post-requirements skills) | `Feature-Requirements-[Feature].md` (saved to user-provided output folder) |
 | 8 | Pre-mortem risk analysis — Tigers / Paper Tigers / Elephants | Risks section merged into requirements doc |
 | 9a | Semantic accuracy review — 10 checks across truth, purity, actionability, completeness | `Validation-Report-[Feature].md` |
 | 9b | Structural integrity sweep — stale markers, contradictions, broken cross-refs | Audit report, fixes applied |
@@ -95,24 +95,27 @@ flowchart LR
     B[Well-defined inputs:\nPRD, Swagger spec,\nconfirmed designs]
 
     GDR[requirements-pipeline\nFull 9-stage pipeline\nStages 2-6 are manual checkpoints]
-    GR[generate-requirements\n3-workflow sub-chain\nSynthesis → Generation → Validation]
+    GR[generate-requirements\n3-workflow sub-chain\nFeature Requirements only\nAPI contracts generated separately]
 
     A --> GDR
     B --> GR
-    GDR -->|"Stage 7 calls"| GR
+    GDR -->|"Stage 7 calls\n(skips intake)"| GR
 ```
 
 **Use `requirements-pipeline` when:**
 - Starting from rough ideas, brainstorming sessions, or meeting notes
 - Inputs are incomplete or contradictory and need clarification
 - You want scenario matrices and assumptions analysis before writing requirements
-- This is a complex feature that needs multi-perspective stress-testing
+- The feature is complex enough to warrant stage-by-stage confirmation
+- You have a `project-context.md` and want it automatically applied across all stages
 
 **Use `generate-requirements` directly when:**
 - You already have a clear PRD, Figma designs, and/or Swagger spec
 - Requirements are well-scoped and inputs are trustworthy
-- You need a quick turnaround (Quick Mode: ~20 min vs full pipeline: ~2 hrs)
+- You need a quick turnaround (Quick Mode: ~15 min vs full pipeline: ~2 hrs)
 - You're updating an existing requirements doc with incremental changes
+
+**After requirements are finalized**, generate API contracts and system flows separately using dedicated skills (`rest-api-contract-generator`).
 
 ---
 
@@ -191,7 +194,7 @@ flowchart TD
 | Situation | Start Here |
 |-----------|-----------|
 | "I have a meeting transcript and some rough ideas for a feature" | `requirements-pipeline` |
-| "I have a Figma link and a PRD, I need requirements" | `generate-requirements` |
+| "I have a Figma link and a PRD, I need requirements" | `generate-requirements` (Feature Requirements only; API contracts generated separately after) |
 | "I have a design with no other context" | `design-to-context` first, then `generate-requirements` |
 | "I have a transcript from a discovery call" | `transcript-to-meeting-notes` first, then feed output to `generate-requirements` |
 | "I need to validate an existing requirements doc" | `validate-requirements` → `review-findings` |

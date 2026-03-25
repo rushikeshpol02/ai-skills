@@ -41,9 +41,10 @@ Cursor's agent scans `~/.cursor/skills/` for `SKILL.md` files at startup. Each s
 ```yaml
 ---
 name: generate-requirements
-description: "Generates complete Agile requirements documentation from any combination
-  of inputs — PRDs, design files/Figma URLs, Swagger/OpenAPI specs, meeting transcripts,
-  or verbal descriptions..."
+description: "Generates Feature Requirements documentation from any combination of
+  inputs -- PRDs, design files/Figma URLs, meeting transcripts, or verbal descriptions.
+  Focuses exclusively on requirements; API contracts and system flows are generated
+  separately after requirements are finalized..."
 ---
 ```
 
@@ -115,16 +116,18 @@ Run requirements-pipeline. I'll describe the feature now: [description]
 
 ### generate-requirements
 
-Best for well-defined inputs:
+Best for well-defined inputs. Produces Feature Requirements only (API contracts are generated separately after requirements are finalized):
 
 ```
 Generate requirements for [Feature Name].
 Quick Mode — inputs: [PRD at path] + [Figma link]
+Save output to: [output folder path]
 ```
 
 ```
 Generate requirements in Comprehensive Mode.
-I have: PRD at [path], Swagger at [path], designs at [path].
+I have: PRD at [path], designs at [path].
+Output folder: [path]
 ```
 
 ```
@@ -276,15 +279,17 @@ Run requirements-pipeline.
 ```
 
 The agent will:
-1. Pre-process the transcript and design (Stages 1)
-2. Present its understanding for your confirmation (Stage 2 — STOP)
-3. Map variables, constraints, actors (Stage 3)
-4. Build a scenario matrix (Stage 4)
-5. Run assumption analysis and present for confirmation (Stage 5 — STOP)
-6. Draft user flows with purity filter (Stage 6)
-7. Generate requirements documents (Stage 7)
-8. Run risk analysis (Stage 8)
-9. Validate and audit the output (Stages 9a + 9b — STOP)
+1. Load `project-context.md` if present, then pre-process the transcript and design (Stage 1)
+2. Verify all inputs were processed (Stage 1.4.1 — processing verification gate)
+3. Present its understanding for your confirmation (Stage 2 — STOP)
+4. Map variables, constraints, actors (Stage 3)
+5. Build a scenario matrix with priorities (Stage 4)
+6. Run assumption analysis and present for confirmation (Stage 5 — STOP)
+7. Draft user flows with purity filter (Stage 6)
+8. Generate Feature Requirements document (Stage 7 — calls `generate-requirements`, skipping its intake)
+9. Run risk analysis (Stage 8)
+10. Validate and audit the output (Stages 9a + 9b — STOP)
+11. Offer to create or update `project-context.md` from what was learned
 
 ### Option B: Pre-process inputs first, then generate
 

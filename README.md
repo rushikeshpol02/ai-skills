@@ -60,7 +60,7 @@ After installation, restart Cursor. Skills are available immediately in any Curs
 | Skill | One-liner | Mode |
 |-------|-----------|------|
 | [requirements-pipeline](cursor/skills/requirements-pipeline/SKILL.md) | 9-stage discovery and analysis pipeline from messy inputs to production-ready docs | Pipeline Orchestrator |
-| [generate-requirements](cursor/skills/generate-requirements/SKILL.md) | Generate Feature Requirements, API Contract, and System Flow from well-defined inputs | Pipeline Stage / Standalone |
+| [generate-requirements](cursor/skills/generate-requirements/SKILL.md) | Generate Feature Requirements document from well-defined inputs (API contracts generated separately) | Pipeline Stage / Standalone |
 | [design-to-context](cursor/skills/design-to-context/SKILL.md) | Convert Figma URLs or design images into User Flow Docs, Design Descriptions, or Context Summaries | Pipeline Stage / Standalone |
 | [transcript-to-meeting-notes](cursor/skills/transcript-to-meeting-notes/SKILL.md) | Turn meeting transcripts (.vtt, .md, .docx, .txt) into structured discovery summaries | Pipeline Stage / Standalone |
 | [identify-assumptions](cursor/skills/identify-assumptions/SKILL.md) | Surface and structure risky assumptions using PM / Designer / Engineer perspectives | Pipeline Stage / Standalone |

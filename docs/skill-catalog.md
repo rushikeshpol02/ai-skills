@@ -30,7 +30,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Mode:** Pipeline Orchestrator
 
-**Purpose:** End-to-end requirements pipeline from messy, early-stage inputs to production-ready requirements documents. Orchestrates 9 stages, calling other skills at each quality gate. Handles inputs that are too raw or contradictory for `generate-requirements` to process directly.
+**Purpose:** End-to-end requirements pipeline from messy, early-stage inputs to a production-ready Feature Requirements document. Orchestrates 9 stages, calling other skills at each quality gate. Handles inputs that are too raw or contradictory for `generate-requirements` to process directly.
 
 **When to use:**
 - Starting from rough ideas, brainstorm notes, or meeting transcripts
@@ -46,29 +46,34 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 | PRD, feature description, or verbal idea | At least one required | Any combination works |
 | Legal / policy documents | Optional | Extracted for rules and constraints |
 | Existing requirements doc (for iterative update) | Optional | Used as baseline for delta updates |
-| Swagger / OpenAPI spec | Optional | Passed through to `generate-requirements` in Stage 7 |
+| Swagger / OpenAPI spec | Optional | Read and extract integration points, data models, constraints. API contracts are generated separately after requirements are finalized using `rest-api-contract-generator`. |
+| `project-context.md` (workspace root) | Optional | Pre-loads tech stack, personas, API conventions, systems, constraints, and glossary if present |
 
 **Outputs (saved to workspace):**
 | File | Stage | Description |
 |------|-------|-------------|
-| `[Feature]-Scenarios-Matrix.md` | Stage 4 | All scenario combinations, edge cases, boundary conditions |
-| `[Feature]-User-Flows.md` | Stage 6 | Step-by-step user flows per actor |
-| `Feature-Requirements-[Feature].md` | Stage 7 | Core requirements document |
-| `API-Contract-[Feature].md` | Stage 7 | Only if APIs are in scope (Comprehensive mode) |
-| `System-Flow-[Feature].md` | Stage 7 | Only if integrations are in scope (Comprehensive mode) |
+| `[Feature]-Scenarios-Matrix.md` | Stage 4 | All scenario combinations, edge cases, boundary conditions (with priority column) |
+| `[Feature]-User-Flows.md` | Stage 6 | Step-by-step user flows per actor (with purity filter applied) |
+| `Feature-Requirements-[Feature].md` | Stage 7 | Feature Requirements document (saved to user-provided output folder) |
 | `Validation-Report-[Feature].md` | Stage 9a | Semantic accuracy review findings |
 | Audit report | Stage 9b | Structural integrity findings |
 
 **Mandatory checkpoints (STOP and wait for user):** Stages 2, 5, and 9
 
+**Key pipeline enhancements (vs standalone `generate-requirements`):**
+- **Stage 1.1:** Loads `project-context.md` if present — pre-populates personas, systems, constraints, and terminology across all stages
+- **Stage 1.4.1:** Mandatory processing verification gate — ensures every input routed to a skill has a saved output file before proceeding (prevents unverifiable source citations)
+- **Stage 7:** Skips `generate-requirements` intake (Steps 1-3) and passes all pipeline context directly to Workflow 1
+- **After Stage 9b:** Offers to create or update `project-context.md` via the `project-context` skill
+
 **Skills called:**
 - Stage 1: `transcript-to-meeting-notes`, `design-to-context`
 - Stage 5: `identify-assumptions`
-- Stage 7: `generate-requirements`
+- Stage 7: `generate-requirements` (skips intake, enters at Workflow 1)
 - Stage 9a: `validate-requirements`
 - Stage 9b: `document-audit`
 
-**Related skills:** All pipeline skills — `generate-requirements`, `design-to-context`, `transcript-to-meeting-notes`, `identify-assumptions`, `validate-requirements`, `document-audit`
+**Related skills:** All pipeline skills — `generate-requirements`, `design-to-context`, `transcript-to-meeting-notes`, `identify-assumptions`, `validate-requirements`, `document-audit`. After requirements are finalized: `rest-api-contract-generator` for API contracts.
 
 ---
 
@@ -76,19 +81,19 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Mode:** Pipeline Stage / Standalone
 
-**Purpose:** Generates production-ready Agile requirements documentation from well-defined inputs. Runs a 3-workflow sub-chain (Synthesize → Generate → Validate) and produces Feature Requirements, optionally an API Contract and System Flow.
+**Purpose:** Generates a production-ready Feature Requirements document from well-defined inputs. Runs a 3-workflow sub-chain (Synthesize → Generate → Validate). Focuses exclusively on requirements; API contracts and system flows are generated separately after requirements are finalized.
 
 **When to use:**
 - Inputs are well-defined: clear PRD, confirmed Figma designs, and/or Swagger spec
-- You need requirements generated quickly (Quick Mode: ~20 min)
+- You need requirements generated quickly (Quick Mode: ~15 min)
 - You're creating the final requirements document from already-analyzed inputs
-- Called by `requirements-pipeline` at Stage 7
+- Called by `requirements-pipeline` at Stage 7 (skips intake, enters at Workflow 1)
 
 **Modes:**
-| Mode | Use When | Outputs |
-|------|----------|---------|
-| Quick | MVP, small feature, UI-only change | Feature Requirements only (~20 min) |
-| Comprehensive | Production feature with APIs or integrations | Feature Requirements + API Contract + System Flow (~45 min) |
+| Mode | Analysis Depth | Use When | Timing |
+|------|---------------|----------|--------|
+| Quick | 3 contexts (Business, Product, UX) | MVP, small feature, internal tool, single actor, low risk | ~15 min |
+| Comprehensive | 6 contexts (+ Persona, Technical, Compliance) | Production feature, complex interactions, compliance-sensitive, external integrations | ~30 min |
 
 **Inputs:**
 | Input | Required | Notes |
@@ -96,22 +101,22 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 | Feature name | Yes | |
 | PRD or feature description | At least one required | |
 | Design files or Figma URLs | Optional | Analyzed in Workflow 1 |
-| Swagger / OpenAPI spec | Optional | Triggers Comprehensive mode |
+| Swagger / OpenAPI spec | Optional | Read for integration points and data models |
 | Meeting transcript or notes | Optional | Decisions extracted in Workflow 1 |
 | `project-context.md` (workspace root) | Optional | Pre-populates tech stack, personas, API conventions if present |
 
-**Outputs (saved to `requirements/[Feature-Name]/`):**
-| File | Description |
-|------|-------------|
-| `Context-Summary-[Feature].md` | Internal analysis artifact |
-| `Feature-Requirements-[Feature].md` | Always generated |
-| `API-Contract-[Feature].md` | Comprehensive mode only |
-| `System-Flow-[Feature].md` | Comprehensive mode only |
-| `Validation-Report-[Feature].md` | Quality gate report |
+**Outputs (saved to user-provided `[output-folder]`):**
+| File | Path | Description |
+|------|------|-------------|
+| `Context-Summary-[Feature].md` | `[output-folder]/` | Internal analysis artifact |
+| `Feature-Requirements-[Feature].md` | `[output-folder]/Generated/Internal/` | Always generated |
+| `Validation-Report-[Feature].md` | `[output-folder]/Generated/Report/` | Quality gate report |
+
+**Pipeline-aware entry point:** When called from `requirements-pipeline` (Stage 7), Steps 1-3 (workspace scan, project context loading, intake) are skipped entirely. The pipeline passes all context directly, and the skill enters at Workflow 1 (`01-synthesize.md`).
 
 **Workflow sub-chain:** `01-synthesize.md` → `02-generate.md` → `03-validate.md`
 
-**Related skills:** `requirements-pipeline` (calls this), `design-to-context`, `transcript-to-meeting-notes`, `validate-requirements`
+**Related skills:** `requirements-pipeline` (calls this), `design-to-context`, `transcript-to-meeting-notes`, `validate-requirements`. After requirements are finalized: `rest-api-contract-generator` for API contracts.
 
 ---
 
