@@ -17,17 +17,78 @@ The user has shared a `figma.com` link (e.g., `https://www.figma.com/design/...?
 
 1. **Check if Figma MCP is available** — look for tools like `get_design_context` or `get_screenshot` in the available MCP tools.
 
-2. **If Figma MCP is available:**
-   - Extract `fileKey` and `nodeId` from the URL.
-     - `fileKey` is the segment after `/design/` (e.g., `vvDPZ5v3PppO3ekMXiq2Xv`)
-     - `nodeId` is the value of `node-id` query param, with `-` replaced by `:` (e.g., `2173-19802` → `2173:19802`)
-   - Call `get_design_context` (preferred — returns screenshot + metadata) or fall back to `get_screenshot`.
-   - If the user provides multiple node URLs, fetch each one and treat them as separate screens, labelled by their node name or URL order.
-   - Treat the fetched screenshot(s) and any returned metadata as the design input for Steps 1–5.
-
-3. **If Figma MCP is NOT available:**
+2. **If Figma MCP is NOT available:**
    - Inform the user: *"I don't have access to Figma tools in this session. Please export the screen(s) as images and share them here, or enable the Figma connector."*
    - Stop and wait — do not proceed until images are provided.
+
+3. **If Figma MCP is available — ALWAYS delegate to a subagent:**
+
+   Figma responses are unpredictable in size. A section node can return thousands of lines of metadata; each `get_design_context` call returns full React component code + screenshots. Making these calls in the main conversation burns irreplaceable context on raw data that will be distilled down to a few key observations.
+
+   **Rule: NEVER call Figma MCP tools directly in the main conversation. Always launch a subagent.**
+
+   #### How to delegate
+
+   Launch a single `generalPurpose` Task subagent with a prompt that includes:
+
+   **a) The Figma URL(s)** and how to parse them:
+   - `fileKey` = segment after `/design/` (e.g., `vvDPZ5v3PppO3ekMXiq2Xv`)
+   - `nodeId` = `node-id` query param value, with `-` replaced by `:` (e.g., `2173-19802` → `2173:19802`)
+   - For `/design/:fileKey/branch/:branchKey/:fileName` URLs, use `branchKey` as `fileKey`
+
+   **b) The output format** you determined in Step 1 (or ask the subagent to determine it from the screenshots).
+
+   **c) The save path** for the output file (following the naming conventions in Step 5).
+
+   **d) The full instructions** for what the subagent must do — copy the relevant template from [templates.md](templates.md) into the subagent prompt so it has everything it needs.
+
+   **e) The Figma fetching strategy** (include this verbatim in the subagent prompt):
+
+   ```
+   FIGMA FETCHING STRATEGY — follow this order:
+
+   1. FIRST: Call get_screenshot on the provided nodeId to get a visual overview.
+      This is cheap and gives you the full picture.
+
+   2. ASSESS the screenshot:
+      - If it shows a single screen or component → call get_design_context on that
+        same nodeId. You're done fetching.
+      - If it shows a SECTION with multiple screens (a grid/canvas of screens) →
+        you received a section node. Do NOT call get_design_context on the section
+        (it returns thousands of lines of sparse metadata). Instead:
+        a) Use the screenshot to identify the unique screen types (ignore
+           variations that differ only in geo/location/error states unless the
+           user specifically asked for those).
+        b) Call get_design_context on ONLY 2-3 representative child nodes that
+           capture the distinct screen types. Pick nodes that look unique in the
+           screenshot.
+        c) For variations (geo on/off, error states), describe them from the
+           section screenshot — do NOT fetch each variation individually.
+
+   3. LIMIT: Maximum 4 Figma API calls total per URL. If you need more, use the
+      screenshots you already have and describe the remaining screens from visual
+      inspection.
+
+   4. DISCARD CODE: The get_design_context tool returns React+Tailwind code.
+      Extract ONLY: (a) text content / labels / copy, (b) component names,
+      (c) interaction annotations (data-interaction-annotations),
+      (d) content annotations (data-content-annotations), (e) design tokens
+      (colors, fonts). Do NOT include the raw code in your output document.
+
+   5. SAVE the output document to the specified path. Return a brief summary
+      (max 20 lines) of what was found: screen count, key observations, critical
+      gaps, and the file path.
+   ```
+
+   **f) Any user-provided context** about the design (e.g., "geo variations don't change the experience", "this is the checkout flow", "focus on the mobile screens").
+
+   #### What the subagent returns
+
+   The subagent saves the full document to the workspace and returns a brief summary (screen count, key observations, critical gaps, file path). The main conversation receives only this summary — all Figma API responses, metadata, and code stay in the subagent's context and are discarded.
+
+   #### Multiple Figma URLs
+
+   If the user provides multiple Figma URLs, launch one subagent per URL (in parallel if independent) or a single subagent if they are related screens that should be documented together. Each subagent follows the same strategy above.
 
 ### Case C — Neither images nor a Figma URL
 Ask the user: *"Could you share the design? You can attach image files (screenshots, exports) or paste a Figma link if you have the Figma connector enabled."*
@@ -67,7 +128,8 @@ Address these before running Step 3:
 | **Dark mode / light mode variants** | Document one as primary, the other as a "Theme Variant" subsection. Note differences only — don't re-document identical elements. |
 | **Annotated design (callouts, redlines)** | Treat annotations as additional context. Include them under a `Design Annotations` subsection at the end of the relevant screen section. |
 | **Images with no clear order** | State the assumed order at the top of the document and ask the user to confirm if sequence matters. |
-| **Figma node with no visible content** | If `get_design_context` or `get_screenshot` returns an empty or error response, tell the user: *"I couldn't retrieve that node. Please check the link or try a different node."* |
+| **Figma node with no visible content** | The subagent should report back: *"Node [id] returned no visible content."* The main agent then tells the user: *"I couldn't retrieve that node. Please check the link or try a different node."* |
+| **Figma section node (grid of screens)** | The subagent uses the screenshot to identify unique screen types, fetches only 2-3 representative nodes, and describes variations from visual inspection. See Case B fetching strategy. |
 
 ---
 
@@ -75,7 +137,7 @@ Address these before running Step 3:
 
 - **Images only.** Every observation must be visible in a provided image. NEVER infer, assume, or add outside knowledge.
 - **Mark unknowns.** Use `[TBD]` for anything not visible. Never invent values.
-- **Attribution.** Note which image each observation comes from (e.g., `(Image 1)`, `(Screen 3 image)`). For Figma inputs, reference by node name or URL if multiple nodes were fetched.
+- **Attribution.** Note which image each observation comes from (e.g., `(Image 1)`, `(Screen 3 image)`). For Figma inputs, reference by node name or Figma URL. When a subagent produced the document, cite the Figma source URL — not individual API call details.
 - **Visual specifics matter.** Capture icon descriptions, color states (active/inactive/error), label text, placeholder text, and badge/indicator states.
 - **Interactions over aesthetics.** Prioritize what happens when elements are tapped/toggled over visual decoration.
 - **Scope clearly.** Note what the document covers and what it does NOT cover. Reference related flows/docs by name if known.
