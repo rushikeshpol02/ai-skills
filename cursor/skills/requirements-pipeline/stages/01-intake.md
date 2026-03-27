@@ -167,7 +167,7 @@ This pre-loaded context informs:
 | High-level requirements, ideas, hypotheses | User describes in chat or provides rough notes; no formal structure | Capture directly — processed in Stage 3 |
 | Legal docs, policy docs, reference material | Formal language, regulatory content, compliance references | Read and extract key rules, constraints, thresholds |
 | Existing requirements doc (for iterative update) | Structured doc with sections like Scope, Assumptions, Dependencies | Read as baseline — delta updates only |
-| Swagger / OpenAPI spec | `.yaml`, `.json` with endpoint definitions | Read and extract integration points, data models, constraints. API contracts are generated separately after requirements are finalized using `rest-api-contract-generator`. |
+| Swagger / OpenAPI spec | `.yaml`, `.json` with endpoint definitions | Read and extract integration points, data models, constraints. API contracts are generated separately after requirements are finalized. |
 
 ## 1.3 Assign source IDs and report
 

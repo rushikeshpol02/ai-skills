@@ -115,7 +115,7 @@ flowchart LR
 - You need a quick turnaround (Quick Mode: ~15 min vs full pipeline: ~2 hrs)
 - You're updating an existing requirements doc with incremental changes
 
-**After requirements are finalized**, generate API contracts and system flows separately using dedicated skills (`rest-api-contract-generator`).
+**After requirements are finalized**, generate API contracts and system flows separately.
 
 ---
 
@@ -159,9 +159,9 @@ flowchart LR
 ```mermaid
 flowchart TD
     subgraph pipeline [Requirements Pipeline - Group 1]
-        GDR[requirements-pipeline\nOrchestrator]
+        GDR[requirements-pipeline\nOrchestrator\nstages/01-intake.md]
         TMN[transcript-to-meeting-notes]
-        DTC[design-to-context]
+        DTC[design-to-context\nFigma via subagent]
         IA[identify-assumptions]
         GR[generate-requirements]
         VR[validate-requirements]

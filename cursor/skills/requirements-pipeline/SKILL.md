@@ -38,7 +38,7 @@ Stage 6: User Flows — Step-by-step for each actor
          Includes Requirement Purity Filter (Step 6.5)
      ↓
 Stage 7: Requirements Document (calls generate-requirements skill)
-         Reads stage artifacts 2-6 only (not original sources)
+         Includes Source Verification Pass
      ↓
 Stage 8: Risk Analysis
      ↓
@@ -343,12 +343,7 @@ After drafting user flows but before finalizing them, run a classification pass 
 **Pipeline provides these values (do not re-ask the user):**
 - **Feature name:** determined in Stage 1
 - **Mode:** always **Comprehensive** (6 contexts) -- the pipeline is the thorough path
-- **Inputs (stage artifacts only, read in order):**
-  - Stage 2: Interpretation Checkpoint (confirmed facts, rejected inferences, decisions, actors, constraints, open items)
-  - Stage 3: Variables, Constraints, Actors (variables table, constraints table, actor interaction map)
-  - Stage 4: Scenario Matrix (all scenarios with edge cases and boundary conditions)
-  - Stage 5: Assumptions (validated assumptions with risk areas)
-  - Stage 6: User Flows (flows after purity filter)
+- **Inputs:** all processed inputs from Stage 1, scenario matrix from Stage 4, assumptions from Stage 5, user flows from Stage 6 (after purity filter)
 - **Output folder:** use `[output]` path established in Stage 1. Do NOT re-ask.
 - **Project context:** loaded from Stage 1.1 (if `project-context.md` existed)
 - **Current state:** from Stage 1.5 (if available)
@@ -356,9 +351,15 @@ After drafting user flows but before finalizing them, run a classification pass 
 
 The skill then runs its 3-workflow pipeline (synthesize → generate → validate) with all context pre-loaded.
 
-**Why stage artifacts only (not original source documents):** Stage artifacts are curated, user-confirmed, and corrected versions of the raw inputs. They contain rejected inferences (guardrails against re-introducing errors), confirmed decisions, and structured analysis that the originals lack. Re-reading original sources at this stage risks picking up information that was already discussed and rejected during Stages 2-6. Source-level verification against originals is handled separately by Stage 9a (validate-requirements, Checks 1, 2, and 4).
+**Important:** Pass the scenario matrix and assumptions as explicit inputs -- they contain information that may not be in the original source documents.
 
-**Source traceability:** Instruct the skill to carry forward the source IDs from stage artifacts (e.g., `(Source: SRC-1, Decision 3)`). These IDs were assigned in Stage 1 and flow through all stage artifacts. Requirements that synthesize multiple stage inputs should list all sources.
+**Source traceability:** Instruct the skill to tag every requirement, decision, assumption, and key fact in the output document with its source. Use the source IDs assigned in Stage 1 (e.g., `(Source: SRC-1, Decision 3)`). Requirements that synthesize multiple inputs should list all sources.
+
+**Source verification pass (MANDATORY after generation):** After the requirements document is generated, perform a source verification pass:
+- For each `(Source: SRC-N)` citation, go back to the actual source and verify it contains the claimed information.
+- Check for **over-generalization** — if a source says "X in context A", the requirement must not say "X in all contexts" without additional sourcing.
+- Check for **misattribution** — if a source is cited but does not actually contain the claimed fact, flag it as `[SOURCE UNVERIFIED — SRC-N does not contain this claim]`.
+- Any requirement tagged `(Source: Implicit)` should be reviewed: is it truly a logical derivation, or is it a gap-fill that should be `[TBD]`?
 
 **Requirement purity enforcement:** Instruct the skill to apply these language rules:
 - Requirements describe WHAT (capability), never HOW (implementation) or WHAT IT LOOKS LIKE (UI pattern).
@@ -431,13 +432,11 @@ After the pipeline completes, offer to create or update the project context:
 
 ```
 This pipeline run discovered new project-level context (personas, systems,
-constraints, terminology). To capture it for future sessions, run
-/project-context to create or update your project-context.md.
+constraints, terminology). To capture it for future sessions, create or
+update your project-context.md.
 
 This is optional but recommended -- it saves significant re-discovery time.
 ```
-
-The `/project-context` skill handles both first-time creation and incremental updates with source confirmation and conflict detection. Do NOT attempt to create or update `project-context.md` inline -- always redirect to the skill.
 
 ---
 
@@ -454,7 +453,7 @@ The `/project-context` skill handles both first-time creation and incremental up
 9. **Never invent the current state.** If existing product capabilities are unknown, tag them as `[CURRENT STATE UNKNOWN]` — do not fabricate a plausible "before" scenario. Always ask about existing product in Step 1.5.
 10. **Requirements describe WHAT, never HOW or WHAT IT LOOKS LIKE.** If you catch yourself writing an implementation mechanism (solution) or a UI layout/navigation pattern (design decision), reframe it as the underlying need or flag it as a design decision / open question.
 11. **Inferred content must be flagged.** `[INFERRED]` is better than confident-sounding fabrication. When filling a gap, tag it explicitly so the user can verify or reject it. Never present an inference as a stated fact.
-12. **Source citations must be accurate.** When citing `(Source: SRC-N)`, carry forward the source ID from stage artifacts faithfully. Source-level verification against original documents is performed in Stage 9a (validate-requirements, Checks 1, 2, and 4).
+12. **Source citations must be accurate.** When citing `(Source: SRC-N)`, verify the source actually contains the claimed information. Do not cite a source for content it does not contain. Run the source verification pass in Stage 7.
 13. **Scoped statements stay scoped.** If a source says "X in context A", do not generalize to "X everywhere" without additional sourcing or explicit `[INFERRED — generalized from SRC-N context A]` tagging.
 14. **Table indicators must be labeled and sorted.** Never use a bare dot (`🔴`) without a label (`🔴 Critical`). All tables with priority, risk, or severity columns must be sorted highest first. Resolved items sink to the bottom.
 15. **Scope inputs to user-provided context.** Never scan the full workspace by default. Use the three-tier scoping gate in Stage 1.1: (1) user-provided files are always included, (2) same-folder discovery with user selection, (3) workspace-wide keyword search only on explicit request. Files not selected by the user are never read.
