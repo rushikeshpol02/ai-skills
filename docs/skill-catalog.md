@@ -20,6 +20,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - [update-documents](#update-documents) — Post-Pipeline
 - [client-ready-requirements](#client-ready-requirements) — Post-Pipeline
 
+
 ---
 
 ## Pipeline Skills (Group 1)
@@ -46,7 +47,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 | PRD, feature description, or verbal idea | At least one required | Any combination works |
 | Legal / policy documents | Optional | Extracted for rules and constraints |
 | Existing requirements doc (for iterative update) | Optional | Used as baseline for delta updates |
-| Swagger / OpenAPI spec | Optional | Read and extract integration points, data models, constraints. API contracts are generated separately after requirements are finalized using `rest-api-contract-generator`. |
+| Swagger / OpenAPI spec | Optional | Read and extract integration points, data models, constraints. API contracts are generated separately after requirements are finalized. |
 | `project-context.md` (workspace root) | Optional | Pre-loads tech stack, personas, API conventions, systems, constraints, and glossary if present |
 
 **Outputs (saved to workspace):**
@@ -64,7 +65,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - **Stage 1.1:** Loads `project-context.md` if present — pre-populates personas, systems, constraints, and terminology across all stages
 - **Stage 1.4.1:** Mandatory processing verification gate — ensures every input routed to a skill has a saved output file before proceeding (prevents unverifiable source citations)
 - **Stage 7:** Skips `generate-requirements` intake (Steps 1-3) and passes all pipeline context directly to Workflow 1
-- **After Stage 9b:** Offers to create or update `project-context.md` via the `project-context` skill
+- **After Stage 9b:** Offers to create or update `project-context.md` to capture project-level knowledge for future sessions
 
 **Skills called:**
 - Stage 1: `transcript-to-meeting-notes`, `design-to-context`
@@ -73,7 +74,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - Stage 9a: `validate-requirements`
 - Stage 9b: `document-audit`
 
-**Related skills:** All pipeline skills — `generate-requirements`, `design-to-context`, `transcript-to-meeting-notes`, `identify-assumptions`, `validate-requirements`, `document-audit`. After requirements are finalized: `rest-api-contract-generator` for API contracts.
+**Related skills:** All pipeline skills — `generate-requirements`, `design-to-context`, `transcript-to-meeting-notes`, `identify-assumptions`, `validate-requirements`, `document-audit`.
 
 ---
 
@@ -116,7 +117,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Workflow sub-chain:** `01-synthesize.md` → `02-generate.md` → `03-validate.md`
 
-**Related skills:** `requirements-pipeline` (calls this), `design-to-context`, `transcript-to-meeting-notes`, `validate-requirements`. After requirements are finalized: `rest-api-contract-generator` for API contracts.
+**Related skills:** `requirements-pipeline` (calls this), `design-to-context`, `transcript-to-meeting-notes`, `validate-requirements`.
 
 ---
 
@@ -146,7 +147,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Outputs:** One of the three format files above, saved to workspace
 
-**Figma MCP:** If a Figma URL is provided and the Figma MCP is available, the skill calls `get_design_context` to retrieve screenshots and metadata automatically.
+**Figma MCP — subagent delegation:** If a Figma URL is provided and the Figma MCP is available, the skill **always delegates Figma calls to a `generalPurpose` subagent**. Figma responses are unpredictable in size (thousands of lines of metadata + screenshots); making these calls in the main conversation burns irreplaceable context. The subagent fetches screenshots, extracts metadata, and returns a distilled summary. Direct Figma MCP calls in the main conversation are explicitly prohibited.
 
 **Related skills:** `requirements-pipeline` (calls this), `generate-requirements`
 
@@ -406,4 +407,5 @@ A **Sources & Reference Materials** section at the end, listing all input docume
 **Core constraint:** Requirement statements are never changed — only citations and codes are stripped. `[TBD]` items are always preserved.
 
 **Related skills:** `validate-requirements` and `document-audit` (run before this skill to ensure the input is accurate); `update-documents` (run first to propagate any corrections); `generate-requirements` and `requirements-pipeline` (produce the input document)
+
 

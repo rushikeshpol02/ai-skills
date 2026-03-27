@@ -47,7 +47,7 @@ If the file is missing or incomplete, ask the user to re-run Workflow 1 or provi
 
 This workflow generates one document: **Feature Requirements**. The depth of analysis depends on the mode (Quick: 3 contexts, Comprehensive: 6 contexts) determined in SKILL.md.
 
-> **Note:** API Contracts and System Flows are generated separately after requirements are finalized, using dedicated skills (`rest-api-contract-generator`, etc.).
+> **Note:** API Contracts and System Flows are generated separately after requirements are finalized.
 
 State upfront which documents you'll generate:
 ```
@@ -285,7 +285,7 @@ Files saved to: [output-folder]/Generated/Internal/
 Next steps:
 - Review document with stakeholders
 - Fill in [TBD] items with relevant teams
-- When requirements are finalized, generate API Contracts using `rest-api-contract-generator`
+- When requirements are finalized, generate API Contracts separately
 - Use these requirements to generate user stories (Story Creation workflow)
 ```
 

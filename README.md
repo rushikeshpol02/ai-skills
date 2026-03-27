@@ -16,7 +16,10 @@ Agent skills are instruction files (`SKILL.md`) stored in `~/.cursor/skills/`. W
 ai-skills/
 ├── cursor/
 │   └── skills/              Product & requirements skills (10 skills)
+│       └── requirements-pipeline/
+│           └── stages/      Extracted stage instructions (e.g., 01-intake.md)
 ├── claude/                  Placeholder for future Claude skills
+├── skill-eval/              Skill evaluation utilities
 └── docs/
     ├── workflow-guide.md    How skills relate to each other + pipeline diagram
     ├── skill-catalog.md     Per-skill reference: inputs, outputs, mode, related skills
@@ -51,25 +54,37 @@ ln -s ~/ai-skills/cursor/skills ~/.cursor/skills
 
 After installation, restart Cursor. Skills are available immediately in any Cursor project.
 
+### Keeping Skills Up to Date
+
+```bash
+cd ~/ai-skills
+git pull
+cp -r cursor/skills/* ~/.cursor/skills/
+```
+
 ---
 
 ## Skills at a Glance
 
-### Product & Requirements Skills (`cursor/skills/`)
+### Pipeline Skills (`cursor/skills/`)
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
 | [requirements-pipeline](cursor/skills/requirements-pipeline/SKILL.md) | 9-stage discovery and analysis pipeline from messy inputs to production-ready docs | Pipeline Orchestrator |
 | [generate-requirements](cursor/skills/generate-requirements/SKILL.md) | Generate Feature Requirements document from well-defined inputs (API contracts generated separately) | Pipeline Stage / Standalone |
-| [design-to-context](cursor/skills/design-to-context/SKILL.md) | Convert Figma URLs or design images into User Flow Docs, Design Descriptions, or Context Summaries | Pipeline Stage / Standalone |
+| [design-to-context](cursor/skills/design-to-context/SKILL.md) | Convert Figma URLs or design images into User Flow Docs, Design Descriptions, or Context Summaries. Delegates Figma MCP calls to a subagent to preserve main context. | Pipeline Stage / Standalone |
 | [transcript-to-meeting-notes](cursor/skills/transcript-to-meeting-notes/SKILL.md) | Turn meeting transcripts (.vtt, .md, .docx, .txt) into structured discovery summaries | Pipeline Stage / Standalone |
 | [identify-assumptions](cursor/skills/identify-assumptions/SKILL.md) | Surface and structure risky assumptions using PM / Designer / Engineer perspectives | Pipeline Stage / Standalone |
-| [validate-requirements](cursor/skills/validate-requirements/SKILL.md) | Check requirements for semantic accuracy across 10 checks in 4 dimensions | Pipeline Stage / Standalone |
+| [validate-requirements](cursor/skills/validate-requirements/SKILL.md) | Check requirements for semantic accuracy across 11 checks in 4 dimensions | Pipeline Stage / Standalone |
 | [document-audit](cursor/skills/document-audit/SKILL.md) | Scan any document for stale markers, contradictions, and broken cross-references | Pipeline Stage / Standalone |
+
+### Post-Pipeline Skills
+
+| Skill | One-liner | Mode |
+|-------|-----------|------|
 | [review-findings](cursor/skills/review-findings/SKILL.md) | Walk through audit or validation report findings interactively and collect decisions | Post-Pipeline |
 | [update-documents](cursor/skills/update-documents/SKILL.md) | Propagate a change (fact, scope, terminology) across multiple related documents | Post-Pipeline |
 | [client-ready-requirements](cursor/skills/client-ready-requirements/SKILL.md) | Transform an internal requirements doc into a client-safe version for all stakeholder types | Post-Pipeline |
-
 
 ---
 

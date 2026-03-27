@@ -94,7 +94,6 @@ Cursor auto-detects skills from the content of your message. You do not need to 
 | "Walk me through the findings in this validation report" | `review-findings` |
 | "A decision changed — update all the docs" | `update-documents` |
 | "Prepare this requirements doc for the client / strip internal references" | `client-ready-requirements` |
-| "Help me create a new skill" | `create-skill` |
 
 ---
 
