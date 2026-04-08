@@ -1,12 +1,12 @@
 # AI Agent Skills
 
-A collection of agent skills for Cursor (and future Claude) that automate product management, requirements engineering, and team workflows. Skills are markdown files that the AI agent reads at runtime to execute structured, multi-step tasks.
+A collection of agent skills for **Cursor** and **Claude Code** that automate product management, requirements engineering, and team workflows. Skills are markdown files that the AI agent reads at runtime to execute structured, multi-step tasks.
 
 ---
 
 ## What Are Agent Skills?
 
-Agent skills are instruction files (`SKILL.md`) stored in `~/.cursor/skills/`. When you invoke a skill — either explicitly by name or implicitly by describing a task — Cursor reads the skill file and follows its step-by-step instructions. Skills can call other skills, save files to your workspace, ask you questions, and produce publication-ready documents.
+Agent skills are instruction files (`SKILL.md`) stored in a skills folder the agent scans at startup. When you invoke a skill — either explicitly by name or implicitly by describing a task — the agent reads the skill file and follows its step-by-step instructions. Skills can call other skills, save files to your workspace, ask you questions, and produce publication-ready documents.
 
 ---
 
@@ -15,10 +15,12 @@ Agent skills are instruction files (`SKILL.md`) stored in `~/.cursor/skills/`. W
 ```
 ai-skills/
 ├── cursor/
-│   └── skills/              Product & requirements skills (10 skills)
-│       └── requirements-pipeline/
-│           └── stages/      Extracted stage instructions (e.g., 01-intake.md)
-├── claude/                  Placeholder for future Claude skills
+│   └── skills/              10 production skills (Cursor + Claude Code compatible)
+│       ├── requirements-pipeline/
+│       │   └── stages/      Stage instruction files (e.g., 01-intake.md)
+│       ├── generate-requirements/
+│       │   └── workflows/   Workflow instruction files
+│       └── ...
 ├── skill-eval/              Skill evaluation utilities
 └── docs/
     ├── workflow-guide.md    How skills relate to each other + pipeline diagram
@@ -26,53 +28,82 @@ ai-skills/
     └── invocation-guide.md  How to install and invoke each skill
 ```
 
+All 10 skills in `cursor/skills/` work with both Cursor and Claude Code — they share the same `SKILL.md` format.
+
 ---
 
 ## Installation
 
-### Option A — Copy (recommended for most users)
+### Cursor
+
+Skills live in `~/.cursor/skills/`. The recommended approach is to symlink each skill so that a `git pull` automatically picks up changes without re-linking.
 
 ```bash
-# Clone this repo
-git clone https://github.com/<your-username>/ai-skills.git
+# Clone the repo (if you haven't already)
+git clone https://github.com/rushikeshpol02/ai-skills.git ~/ai-skills
 
-# Copy skills into Cursor's skills folder
-cp -r ai-skills/cursor/skills/* ~/.cursor/skills/
+# Create the skills folder if it doesn't exist
+mkdir -p ~/.cursor/skills
+
+# Symlink each skill
+for skill in ~/ai-skills/cursor/skills/*/; do
+  ln -s "$skill" ~/.cursor/skills/$(basename "$skill")
+done
 ```
 
-### Option B — Symlink (keeps skills in sync with repo automatically)
+Restart Cursor. Skills are loaded at agent startup — no other configuration required.
+
+**Keeping skills up to date:**
 
 ```bash
-git clone https://github.com/<your-username>/ai-skills.git ~/ai-skills
-
-# Back up existing skills folder if needed
-mv ~/.cursor/skills ~/.cursor/skills.bak
-
-# Symlink
-ln -s ~/ai-skills/cursor/skills ~/.cursor/skills
+cd ~/ai-skills && git pull
+# Symlinks pick up changes automatically — no re-linking needed
 ```
 
-After installation, restart Cursor. Skills are available immediately in any Cursor project.
+---
 
-### Keeping Skills Up to Date
+### Claude Code
+
+Skills live in `~/.claude/skills/`. Same symlink approach:
 
 ```bash
-cd ~/ai-skills
-git pull
-cp -r cursor/skills/* ~/.cursor/skills/
+# Create the skills folder if it doesn't exist
+mkdir -p ~/.claude/skills
+
+# Symlink each skill
+for skill in ~/ai-skills/cursor/skills/*/; do
+  ln -s "$skill" ~/.claude/skills/$(basename "$skill")
+done
+```
+
+Skills are discovered automatically by Claude Code at startup.
+
+---
+
+### Install for Both at Once
+
+```bash
+git clone https://github.com/rushikeshpol02/ai-skills.git ~/ai-skills
+mkdir -p ~/.cursor/skills ~/.claude/skills
+
+for skill in ~/ai-skills/cursor/skills/*/; do
+  name=$(basename "$skill")
+  ln -s "$skill" ~/.cursor/skills/"$name"
+  ln -s "$skill" ~/.claude/skills/"$name"
+done
 ```
 
 ---
 
 ## Skills at a Glance
 
-### Pipeline Skills (`cursor/skills/`)
+### Pipeline Skills
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
 | [requirements-pipeline](cursor/skills/requirements-pipeline/SKILL.md) | 9-stage discovery and analysis pipeline from messy inputs to production-ready docs | Pipeline Orchestrator |
-| [generate-requirements](cursor/skills/generate-requirements/SKILL.md) | Generate Feature Requirements document from well-defined inputs (API contracts generated separately) | Pipeline Stage / Standalone |
-| [design-to-context](cursor/skills/design-to-context/SKILL.md) | Convert Figma URLs or design images into User Flow Docs, Design Descriptions, or Context Summaries. Delegates Figma MCP calls to a subagent to preserve main context. | Pipeline Stage / Standalone |
+| [generate-requirements](cursor/skills/generate-requirements/SKILL.md) | Generate Feature Requirements from well-defined inputs; API contracts generated separately using `rest-api-contract-generator` | Pipeline Stage / Standalone |
+| [design-to-context](cursor/skills/design-to-context/SKILL.md) | Convert Figma URLs or design images into User Flow Docs, Design Descriptions, or Context Summaries | Pipeline Stage / Standalone |
 | [transcript-to-meeting-notes](cursor/skills/transcript-to-meeting-notes/SKILL.md) | Turn meeting transcripts (.vtt, .md, .docx, .txt) into structured discovery summaries | Pipeline Stage / Standalone |
 | [identify-assumptions](cursor/skills/identify-assumptions/SKILL.md) | Surface and structure risky assumptions using PM / Designer / Engineer perspectives | Pipeline Stage / Standalone |
 | [validate-requirements](cursor/skills/validate-requirements/SKILL.md) | Check requirements for semantic accuracy across 11 checks in 4 dimensions | Pipeline Stage / Standalone |
@@ -96,15 +127,11 @@ cp -r cursor/skills/* ~/.cursor/skills/
 
 ---
 
-## Future Skills
-
-The `claude/` directory is reserved for Claude agent skills (`.claude/commands/` or CLAUDE.md-based skills). Structure to be added when Claude skills are authored.
-
----
-
 ## Contributing
 
 To add a new skill:
 1. Create a folder under `cursor/skills/<skill-name>/`
-2. Add a `SKILL.md` with a valid YAML frontmatter block (`name`, `description`)
+2. Add a `SKILL.md` — the agent reads this file at runtime
 3. Update [docs/skill-catalog.md](docs/skill-catalog.md) with the new entry
+
+Skills in this repo are production-ready. Work-in-progress or personal skills should live outside this repo (e.g., `~/personal-skills/wip/`) and be symlinked separately — this keeps the repo clean and ensures only stable skills are published.

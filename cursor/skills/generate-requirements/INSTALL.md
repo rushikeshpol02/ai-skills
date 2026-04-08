@@ -74,7 +74,7 @@ After running, your workspace will contain:
 
 - **Quick Mode:** For MVPs and small features. Lightweight analysis (3 contexts).
 - **Comprehensive Mode:** For production features with complex interactions, compliance concerns, or integrations. Full analysis (6 contexts).
-- **API Contracts and System Flows** are generated separately after requirements are finalized.
+- **API Contracts and System Flows** are generated separately after requirements are finalized, using `rest-api-contract-generator`.
 - **Resume:** If you have an existing Context Summary, you can start from Workflow 2 directly.
 - **Design files:** Provide Figma URLs or upload images — analyzed automatically in Workflow 1.
 - **Swagger:** Upload your existing OpenAPI spec — patterns extracted and applied to API Contract.

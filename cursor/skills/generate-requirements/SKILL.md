@@ -17,7 +17,7 @@ It orchestrates three sequential workflows, each saved as a file, so context sur
 
 `[output-folder]` is provided by the user during intake (Step 2). There is no default — always ask.
 
-> **Note:** This skill focuses on Feature Requirements only. API Contracts and System Flows are generated separately after requirements are finalized.
+> **Note:** This skill focuses on Feature Requirements only. API Contracts and System Flows are generated separately after requirements are finalized, using `/rest-api-contract-generator` and a dedicated system flow skill respectively.
 
 **Core principle: Truth over completeness.** Mark unknowns as [TBD]. Never fabricate data.
 
@@ -278,7 +278,7 @@ These existing skills can assist with specific inputs before running this workfl
 |-----------|-----------------|
 | User has a meeting recording or .vtt transcript | `transcript-to-meeting-notes` — process first, use output as PRD input |
 | User has Figma URL or design screenshots | Design analysis is built into this skill's Workflow 1 |
-| Requirements are finalized and need API contracts | Generate API contracts separately — run after requirements are stable |
+| Requirements are finalized and need API contracts | `rest-api-contract-generator` — run after requirements are stable |
 | Requirements are finalized and need system flow docs | Future: `system-flow-generator` — run after requirements are stable |
 
 ---
@@ -291,10 +291,13 @@ When Workflow 3 (Validation) finishes, offer to create or update the project con
 
 ```
 To capture what was learned in this session (new personas, systems,
-constraints, terminology), create or update your project-context.md.
+constraints, terminology), run /project-context to create or update
+your project-context.md.
 
 This is optional but recommended -- it saves time on future sessions.
 ```
+
+The `/project-context` skill handles both first-time creation and incremental updates with source confirmation and conflict detection. Do NOT attempt to create or update `project-context.md` inline.
 
 ---
 

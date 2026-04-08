@@ -47,7 +47,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 | PRD, feature description, or verbal idea | At least one required | Any combination works |
 | Legal / policy documents | Optional | Extracted for rules and constraints |
 | Existing requirements doc (for iterative update) | Optional | Used as baseline for delta updates |
-| Swagger / OpenAPI spec | Optional | Read and extract integration points, data models, constraints. API contracts are generated separately after requirements are finalized. |
+| Swagger / OpenAPI spec | Optional | Read and extract integration points, data models, constraints. API contracts are generated separately after requirements are finalized using `rest-api-contract-generator`. |
 | `project-context.md` (workspace root) | Optional | Pre-loads tech stack, personas, API conventions, systems, constraints, and glossary if present |
 
 **Outputs (saved to workspace):**
