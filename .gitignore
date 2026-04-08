@@ -7,10 +7,5 @@ __pycache__/
 skill-eval/.venv/
 skill-eval/.env
 
-# Internal-only skills (not ready for public repo)
-cursor/skills/rest-api-contract-generator/
-cursor/skills/jtbd-generator/
-cursor/skills/generate-pm-jd/
-cursor/skills/github-issue-classifier/
-cursor/skills/generate-uat/
-cursor/skills/project-context/
+# claude/ dir contains legacy .skill format files — not part of the public repo
+claude/

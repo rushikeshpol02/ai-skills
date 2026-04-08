@@ -6,30 +6,55 @@ How to install skills, how Cursor discovers them, and how to trigger each skill 
 
 ## Installation
 
+Skills in this repo work with both **Cursor** and **Claude Code**. The recommended approach is to symlink each skill folder so that `git pull` picks up updates automatically — no re-copying needed.
+
 ### Step 1: Clone the repo
 
 ```bash
-git clone https://github.com/<your-username>/ai-skills.git ~/ai-skills
+git clone https://github.com/rushikeshpol02/ai-skills.git ~/ai-skills
 ```
 
-### Step 2: Copy skills into Cursor's skills folder
+### Step 2: Symlink skills into the agent's skills folder
+
+**Cursor** — skills are discovered from `~/.cursor/skills/`:
 
 ```bash
-cp -r ~/ai-skills/cursor/skills/* ~/.cursor/skills/
+mkdir -p ~/.cursor/skills
+for skill in ~/ai-skills/cursor/skills/*/; do
+  ln -s "$skill" ~/.cursor/skills/$(basename "$skill")
+done
 ```
 
-> If `~/.cursor/skills/` does not exist yet, create it first: `mkdir -p ~/.cursor/skills`
+**Claude Code** — skills are discovered from `~/.claude/skills/`:
 
-### Step 3: Restart Cursor
+```bash
+mkdir -p ~/.claude/skills
+for skill in ~/ai-skills/cursor/skills/*/; do
+  ln -s "$skill" ~/.claude/skills/$(basename "$skill")
+done
+```
 
-Close and reopen Cursor. Skills are loaded at agent startup — no other configuration is required.
+**Both at once:**
+
+```bash
+mkdir -p ~/.cursor/skills ~/.claude/skills
+for skill in ~/ai-skills/cursor/skills/*/; do
+  name=$(basename "$skill")
+  ln -s "$skill" ~/.cursor/skills/"$name"
+  ln -s "$skill" ~/.claude/skills/"$name"
+done
+```
+
+### Step 3: Restart the agent
+
+- **Cursor**: close and reopen. Skills load at agent startup.
+- **Claude Code**: skills are discovered automatically on next invocation.
 
 ### Keeping skills up to date
 
 ```bash
-cd ~/ai-skills
-git pull
-cp -r cursor/skills/* ~/.cursor/skills/
+cd ~/ai-skills && git pull
+# Symlinks pick up changes automatically — no re-linking needed
 ```
 
 ---
@@ -115,7 +140,7 @@ Run requirements-pipeline. I'll describe the feature now: [description]
 
 ### generate-requirements
 
-Best for well-defined inputs. Produces Feature Requirements only (API contracts are generated separately after requirements are finalized):
+Best for well-defined inputs. Produces Feature Requirements only — API contracts are generated separately after requirements are finalized using `rest-api-contract-generator`:
 
 ```
 Generate requirements for [Feature Name].

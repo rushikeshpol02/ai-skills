@@ -432,11 +432,13 @@ After the pipeline completes, offer to create or update the project context:
 
 ```
 This pipeline run discovered new project-level context (personas, systems,
-constraints, terminology). To capture it for future sessions, create or
-update your project-context.md.
+constraints, terminology). To capture it for future sessions, run
+/project-context to create or update your project-context.md.
 
 This is optional but recommended -- it saves significant re-discovery time.
 ```
+
+The `/project-context` skill handles both first-time creation and incremental updates with source confirmation and conflict detection. Do NOT attempt to create or update `project-context.md` inline -- always redirect to the skill.
 
 ---
 
