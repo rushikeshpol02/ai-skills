@@ -5,6 +5,13 @@ description: "A 9-stage discovery and analysis pipeline that takes messy, early-
 
 # Generate Detailed Requirements — Pipeline Orchestrator
 
+## NON-NEGOTIABLE (read first)
+1. Save every stage artifact to file before presenting in chat. Chat is ephemeral.
+2. Never fabricate. Mark unknowns as `[TBD]`, inferences as `[INFERRED]`.
+3. Never skip Stage 2 (interpretation) or Stage 9 (validation).
+4. Source traceability on every claim. No citation = flag as `(Source: Implicit)`.
+5. Requirements describe WHAT, never HOW (solution) or WHAT IT LOOKS LIKE (design).
+
 ## Purpose
 
 Orchestrates a full requirements pipeline from messy, diverse inputs to a production-ready requirements document. It coordinates multiple skills and enforces quality gates between stages.
@@ -20,34 +27,63 @@ Orchestrates a full requirements pipeline from messy, diverse inputs to a produc
 
 ---
 
+## Critical Rules
+
+1. **Never skip the interpretation checkpoint (Stage 2).** Misunderstanding inputs wastes more time than confirming understanding.
+2. **Never skip the quality gates (Stage 9, and 9c if split).** Stage 9 catches both semantic inaccuracies and structural issues in a single pass; Stage 9c catches cross-document conflicts. All applicable gates are required.
+3. **Save artifacts at every stage — see Stage Artifact Registry.** Long sessions lose context. Files persist. Never present stage output only in chat. Save the file first, then summarize briefly in chat with the file path.
+4. **Mark unknowns honestly.** `[TBD]` is always better than invented data.
+5. **Domain-agnostic.** Never assume a specific tech stack, industry, or platform unless the user's inputs specify one.
+6. **One stage at a time.** Complete each stage fully before starting the next. Wait for user confirmation at checkpoints. Exception: after Stage 3.5, per-feature stages run in staggered parallel per the Execution Model.
+7. **Consolidate inputs upfront.** Process all user-confirmed inputs (from the three-tier scoping gate) in Stage 1 before doing any analysis. Do not process inputs one at a time across multiple rounds.
+8. **Source traceability everywhere.** Every requirement, assumption, decision, and constraint in the final document must carry a source tag (`Source: SRC-N, section/decision` or `Source: Implicit`). If you can't trace a statement to an input, tag it as Implicit — this flags it for extra validation.
+9. **Never invent the current state.** If existing product capabilities are unknown, tag them as `[CURRENT STATE UNKNOWN]` — do not fabricate a plausible "before" scenario. Always ask about existing product in Step 1.5.
+10. **Requirements describe WHAT, never HOW or WHAT IT LOOKS LIKE.** If you catch yourself writing an implementation mechanism (solution) or a UI layout/navigation pattern (design decision), reframe it as the underlying need or flag it as a design decision / open question.
+11. **Inferred content must be flagged.** `[INFERRED]` is better than confident-sounding fabrication. When filling a gap, tag it explicitly so the user can verify or reject it. Never present an inference as a stated fact.
+12. **Source citations must be accurate.** When citing `(Source: SRC-N)`, verify the source actually contains the claimed information. Do not cite a source for content it does not contain. Run the source verification pass in Stage 7.
+13. **Scoped statements stay scoped.** If a source says "X in context A", do not generalize to "X everywhere" without additional sourcing or explicit `[INFERRED — generalized from SRC-N context A]` tagging.
+14. **Table indicators must be labeled and sorted.** Never use a bare dot (`🔴`) without a label (`🔴 Critical`). All tables with priority, risk, or severity columns must be sorted highest first. Resolved items sink to the bottom.
+15. **Scope inputs to user-provided context.** Never scan the full workspace by default. Use the three-tier scoping gate in Stage 1.1: (1) user-provided files are always included, (2) same-folder discovery with user selection, (3) workspace-wide keyword search only on explicit request. Files not selected by the user are never read.
+16. **Each stage must produce unique insight, not reformat prior stages.** Before writing any stage artifact, answer: "What will I know after this stage that I didn't know before?" If the answer is "the same things in a different table format," you are restating, not analyzing. Apply the stage's analytical framework instead. When a stage builds on a prior stage's content, **reference** it (e.g., "See Stage 2, C1-C11") — do not copy it.
+17. **Brainstorm stages require collaborative gap-finding.** Stages that involve brainstorming (Stage 3, Stage 4) must surface questions *to the user* before finalizing the artifact. Present an initial analysis, then explicitly ask what's missing. Delivering a finished artifact without user interaction is a presentation, not a brainstorm.
+18. **Always run Stage 3.5 (Feature Decomposition).** Even if the feature seems straightforward, produce the decomposition artifact. It may recommend "no split needed" and that is a valid output. Skipping it risks producing a monolithic document that should have been split.
+19. **Shared Registry is binding.** When multiple features exist, each shared item (FR, assumption, dependency, open question) has exactly one owner. Other features reference, never duplicate. Subagents must obey their exclusion lists. New shared items discovered during Stages 4-9 are flagged as `[SHARED — assign to Feature X]` and resolved in Stage 9c.
+20. **Cross-document consistency over individual completeness.** When producing multiple feature documents, no document should contradict another. If a conflict is detected (same rule with different wording, inconsistent assumption status), resolve it before finalizing. Stage 9c is the enforcement mechanism.
+
+---
+
 ## Pipeline Overview
 
 ```
-Stage 1: Intake & Classification + Current State Discovery
+Stage 1:   Intake & Classification + Current State Discovery
      ↓
-Stage 2: Interpretation Checkpoint (STOP — wait for user confirmation)
-         Includes Inference Register — STATED vs INFERRED separation
+Stage 2:   Interpretation Checkpoint (STOP — wait for user confirmation)
+           Includes Inference Register — STATED vs INFERRED separation
      ↓
-Stage 3: Brainstorm — Variables, Constraints, Actors
+Stage 3:   Brainstorm — Variables, Constraints, Actors
      ↓
-Stage 4: Scenario Matrix — Combinations, Edge Cases, Boundary Conditions
+Stage 3.5: Feature Decomposition (STOP — wait for user confirmation)
+           Cluster value streams, test independence, build Shared Registry
+           If single feature → continue as one stream
+           If multiple features → staggered parallel execution below
      ↓
-Stage 5: Assumptions Identification (calls identify-assumptions skill)
+  ┌──────────────────────────────────────────────────────┐
+  │ Per-feature stages (run once if single feature,      │
+  │ staggered-parallel if multiple — see Execution Model)│
+  │                                                      │
+  │ Stage 4:  Scenario Matrix                            │
+  │ Stage 5:  Assumptions (CHECKPOINT)                   │
+  │ Stage 6:  User Flows + Purity Filter                 │
+  │ Stage 7:  Requirements Document                      │
+  │ Stage 8:  Risk Analysis                              │
+  │ Stage 9:  Validation (Semantic + Structural)           │
+  └──────────────────────────────────────────────────────┘
      ↓
-Stage 6: User Flows — Step-by-step for each actor
-         Includes Requirement Purity Filter (Step 6.5)
-     ↓
-Stage 7: Requirements Document (calls generate-requirements skill)
-         Includes Source Verification Pass
-     ↓
-Stage 8: Risk Analysis
-     ↓
-Stage 9a: Requirements Accuracy Review (calls validate-requirements skill)
-     ↓
-Stage 9b: Document Audit (calls document-audit skill)
+Stage 9c: Post-Merge Reconciliation (ONLY if multiple features)
+          Cross-document deduplication, conflict detection, cross-references
 ```
 
-**Stages 2, 5, and 9 are mandatory checkpoints.** Do not skip them.
+**Mandatory checkpoints:** Stages 2, 3.5, 5, and 9 (including dedup). Do not skip them.
 
 ---
 
@@ -65,18 +101,20 @@ At the start of Stage 1, before processing any inputs, ask the user:
 
 ### Folder structure
 
+**Single feature (no split):**
+
 ```
 [output]/
 ├── stage_output/                          ← Pipeline working artifacts
 │   ├── Stage1-Intake.md
 │   ├── Stage2-Interpretation.md
 │   ├── Stage3-Variables-Actors.md
+│   ├── Stage3.5-Feature-Decomposition.md  ← Always produced (may say "no split needed")
 │   ├── Stage4-Scenarios-Matrix.md
 │   ├── Stage5-Assumptions.md
 │   ├── Stage6-User-Flows.md
 │   ├── Stage8-Risk-Analysis.md
-│   ├── Stage9a-Accuracy-Review.md
-│   └── Stage9b-Document-Audit.md
+│   └── Stage9-Validation-Report.md
 ├── source_summaries/                      ← Processed inputs from Stage 1
 │   ├── [Meeting]_Summary_[date].md
 │   ├── Context-Summary-[Design].md
@@ -85,24 +123,51 @@ At the start of Stage 1, before processing any inputs, ask the user:
 └── [Feature]-Requirements-Client.md       ← Client-ready version (if requested)
 ```
 
-Create the `stage_output/` and `source_summaries/` subfolders at the start of Stage 1 (use `mkdir -p`).
+**Multiple features (split at Stage 3.5):**
+
+```
+[output]/
+├── stage_output/                          ← Shared pipeline artifacts (Stages 1-3.5)
+│   ├── Stage1-Intake.md
+│   ├── Stage2-Interpretation.md
+│   ├── Stage3-Variables-Actors.md
+│   ├── Stage3.5-Feature-Decomposition.md  ← Includes Shared Registry
+│   └── Stage9c-Reconciliation.md          ← Post-merge reconciliation report
+├── [FeatureA]/                            ← Per-feature folder
+│   ├── stage_output/
+│   │   ├── Stage4-Scenarios-Matrix.md
+│   │   ├── Stage5-Assumptions.md
+│   │   ├── Stage6-User-Flows.md
+│   │   ├── Stage8-Risk-Analysis.md
+│   │   └── Stage9-Validation-Report.md
+│   └── [FeatureA]-Requirements.md
+├── [FeatureB]/                            ← Per-feature folder
+│   ├── stage_output/
+│   │   └── ... (same structure)
+│   └── [FeatureB]-Requirements.md
+├── source_summaries/                      ← Shared (processed inputs from Stage 1)
+│   └── ...
+```
+
+Create the `stage_output/` and `source_summaries/` subfolders at the start of Stage 1 (use `mkdir -p`). Per-feature subfolders are created after Stage 3.5 confirms the split.
 
 ### Stage Artifact Registry
 
 Every stage MUST save its output to a markdown file before proceeding to the next stage. This is not optional. **Never present stage output only in chat.** Chat output is ephemeral and lost when context fills up; files persist across the entire pipeline.
 
-| Stage | Save To | What It Contains |
-|---|---|---|
-| 1 | `[output]/stage_output/Stage1-Intake.md` | Source registry, input classification, processing verification, current state summary |
-| 2 | `[output]/stage_output/Stage2-Interpretation.md` | STATED facts, INFERRED items, actors, constraints, decisions, open items |
-| 3 | `[output]/stage_output/Stage3-Variables-Actors.md` | Variables table, constraints table, actor interaction map |
-| 4 | `[output]/stage_output/Stage4-Scenarios-Matrix.md` | Full scenario matrix with edge cases and boundary conditions |
-| 5 | `[output]/stage_output/Stage5-Assumptions.md` | All assumptions grouped by priority and risk area |
-| 6 | `[output]/stage_output/Stage6-User-Flows.md` | User flows with purity filter classification |
-| 7 | `[output]/[Feature]-Requirements.md` | Feature requirements document *(produced by `generate-requirements` skill)* |
-| 8 | `[output]/stage_output/Stage8-Risk-Analysis.md` | Tigers / Paper Tigers / Elephants analysis |
-| 9a | `[output]/stage_output/Stage9a-Accuracy-Review.md` | Accuracy review report *(produced by `validate-requirements` skill)* |
-| 9b | `[output]/stage_output/Stage9b-Document-Audit.md` | Document audit report *(produced by `document-audit` skill)* |
+| Stage | Save To |
+|---|---|
+| 1 | `[output]/stage_output/Stage1-Intake.md` |
+| 2 | `[output]/stage_output/Stage2-Interpretation.md` |
+| 3 | `[output]/stage_output/Stage3-Variables-Actors.md` |
+| 3.5 | `[output]/stage_output/Stage3.5-Feature-Decomposition.md` |
+| 4 | `[output]/stage_output/Stage4-Scenarios-Matrix.md` (or per-feature) |
+| 5 | Same pattern as Stage 4 |
+| 6 | Same pattern as Stage 4 |
+| 7 | `[output]/[Feature]-Requirements.md` (or per-feature) |
+| 8 | Same pattern as Stage 4 |
+| 9 | Same pattern as Stage 4 |
+| 9c | `[output]/stage_output/Stage9c-Reconciliation.md` |
 
 **Processed inputs** from Stage 1 (meeting summaries, design context docs) save to `[output]/source_summaries/`.
 
@@ -127,306 +192,115 @@ When Stage 1 is complete, return here and proceed to Stage 2.
 
 ## Stage 2: Interpretation Checkpoint (MANDATORY STOP)
 
-**Before doing any analysis or editing, summarize what you understood from ALL inputs.**
+Read the file:
 
-Present to the user, separating STATED facts from INFERRED conclusions:
+    stages/02-interpretation.md
 
-```
-Here's what I extracted from all inputs:
-
-**Problem / Feature:**
-[1-2 sentence summary of what this feature is about]
-
-**Current State:**
-[What exists today — from Step 1.5. If unknown, state: "CURRENT STATE UNKNOWN — not yet provided"]
-
-**STATED facts (directly from sources):**
-- [Fact 1] (Source: SRC-N, section/decision)
-- [Fact 2] (Source: SRC-N, section/decision)
-
-**INFERRED conclusions (derived or gap-filled — need your confirmation):**
-- [Inference 1] — reasoning: [why this was inferred] (Based on: SRC-N)
-- [Inference 2] — reasoning: [why this was inferred] (Based on: SRC-N)
-
-**Actors identified:**
-- [Actor 1: role and relevance] (Source: SRC-N)
-- [Actor 2: role and relevance] (Source: SRC-N)
-
-**Constraints / rules identified:**
-- [Constraint 1] (Source: SRC-N, section/decision)
-- [Constraint 2] (Source: SRC-N, section/decision)
-
-**Open / unclear items:**
-- [Item 1 — what's unclear and why it matters]
-
-**Decisions already made (from transcripts/meetings):**
-- [Decision 1] (Source: SRC-N, Decision N)
-
-Does this match your understanding? Anything missing or incorrect?
-Please review the INFERRED items — confirm, correct, or reject each one.
-```
-
-Every fact, constraint, and decision must carry its source ID.
-
-**Inference Register rules:**
-- Any item not directly quoted or clearly present in a source is INFERRED and must be listed in the INFERRED section, not the STATED section.
-- The user must confirm, correct, or reject each INFERRED item before proceeding.
-- Confirmed inferences become STATED facts (with `Source: User-confirmed`).
-- Rejected inferences are removed.
-- Unresolved inferences become `[TBD]` — they must NOT be written as confident fact in later stages.
-
-### Save Stage 2 artifact
-
-**Save to:** `[output]/stage_output/Stage2-Interpretation.md`
-
-Include: all sections above (Problem/Feature, Current State, STATED facts, INFERRED items, Actors, Constraints, Open items, Decisions). End with an `## ACTION REQUIRED` section listing what the user needs to confirm/reject.
-
-**In chat, present only:** A brief summary (file path, count of STATED facts, count of INFERRED items needing review, count of open items) and ask the user to review the file.
-
-**STOP and WAIT for user confirmation.** Do not proceed to Stage 3 until the user confirms or corrects.
+Follow that file's instructions completely from start to finish.
+When Stage 2 is complete, return here and proceed to Stage 3.
 
 ---
 
 ## Stage 3: Brainstorm — Variables, Constraints, Actors
 
-### 3.1 Identify variables
+Read the file:
 
-Work with the user to define the variables that determine system behavior:
+    stages/03-brainstorm.md
 
-| Variable | Values / Range | Source (SRC-N) | Determines |
-|---|---|---|---|
-| [Variable 1] | [Possible values] | [SRC-N, section/decision] | [What system behavior it affects] |
-
-### 3.2 Identify constraints
-
-Constraints are non-negotiable rules that limit how the system can behave:
-
-| Constraint | Rule | Source (SRC-N) | Impact |
-|---|---|---|---|
-| [Constraint 1] | [Exact rule] | [SRC-N, section/decision] | [What it prevents or requires] |
-
-### 3.3 Map actors and their interactions
-
-| Actor | Actions | Receives | Depends On |
-|---|---|---|---|
-| [Actor 1] | [What they do] | [What they see/get] | [What must happen first] |
-
-### 3.4 Present variables list for confirmation
-
-Show the complete variables list and ask:
-- Are any variables missing?
-- Are the values/ranges correct?
-- Are there any constraints I haven't captured?
-
-### Save Stage 3 artifact
-
-**Save to:** `[output]/stage_output/Stage3-Variables-Actors.md`
-
-Include: variables table, constraints table, actor interaction map. End with `## Next Stage → Stage 4: Scenario Matrix`.
-
-**Wait for user confirmation before proceeding.**
+Follow that file's instructions completely from start to finish.
+When Stage 3 is complete, return here and proceed to Stage 3.5.
 
 ---
 
-## Stage 4: Scenario Matrix — Combinations, Edge Cases, Boundary Conditions
+## Stage 3.5: Feature Decomposition (MANDATORY CHECKPOINT)
 
-### 4.1 Build scenario matrix
+Read the file:
 
-Cross-reference variables to identify all meaningful combinations:
+    stages/03.5-decomposition.md
 
-| Scenario ID | [Variable 1] | [Variable 2] | [Variable N] | Expected Behavior | Priority | Notes |
-|---|---|---|---|---|---|---|
-| S1 | [value] | [value] | [value] | [What happens] | 🔴 Critical | |
+Follow that file's instructions completely from start to finish (includes Execution Model for staggered parallel).
+When Stage 3.5 is complete, return here and proceed to Stage 4.
 
-**Rules:**
-- Include happy path scenarios first
-- Include boundary conditions (minimum, maximum, just-above, just-below thresholds)
-- Include error scenarios (invalid inputs, timeouts, missing data)
-- Include edge cases (concurrent actions, interrupted flows, partial data)
-- Sort scenarios: happy paths first, then by priority (🔴 Critical → 🟡 Important → 🟢 Edge case)
+---
 
-### 4.2 Identify edge cases
+## Stage 4: Scenario Matrix
 
-For each variable, ask:
-- What happens at the boundary? (e.g., exactly at a threshold)
-- What if this value is missing or null?
-- What if two actors do conflicting things simultaneously?
-- What if the process is interrupted midway?
+Read the file:
 
-### 4.3 Present matrix for review
+    stages/04-scenarios.md
 
-Show the full scenario matrix and edge case list. Ask:
-- Any scenarios missing?
-- Any edge cases you've seen in practice?
-- Which scenarios are highest priority?
-
-**Save to:** `[output]/stage_output/Stage4-Scenarios-Matrix.md`
+Follow that file's instructions completely from start to finish.
+When Stage 4 is complete, return here and proceed to Stage 5.
 
 ---
 
 ## Stage 5: Assumptions Identification (MANDATORY CHECKPOINT)
 
-**Read and follow the `identify-assumptions` skill** with the following context:
-- The variables and constraints from Stage 3
-- The scenario matrix from Stage 4
-- All processed inputs from Stage 1
-- Any assumptions already surfaced by `transcript-to-meeting-notes` (if transcripts were processed in Stage 1). Note: meeting notes produce a simpler 3-field assumption format (STATUS, VALIDATE WITH / BY WHEN, RISK IF WRONG). The `identify-assumptions` skill will enrich these with RISK AREA, EVIDENCE, and SUGGESTED TEST fields, and may identify additional assumptions not discussed in the meeting.
+Read the file:
 
-**Present all assumptions to the user.** Group by priority (HIGH / MEDIUM / LOW), then by risk area (Value, Usability, Viability, Feasibility) within each group. Highest risk first.
+    stages/05-assumptions.md
 
-**Table formatting rule (applies to all tables in all pipeline artifacts):**
-- Every priority/risk/severity indicator must include a label, never a bare dot: `🔴 Critical` not `🔴`, `🟡 Important` not `🟡`, `🟢 Low` not `🟢`
-- Tables must be sorted by highest priority/risk/severity first. Resolved items sink to the bottom.
-
-### Save Stage 5 artifact
-
-**Save to:** `[output]/stage_output/Stage5-Assumptions.md`
-
-Include: all assumptions grouped by priority (HIGH/MEDIUM/LOW) then by risk area, with STATUS, VALIDATE WITH, BY WHEN, RISK IF WRONG, and any enrichment from the `identify-assumptions` skill. End with `## ACTION REQUIRED` section.
-
-**Wait for user to confirm, correct, or add assumptions before proceeding.**
+Follow that file's instructions completely from start to finish.
+When Stage 5 is complete, return here and proceed to Stage 6.
 
 ---
 
 ## Stage 6: User Flows
 
-### 6.1 Identify flows needed
+Read the file:
 
-Based on actors from Stage 3 and scenarios from Stage 4:
+    stages/06-user-flows.md
 
-| Flow | Actor | Trigger | Happy Path Steps | Alternative Paths |
-|---|---|---|---|---|
-| [Flow 1] | [Actor] | [What starts it] | [Count] | [Count] |
-
-### 6.2 Draft each flow
-
-For each flow, produce:
-1. **Step-by-step happy path** — numbered steps with actor, action, system response
-2. **Decision points** — where the flow branches, with conditions for each branch
-3. **Alternative paths** — what happens on each non-happy-path branch
-4. **Background processing** — what the system does behind the scenes (data storage, notifications, triggers)
-5. **Error handling** — what happens when things go wrong
-
-### 6.3 Flow ordering rationale
-
-If multiple flows exist, explain why they are ordered this way. Consider:
-- Which flow is legally or business-critical?
-- What happens if the process is interrupted — which data should already be captured?
-
-### 6.4 Present flows for review
-
-Show each flow and ask for feedback before proceeding to full requirements generation.
-
-**Save to:** `[output]/stage_output/Stage6-User-Flows.md`
-
-### 6.5 Requirement Purity Filter
-
-After drafting user flows but before finalizing them, run a classification pass on every element in the flows. For each step, business rule, data field, and behavior description, classify it as:
-
-| Classification | Definition | Action |
-|---|---|---|
-| **REQUIREMENT** | What the system must enable — observable, testable, solution-free | Keep in the flow and pass to Stage 7 |
-| **SOLUTION** | How the system achieves it — implementation mechanism (e.g., "cache locally", "use delta API", "retry with exponential backoff") | Move to an "Implementation Notes" callout. Reframe the underlying need as a requirement. |
-| **DESIGN** | What it looks like — UI layout, navigation pattern, visual structure (e.g., "organized as tabs", "swipe left/right") | Move to "Design Decisions [TBD]" or "Open Questions". Reframe the underlying need as a requirement. |
-| **DATA** | What information is needed — field lists, data scope | Keep, but verify the source. Flag any data fields not traceable to a source as `[INFERRED — verify]`. |
-
-**Present the classification to the user at the Stage 6 review checkpoint.** This catches solutions and design prescriptions before they enter the requirements document.
-
-**Why this matters:** User flows naturally produce implementation and design details because they describe concrete interactions. Without this filter, those details propagate into Stage 7 as if they were requirements — making the final doc prescribe solutions and designs instead of capabilities.
+Follow that file's instructions completely from start to finish.
+When Stage 6 is complete, return here and proceed to Stage 7.
 
 ---
 
 ## Stage 7: Requirements Document Generation
 
-**Call the `generate-requirements` skill, skipping its intake step (SKILL.md Steps 1-3).** The pipeline has already gathered all required context. Go directly to Workflow 1 (`workflows/01-synthesize.md`).
+Read the file:
 
-**Pipeline provides these values (do not re-ask the user):**
-- **Feature name:** determined in Stage 1
-- **Mode:** always **Comprehensive** (6 contexts) -- the pipeline is the thorough path
-- **Inputs:** all processed inputs from Stage 1, scenario matrix from Stage 4, assumptions from Stage 5, user flows from Stage 6 (after purity filter)
-- **Output folder:** use `[output]` path established in Stage 1. Do NOT re-ask.
-- **Project context:** loaded from Stage 1.1 (if `project-context.md` existed)
-- **Current state:** from Stage 1.5 (if available)
-- **New or existing:** determined in Stage 1.5
+    stages/07-requirements.md
 
-The skill then runs its 3-workflow pipeline (synthesize → generate → validate) with all context pre-loaded.
-
-**Important:** Pass the scenario matrix and assumptions as explicit inputs -- they contain information that may not be in the original source documents.
-
-**Source traceability:** Instruct the skill to tag every requirement, decision, assumption, and key fact in the output document with its source. Use the source IDs assigned in Stage 1 (e.g., `(Source: SRC-1, Decision 3)`). Requirements that synthesize multiple inputs should list all sources.
-
-**Source verification pass (MANDATORY after generation):** After the requirements document is generated, perform a source verification pass:
-- For each `(Source: SRC-N)` citation, go back to the actual source and verify it contains the claimed information.
-- Check for **over-generalization** — if a source says "X in context A", the requirement must not say "X in all contexts" without additional sourcing.
-- Check for **misattribution** — if a source is cited but does not actually contain the claimed fact, flag it as `[SOURCE UNVERIFIED — SRC-N does not contain this claim]`.
-- Any requirement tagged `(Source: Implicit)` should be reviewed: is it truly a logical derivation, or is it a gap-fill that should be `[TBD]`?
-
-**Requirement purity enforcement:** Instruct the skill to apply these language rules:
-- Requirements describe WHAT (capability), never HOW (implementation) or WHAT IT LOOKS LIKE (UI pattern).
-- If a statement prescribes an implementation approach, reframe it as the underlying need and add an "Implementation Note" callout.
-- If a statement prescribes a UI pattern, move it to Open Questions / Design Decisions unless the user explicitly confirmed the design in a prior stage.
+Follow that file's instructions completely from start to finish.
+When Stage 7 is complete, return here and proceed to Stage 8.
 
 ---
 
 ## Stage 8: Risk Analysis
 
-Perform a pre-mortem analysis with:
-- The requirements document from Stage 7
-- The assumptions from Stage 5 (especially unconfirmed ones)
-- The scenario matrix from Stage 4 (especially edge cases)
+Read the file:
 
-Produce a Tigers / Paper Tigers / Elephants analysis:
-- **Tigers** — Real, high-impact risks that need mitigation plans
-- **Paper Tigers** — Risks that seem scary but are manageable
-- **Elephants** — Obvious problems everyone sees but no one has addressed
+    stages/08-risk-analysis.md
 
-**Merge relevant risks back into the requirements document's Risks section.**
-
-### Save Stage 8 artifact
-
-**Save to:** `[output]/stage_output/Stage8-Risk-Analysis.md`
-
-Include: Tigers / Paper Tigers / Elephants analysis, and a summary of which risks were merged back into the requirements document.
+Follow that file's instructions completely from start to finish.
+When Stage 8 is complete, return here and proceed to Stage 9.
 
 ---
 
-## Stage 9a: Requirements Accuracy Review (MANDATORY)
+## Stage 9: Validation — Dedup + Semantic + Structural (MANDATORY FINAL STEP)
 
-**Read and follow the `validate-requirements` skill** on the requirements document from Stage 7.
+Read the file:
 
-This skill performs 10 semantic accuracy checks across 4 dimensions:
-- **Is it true?** — Source accuracy, inference detection, over-generalization, actor capability
-- **Is it a requirement?** — Requirement purity (not a solution or design decision)
-- **Is it actionable?** — Testability, ambiguity detection
-- **Is it complete and safe?** — Assumption-requirement dependency, negative path coverage, scope boundary
+    stages/09-validation.md
 
-**Inputs to provide:**
-- The requirements document from Stage 7
-- The source documents folder (meeting summaries, client docs, design descriptions from Stage 1)
-- Sibling requirements docs (if multiple feature docs were generated)
-
-**Fix all Critical findings immediately.** Present Should Fix and Verify findings to the user for decision before proceeding to Stage 9b.
+Follow that file's instructions completely from start to finish.
+When Stage 9 is complete, return here and proceed to Stage 9c (if multiple features) or post-pipeline steps.
 
 ---
 
-## Stage 9b: Document Audit (MANDATORY FINAL STEP)
+## Stage 9c: Post-Merge Reconciliation (ONLY if multiple features)
 
-**Read and follow the `document-audit` skill** on the requirements document (after Stage 9a fixes are applied).
+Read the file:
 
-This skill checks structural integrity:
-- Scans for `[PENDING]`, `[TBD]`, `[UNKNOWN]` markers that are already answered elsewhere in the doc
-- Finds contradictions between sections
-- Finds stale notes from earlier drafts
-- Checks cross-references between sections
-- Verifies assumptions table matches assumption references in the body
+    stages/09c-reconciliation.md
 
-**Apply all HIGH-confidence fixes. Present the audit report and a summary of what was cleaned up.**
-
-**STOP and WAIT for user to review the audit findings.** Do not mark the document as final until the user confirms all MEDIUM-confidence findings are resolved.
+Follow that file's instructions completely from start to finish.
+When Stage 9c is complete, return here and proceed to the post-pipeline steps.
 
 ---
 
-## After Stage 9b: Update or Create Project Context
+## After Stage 9 (or 9c if split): Update or Create Project Context
 
 After the pipeline completes, offer to create or update the project context:
 
@@ -439,23 +313,3 @@ This is optional but recommended -- it saves significant re-discovery time.
 ```
 
 The `/project-context` skill handles both first-time creation and incremental updates with source confirmation and conflict detection. Do NOT attempt to create or update `project-context.md` inline -- always redirect to the skill.
-
----
-
-## Critical Rules
-
-1. **Never skip the interpretation checkpoint (Stage 2).** Misunderstanding inputs wastes more time than confirming understanding.
-2. **Never skip the quality gates (Stage 9a + 9b).** Stage 9a catches semantic inaccuracies; Stage 9b catches structural issues. Both are required.
-3. **Save artifacts at every stage — see Stage Artifact Registry.** Long sessions lose context. Files persist. Never present stage output only in chat. Save the file first, then summarize briefly in chat with the file path.
-4. **Mark unknowns honestly.** `[TBD]` is always better than invented data.
-5. **Domain-agnostic.** Never assume a specific tech stack, industry, or platform unless the user's inputs specify one.
-6. **One stage at a time.** Complete each stage fully before starting the next. Wait for user confirmation at checkpoints.
-7. **Consolidate inputs upfront.** Process all user-confirmed inputs (from the three-tier scoping gate) in Stage 1 before doing any analysis. Do not process inputs one at a time across multiple rounds.
-8. **Source traceability everywhere.** Every requirement, assumption, decision, and constraint in the final document must carry a source tag (`Source: SRC-N, section/decision` or `Source: Implicit`). If you can't trace a statement to an input, tag it as Implicit — this flags it for extra validation.
-9. **Never invent the current state.** If existing product capabilities are unknown, tag them as `[CURRENT STATE UNKNOWN]` — do not fabricate a plausible "before" scenario. Always ask about existing product in Step 1.5.
-10. **Requirements describe WHAT, never HOW or WHAT IT LOOKS LIKE.** If you catch yourself writing an implementation mechanism (solution) or a UI layout/navigation pattern (design decision), reframe it as the underlying need or flag it as a design decision / open question.
-11. **Inferred content must be flagged.** `[INFERRED]` is better than confident-sounding fabrication. When filling a gap, tag it explicitly so the user can verify or reject it. Never present an inference as a stated fact.
-12. **Source citations must be accurate.** When citing `(Source: SRC-N)`, verify the source actually contains the claimed information. Do not cite a source for content it does not contain. Run the source verification pass in Stage 7.
-13. **Scoped statements stay scoped.** If a source says "X in context A", do not generalize to "X everywhere" without additional sourcing or explicit `[INFERRED — generalized from SRC-N context A]` tagging.
-14. **Table indicators must be labeled and sorted.** Never use a bare dot (`🔴`) without a label (`🔴 Critical`). All tables with priority, risk, or severity columns must be sorted highest first. Resolved items sink to the bottom.
-15. **Scope inputs to user-provided context.** Never scan the full workspace by default. Use the three-tier scoping gate in Stage 1.1: (1) user-provided files are always included, (2) same-folder discovery with user selection, (3) workspace-wide keyword search only on explicit request. Files not selected by the user are never read.

@@ -45,7 +45,25 @@
 
 ---
 
-## 3. User Context
+## 3. Scope
+
+### In Scope (This Phase)
+
+| Capability | Description | Source |
+|---|---|---|
+| [Capability 1] | [What it enables — user value] | [SRC-N] |
+| [Capability 2] | [What it enables] | [SRC-N] |
+
+### Out of Scope (This Phase)
+
+| Item | Reason / Notes | Source |
+|---|---|---|
+| [Excluded item 1] | [Why excluded — deferred to Phase N, not needed, etc.] | [SRC-N] |
+| [Excluded item 2] | [Why excluded] | [SRC-N] |
+
+---
+
+## 4. User Context
 
 ### Primary Personas
 **[Persona Name/Role]**
@@ -67,7 +85,7 @@
 
 ---
 
-## 4. UX Context *(Skip for Backend-only features)*
+## 5. UX Context *(Skip for Backend-only features)*
 
 ### Design Assets
 - [Figma link — add `/m=dev` for dev mode] or [Mockup reference]
@@ -109,7 +127,7 @@
 
 ---
 
-## 5. Technical Context
+## 6. Technical Context
 
 ### System Architecture
 ```
@@ -152,7 +170,7 @@
 
 ---
 
-## 6. Compliance & Constraints *(Comprehensive mode only)*
+## 7. Compliance & Constraints *(Comprehensive mode only)*
 
 - **Regulatory:** [Requirements or N/A]
 - **Security:** [Auth method, data protection, encryption requirements]
@@ -163,7 +181,7 @@
 
 ---
 
-## 7. Functional Requirements
+## 8. Functional Requirements
 
 ### FR-1: [Requirement Name]
 
@@ -192,7 +210,7 @@
 
 ---
 
-## 8. Error Handling
+## 9. Error Handling
 
 ### Error Scenarios
 
@@ -211,7 +229,7 @@
 
 ---
 
-## 9. Backward Compatibility *(Include ONLY if modifying existing features)*
+## 10. Backward Compatibility *(Include ONLY if modifying existing features)*
 
 ### Changes Overview
 - [What is being modified]
@@ -235,23 +253,33 @@
 
 ---
 
-## 10. Known Limitations
+## 11. Known Limitations
+
+> **Classification rule:** Items here are confirmed gaps the team is shipping with (accepted trade-offs). If an item has an owner and delivery status, it belongs in Dependencies (section 13). If it is a non-negotiable rule, it belongs in Constraints (section 2/7).
 
 - [Limitation 1] — Reason: [why this constraint exists]
 - [Limitation 2] — Reason: [why]
 
 ---
 
-## 11. Future Enhancements (Out of Scope for This Phase)
+## 12. Future Enhancements
 
-- [Enhancement 1] — Deferred because: [reason]
+> See **Section 3: Out of Scope** for the full exclusion list with sources.
+
+Items below add detail beyond what the scope table captures (e.g., phased roadmap, dependencies between deferred items):
+
+- [Enhancement 1] — [additional detail not in scope table]
 - [Enhancement 2]
 
 ---
 
-## 12. Assumptions & Dependencies
+## 13. Assumptions & Dependencies
 
-**Assumptions (sorted by risk tier, highest first):**
+> **One item, one home.** An item is either an Assumption or a Dependency, never both. If it has an owner and delivery status, it is a Dependency. If it needs a stakeholder decision, it is an Open Question (section 15), not an Assumption. Confirmed assumptions should be deleted or moved to Known Limitations (section 11) if the confirmed fact creates a trade-off.
+
+### Assumptions
+
+> Something we believe but haven't confirmed; carries risk if wrong.
 
 | # | Assumption | Status | Source |
 |---|------------|--------|--------|
@@ -259,7 +287,10 @@
 | M1 | [Medium-risk assumption] | [Status] | [SRC-N] |
 | L1 | [Low-risk assumption] | [Status] | [SRC-N] |
 
-**Dependencies (sorted by risk, highest first):**
+### Dependencies
+
+> A deliverable another team must provide before we can build.
+
 | Dependency | Owner | Status | Risk |
 |------------|-------|--------|------|
 | [Item] | [Team] | [Status] | 🔴 Critical |
@@ -268,7 +299,7 @@
 
 ---
 
-## 13. Related Documents
+## 14. Related Documents
 
 | Document | Location | Status |
 |----------|----------|--------|
@@ -277,7 +308,9 @@
 
 ---
 
-## 14. Open Questions / TBD Items
+## 15. Open Questions / TBD Items
+
+> **Classification rule:** Items here are stakeholder decisions needed before proceeding. If an item is also listed as an Assumption, keep the OQ and delete the Assumption. If an item is just "can X team provide Y?", it belongs in Dependencies (section 13), not here.
 
 *Sorted by priority, highest first.*
 
@@ -289,7 +322,7 @@
 
 ---
 
-## 15. Change History
+## 16. Change History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|

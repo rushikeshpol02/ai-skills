@@ -284,6 +284,34 @@ Stage 1 file: [path]
 Run client-ready-requirements on all requirement docs in [folder path].
 ```
 
+### figjam-diagram-generator
+
+```
+Create a FigJam diagram from the user flows in [file path].
+```
+
+```
+Generate a flowchart in FigJam from the requirements at [file path].
+```
+
+```
+Build a sequence diagram in FigJam for [describe the interaction].
+```
+
+### securitas-client-ready-requirements
+
+```
+Use securitas-client-ready-requirements on [path to Feature-Requirements-*.md].
+```
+
+```
+Prepare [requirements file path] for Securitas/Lauren review.
+```
+
+```
+Create a streamlined client version of [requirements file path] for Securitas.
+```
+
 ---
 
 ## Pipeline Chaining — Running the Full Pipeline in One Conversation
@@ -307,13 +335,15 @@ The agent will:
 2. Verify all inputs were processed (Stage 1.4.1 — processing verification gate)
 3. Present its understanding for your confirmation (Stage 2 — STOP)
 4. Map variables, constraints, actors (Stage 3)
-5. Build a scenario matrix with priorities (Stage 4)
-6. Run assumption analysis and present for confirmation (Stage 5 — STOP)
-7. Draft user flows with purity filter (Stage 6)
-8. Generate Feature Requirements document (Stage 7 — calls `generate-requirements`, skipping its intake)
-9. Run risk analysis (Stage 8)
-10. Validate and audit the output (Stages 9a + 9b — STOP)
-11. Offer to create or update `project-context.md` from what was learned
+5. Decompose features, build Shared Registry if multi-feature (Stage 3.5 — STOP)
+6. Build a scenario matrix with priorities (Stage 4)
+7. Run assumption analysis and present for confirmation (Stage 5 — STOP)
+8. Draft user flows with purity filter (Stage 6)
+9. Generate Feature Requirements document (Stage 7 — calls `generate-requirements`, skipping its intake)
+10. Run risk analysis (Stage 8)
+11. Combined validation — dedup + semantic + structural review (Stage 9 — STOP)
+12. Post-merge reconciliation if multi-feature (Stage 9c)
+13. Offer to create or update `project-context.md` from what was learned
 
 ### Option B: Pre-process inputs first, then generate
 

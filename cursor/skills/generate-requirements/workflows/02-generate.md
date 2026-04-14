@@ -8,6 +8,23 @@
 
 > `[output-folder]` is the path provided by the user during SKILL.md intake. It is NOT a hardcoded path.
 
+## NON-NEGOTIABLE (read first)
+1. Every FR describes WHAT (capability), never HOW (implementation) or WHAT IT LOOKS LIKE (UI).
+2. Every (Source: SRC-N) citation must be verified against the actual source content.
+3. Save generated document to file before presenting. Chat is ephemeral.
+4. Each item lives in exactly one section. Zero cross-section duplicates.
+5. Wait for user approval before proceeding to validation.
+
+## Critical Rules
+
+| Do | Don't |
+|-------|---------|
+| Save the file before presenting | Display only in chat |
+| Run inline quality check before presenting | Present documents with known failures |
+| Flag all TBDs with stakeholder routing | Leave TBDs without context |
+| Keep within word limits | Write exhaustive documents beyond limits |
+| Wait for user feedback at the end | Auto-proceed to validation |
+
 ---
 
 ## 🎯 Purpose
@@ -94,21 +111,27 @@ State upfront which documents you'll generate:
 
 **Tier 1 attribution required: 100%**
 
-### 3. User Context
+### 3. Scope
+- **In Scope (This Phase)** — Table: Capability | Description | Source
+- **Out of Scope (This Phase)** — Table: Item | Reason/Notes | Source
+- Sources from Context Summary Product Context (in-scope/out-of-scope) and pipeline Stage 6 (purity filter)
+- Every item must cite a source; items without sources are flagged as [TBD]
+
+### 4. User Context
 - Primary personas (specific roles, not "user")
 - User needs and pain points
 - High-level user journey
 
 **Tier 1 attribution required for persona info**
 
-### 4. UX Context *(Frontend/Mobile only — skip for Backend)*
+### 5. UX Context *(Frontend/Mobile only — skip for Backend)*
 - Design asset references (Figma links with `/m=dev`)
 - User flows (numbered steps)
 - Visual states: empty, loading, success, error, no-data
 - Key interactions (trigger → action → feedback)
 - Responsive behavior (desktop / tablet / mobile)
 
-### 5. Technical Context
+### 6. Technical Context
 - System architecture (high-level)
 - Technology stack (relevant)
 - APIs / Endpoints summary (detailed specs in API Contract)
@@ -118,7 +141,7 @@ State upfront which documents you'll generate:
 
 **Tier 1 attribution required for performance and constraints**
 
-### 6. Compliance & Constraints *(Comprehensive only)*
+### 7. Compliance & Constraints *(Comprehensive only)*
 - Regulatory requirements or N/A
 - Security requirements (auth, data protection)
 - Accessibility (WCAG level or N/A)
@@ -127,7 +150,7 @@ State upfront which documents you'll generate:
 
 **Tier 1 attribution required for regulatory and security**
 
-### 7. Functional Requirements (Detailed)
+### 8. Functional Requirements (Detailed)
 
 For each requirement use this structure:
 
@@ -151,7 +174,7 @@ For each requirement use this structure:
 **Source:** [Document/person, date]
 ```
 
-### 8. Error Handling
+### 9. Error Handling
 
 ```
 | Error Type | Cause | User Experience | System Behavior |
@@ -159,7 +182,7 @@ For each requirement use this structure:
 | [Type] | [Cause] | [What user sees] | [What system does] |
 ```
 
-### 9. Backward Compatibility *(include ONLY if EXISTING features modified)*
+### 10. Backward Compatibility *(include ONLY if EXISTING features modified)*
 
 ```
 **Changes Overview:** [What's being modified]
@@ -174,10 +197,14 @@ For each requirement use this structure:
 **Recommendation:** [Minimum-impact approach]
 ```
 
-### 10. Known Limitations
+### 11. Known Limitations
 - [Limitation — reason]
 
-### 11. Assumptions & Dependencies
+### 12. Future Enhancements
+
+> Reference Section 3 Out of Scope. Only add detail not already in the scope table (phased roadmap, dependencies between deferred items).
+
+### 13. Assumptions & Dependencies
 
 ```
 | Dependency | Owner | Status | Risk |
@@ -185,7 +212,7 @@ For each requirement use this structure:
 | [Item] | [Team] | [Status] | HIGH/MED/LOW |
 ```
 
-### 12. Related Documents
+### 14. Related Documents
 - API Contract: [path if exists]
 - System Flow: [path if exists]
 - Design files: [links]
@@ -196,43 +223,15 @@ For each requirement use this structure:
 
 ---
 
-## ✅ Step 4: Inline Quality Check
+## Step 3.5-4: Quality Gate
 
-Before presenting the document to the user, run these checks:
+After generating all sections, run the deduplication and quality checks:
 
-**Completeness:**
-- [ ] All required sections present
-- [ ] No [TBD] without explanation and stakeholder routing
-- [ ] Source attribution meets threshold (Tier 1 = 100%, Tier 2 = 60%+ target)
+Read the file:
 
-**Clarity:**
-- [ ] Plain English throughout (no code, no jargon without explanation)
-- [ ] All requirements are specific and testable ("System must X within Y seconds")
-- [ ] No vague language ("should consider", "might", "probably")
+    workflows/02b-quality-gate.md
 
-**Requirement Purity:**
-- [ ] No FR contains implementation mechanisms (HOW) — solutions belong in Implementation Notes
-- [ ] No FR prescribes UI layout or navigation patterns (WHAT IT LOOKS LIKE) — design decisions belong in Open Questions
-- [ ] Each business rule is testable — a QA engineer could write a pass/fail test without asking clarifying questions
-
-**Source Accuracy:**
-- [ ] Every `(Source: SRC-N)` citation was verified against the actual source content
-- [ ] No source is cited for content it does not contain
-- [ ] Statements tagged `(Source: Implicit)` are genuinely logical derivations, not gap-fills that should be `[TBD]`
-- [ ] No scoped statement has been over-generalized (source says "X in context A" but doc says "X everywhere")
-
-**Table Formatting:**
-- [ ] Every priority/risk/severity indicator uses a labeled format, never a bare dot:
-  - `🔴 Critical` not `🔴`
-  - `🟡 Important` not `🟡`
-  - `🟢 Nice to have` not `🟢`
-- [ ] Tables are sorted by highest priority/risk/severity first:
-  - **Open Questions** -- sorted by priority (🔴 Critical → 🟡 Important → 🟢 Nice to have). Resolved questions sink to the bottom.
-  - **Dependencies** -- sorted by risk (🔴 Critical → 🟡 Medium → 🟢 Low)
-  - **Assumptions** -- sorted by risk tier (H = High → M = Medium → L = Low)
-  - **Risks** -- sorted by impact (highest first)
-
-**Fix any failures before presenting.** Do not present documents with known quality failures.
+Follow that file's instructions completely. When the quality gate passes, return here and proceed to Step 5.
 
 ---
 
@@ -291,12 +290,6 @@ Next steps:
 
 ---
 
-## 🚨 Critical Rules
+---
 
-| ✅ Do | ❌ Don't |
-|-------|---------|
-| Save the file before presenting | Display only in chat |
-| Run inline quality check before presenting | Present documents with known failures |
-| Flag all TBDs with stakeholder routing | Leave TBDs without context |
-| Keep within word limits | Write exhaustive documents beyond limits |
-| Wait for user feedback at the end | Auto-proceed to validation |
+Workflow 2 complete. Return to `SKILL.md` workflow chain.

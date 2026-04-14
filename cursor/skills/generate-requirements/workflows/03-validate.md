@@ -7,6 +7,33 @@
 
 > `[output-folder]` is the path provided by the user during SKILL.md intake. It is NOT a hardcoded path.
 
+## Pipeline Mode: Skip
+
+When this skill is called from `/requirements-pipeline` (Stage 7), skip this workflow entirely.
+The pipeline runs `/validate-requirements` at Stage 9 with a comprehensive 15-check validation
+that supersedes this workflow's lighter checks. Running both wastes context budget.
+
+Instead, return to the pipeline orchestrator with:
+"Workflow 3 (internal validation) skipped -- pipeline will run /validate-requirements at Stage 9."
+
+## NON-NEGOTIABLE (read first)
+1. Read the full document before scoring. Never validate from a partial read.
+2. Detect fabricated data in every section. Unsourced = flag.
+3. Save validation report to file before presenting. Chat is ephemeral.
+4. Count and categorize ALL [TBD] markers with stakeholder routing.
+5. Wait for user response. Never auto-proceed or suggest next steps without user intent.
+
+## Critical Rules
+
+| Do | Don't |
+|-------|---------|
+| Validate ALL applicable contexts (mark N/A if not applicable) | Skip context validation |
+| Check for fabricated data in every section | Accept unsourced data as valid |
+| Count and categorize ALL [TBD] markers | Ignore TBDs |
+| Verify internal document consistency | Assume sections within the document align |
+| Save report before presenting | Display only in chat |
+| Wait for user response | Auto-proceed or suggest story creation without user intent |
+
 ---
 
 ## 🎯 Purpose
@@ -133,6 +160,40 @@ For each `(Source: SRC-N)` citation in the document, verify the source actually 
 
 ---
 
+## 🔀 Step 4: Cross-Section Deduplication Check
+
+Scan the document's Constraints, Known Limitations, Assumptions, Dependencies, and Open Questions sections for items that appear in more than one location.
+
+**Classification reference (each item gets exactly one home):**
+
+| Classification | Definition |
+|---|---|
+| **Hard Constraint** | Non-negotiable system rule (regulatory, legal, timeline) |
+| **Dependency** | Deliverable another team must provide before we can build |
+| **Assumption** | Something we believe but haven't confirmed; carries risk if wrong |
+| **Known Limitation** | Confirmed gap we are shipping with (accepted trade-off) |
+| **Open Question** | Stakeholder decision needed before proceeding |
+
+**Check for these specific overlaps:**
+
+| Check | Sections to compare | Verdict |
+|-------|---------------------|---------|
+| Same fact in Constraints AND Dependencies | Section 2/7 vs Section 13 | ❌ Duplicate if constraint is just restating the dependency |
+| Same uncertainty in Assumptions AND Open Questions | Section 13 vs Section 15 | ❌ The OQ should own it |
+| Known Limitation restates a Dependency with an owner | Section 11 vs Section 13 | ❌ The Dependency should own it |
+| Same rule in two Constraint locations | Section 2 vs Section 7 | ❌ Keep the more specific version |
+| Confirmed assumption still in Assumptions table | Section 13 | ❌ Should be deleted or moved to Known Limitations |
+| Cross-references stale after renumbering | All sections | ❌ Update references |
+
+**Count duplicates found:**
+- Total cross-section duplicates: [N]
+- 🔴 Critical (blocks clarity): [N]
+- 🟡 Warning (redundant but not contradictory): [N]
+
+**Thresholds:**
+- 3+ cross-section duplicates → ⚠️ WARNING (deduplication incomplete)
+- Any contradictory duplicate (same topic, different rules) → ❌ FAIL
+
 ---
 
 ## 📊 Step 5: Compute Overall Score
@@ -152,7 +213,7 @@ For each `(Source: SRC-N)` citation in the document, verify the source actually 
 | 70–89% | ⚠️ PASS WITH WARNINGS |
 | < 70% | ❌ FAIL |
 
-**Overall readiness:** ALL three checks (Completeness, Source Integrity, Alignment) must PASS for overall PASS.
+**Overall readiness:** ALL four checks (Completeness, Source Integrity, Deduplication, Alignment) must PASS for overall PASS.
 
 ---
 
@@ -174,6 +235,7 @@ For each `(Source: SRC-N)` citation in the document, verify the source actually 
 **Summary:**
 - Completeness: [X]% ([N] contexts complete)
 - Source integrity: [N] fabricated items / [N] critical TBDs
+- Deduplication: [N] cross-section duplicates found
 - Internal consistency: [N] issues
 - Readiness: ✅ Ready / ⚠️ Proceed with caution / ❌ Not ready
 
@@ -272,13 +334,6 @@ Present validation report to user:
 
 ---
 
-## 🚨 Critical Rules
+---
 
-| ✅ Do | ❌ Don't |
-|-------|---------|
-| Validate ALL applicable contexts (mark N/A if not applicable) | Skip context validation |
-| Check for fabricated data in every section | Accept unsourced data as valid |
-| Count and categorize ALL [TBD] markers | Ignore TBDs |
-| Verify internal document consistency | Assume sections within the document align |
-| Save report before presenting | Display only in chat |
-| Wait for user response | Auto-proceed or suggest story creation without user intent |
+Workflow 3 complete. Return to `SKILL.md` post-pipeline steps.

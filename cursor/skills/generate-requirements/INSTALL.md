@@ -8,12 +8,15 @@ generate-requirements/
 ├── workflows/
 │   ├── 01-synthesize.md         ← Workflow 1: Context synthesis
 │   ├── 02-generate.md           ← Workflow 2: Document generation
+│   ├── 02b-quality-gate.md      ← Deduplication + inline quality checks
 │   └── 03-validate.md           ← Workflow 3: Validation
-└── templates/
-    ├── context-summary.md        ← Internal artifact template
-    ├── feature-requirements.md   ← Feature Requirements output template
-    ├── api-contract.md           ← API Contract output template
-    └── system-flow.md            ← System Flow output template
+├── templates/
+│   ├── context-summary.md        ← Internal artifact template
+│   └── feature-requirements.md   ← Feature Requirements output template
+└── archive/
+    ├── api-contract.md           ← (archived — API contracts use /rest-api-contract-generator)
+    ├── system-flow.md            ← (archived — system flows use a separate skill)
+    └── project-context.md        ← (archived — project context uses /project-context)
 ```
 
 ---
