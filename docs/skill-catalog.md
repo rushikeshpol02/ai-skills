@@ -19,6 +19,8 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - [review-findings](#review-findings) — Post-Pipeline
 - [update-documents](#update-documents) — Post-Pipeline
 - [client-ready-requirements](#client-ready-requirements) — Post-Pipeline
+- [figjam-diagram-generator](#figjam-diagram-generator) — Post-Pipeline
+- [securitas-client-ready-requirements](#securitas-client-ready-requirements) — Post-Pipeline / Client-Specific
 
 
 ---
@@ -53,13 +55,14 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 **Outputs (saved to workspace):**
 | File | Stage | Description |
 |------|-------|-------------|
+| `Stage3.5-Feature-Decomposition.md` | Stage 3.5 | Feature decomposition with Shared Registry (always produced, may say "no split needed") |
 | `[Feature]-Scenarios-Matrix.md` | Stage 4 | All scenario combinations, edge cases, boundary conditions (with priority column) |
 | `[Feature]-User-Flows.md` | Stage 6 | Step-by-step user flows per actor (with purity filter applied) |
 | `Feature-Requirements-[Feature].md` | Stage 7 | Feature Requirements document (saved to user-provided output folder) |
-| `Validation-Report-[Feature].md` | Stage 9a | Semantic accuracy review findings |
-| Audit report | Stage 9b | Structural integrity findings |
+| `Stage9-Validation-Report.md` | Stage 9 | Combined semantic + structural review findings |
+| `Stage9c-Reconciliation.md` | Stage 9c | Post-merge reconciliation report (multi-feature only) |
 
-**Mandatory checkpoints (STOP and wait for user):** Stages 2, 5, and 9
+**Mandatory checkpoints (STOP and wait for user):** Stages 2, 3.5, 5, and 9
 
 **Key pipeline enhancements (vs standalone `generate-requirements`):**
 - **Stage 1.1:** Loads `project-context.md` if present — pre-populates personas, systems, constraints, and terminology across all stages
@@ -71,8 +74,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - Stage 1: `transcript-to-meeting-notes`, `design-to-context`
 - Stage 5: `identify-assumptions`
 - Stage 7: `generate-requirements` (skips intake, enters at Workflow 1)
-- Stage 9a: `validate-requirements`
-- Stage 9b: `document-audit`
+- Stage 9: `validate-requirements` (combined semantic + structural review)
 
 **Related skills:** All pipeline skills — `generate-requirements`, `design-to-context`, `transcript-to-meeting-notes`, `identify-assumptions`, `validate-requirements`, `document-audit`.
 
@@ -221,29 +223,42 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Mode:** Pipeline Stage / Standalone
 
-**Purpose:** Validates requirements documents for semantic accuracy using 10 checks across 4 dimensions. Catches things that are factually wrong, unsourced, over-generalized, solution-prescriptive, or untestable.
+**Purpose:** Validates requirements documents using 15 checks across 2 dimensions: semantic accuracy (11 checks) and structural integrity (4 checks). Catches things that are factually wrong, unsourced, over-generalized, solution-prescriptive, untestable, stale, contradictory, or incomplete. Supports incremental mode for efficient re-validation after edits.
 
 **When to use:**
-- After generating requirements (as part of the pipeline at Stage 9a)
+- After generating requirements (as part of the pipeline at Stage 9)
 - Before sharing requirements with stakeholders
 - When suspecting inaccuracies or unsourced claims
+- After `update-documents` propagates changes (in the verify step)
 - As a periodic quality sweep
 
-**The 10 checks:**
+**The 15 checks:**
+
 | # | Check | Dimension |
 |---|-------|-----------|
-| 1 | Source Accuracy Audit | Is it true? |
-| 2 | Inference Detection | Is it true? |
-| 3 | Actor Capability Check | Is it true? |
-| 4 | Over-Generalization Detection | Is it true? |
-| 5 | Requirement Purity | Is it a requirement? |
-| 6 | Testability | Is it actionable? |
-| 7 | Ambiguity Detection | Is it actionable? |
-| 8 | Assumption-Requirement Dependency | Is it complete? |
-| 9 | Negative Path Coverage | Is it complete? |
-| 10 | Scope Boundary | Is it complete? |
+| 1 | Source Accuracy Audit | Semantic |
+| 2 | Inference Detection | Semantic |
+| 3 | Requirement Purity | Semantic |
+| 4 | Over-Generalization Detection | Semantic |
+| 5 | Scope Boundary | Semantic |
+| 6 | Testability | Semantic |
+| 7 | Ambiguity Detection | Semantic |
+| 8 | Assumption-Requirement Dependency | Semantic |
+| 9 | Negative Path Coverage | Semantic |
+| 10 | Actor Capability Check | Semantic |
+| 11 | Intra-Document Consistency | Semantic |
+| S1 | Staleness Detection | Structural |
+| S2 | Cross-Section Contradictions | Structural |
+| S3 | Cross-References | Structural |
+| S4 | Completeness | Structural |
 
-**Distinct from `document-audit`:** This skill checks semantic accuracy (is the content true and correct?). `document-audit` checks structural integrity (are there stale markers, contradictions, broken cross-refs?).
+**Replaces separate `document-audit` for requirements docs.** The standalone `document-audit` skill remains available for non-requirements documents (PRDs, meeting notes, design specs).
+
+**Modes:**
+| Condition | Mode | Behavior |
+|---|---|---|
+| No prior report | Full | Run all 15 checks from scratch |
+| Prior report provided | Incremental | Detect changes, selectively re-run, carry forward valid findings (40-60% effort reduction) |
 
 **Inputs:**
 | Input | Required | Notes |
@@ -251,12 +266,13 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 | Requirements document | Yes | The file to validate |
 | Source documents folder | Yes (for Checks 1, 2, 4, 10) | Meeting summaries, design descriptions, transcripts |
 | Sibling requirements docs | Optional | Needed for Check 5 (Scope Boundary) |
+| Prior validation report | Optional | Enables incremental mode |
 
 **Outputs:**
 - Chat summary of critical findings
-- `Validation-Report-[Feature].md` — full report with Critical / Should Fix / Verify / Gaps findings
+- `Validation-Report-[Feature].md` — unified report with Semantic and Structural sections, severity-grouped findings
 
-**Related skills:** `requirements-pipeline` (calls this), `review-findings` (processes this skill's report), `document-audit` (structural counterpart)
+**Related skills:** `requirements-pipeline` (calls this at Stage 9), `review-findings` (processes this skill's report), `update-documents` (calls this in verify step for requirements docs)
 
 ---
 
@@ -264,17 +280,16 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Mode:** Pipeline Stage / Standalone
 
-**Purpose:** Scans any document for structural problems: stale `[TBD]`, `[PENDING]`, `[UNKNOWN]` markers that are already answered elsewhere, contradictions between sections, orphaned cross-references, and notes left over from earlier drafts.
+**Purpose:** Scans any **non-requirements** document for structural problems: stale `[TBD]`, `[PENDING]`, `[UNKNOWN]` markers that are already answered elsewhere, contradictions between sections, orphaned cross-references, and notes left over from earlier drafts.
 
 **When to use:**
 - After incorporating new information or multiple rounds of editing
 - As a final quality gate before sharing any document
-- Called by `requirements-pipeline` at Stage 9b (after `validate-requirements`)
-- After `update-documents` propagates changes (in the verify step)
+- After `update-documents` propagates changes (in the verify step, for non-requirements docs)
 
-**Domain-agnostic:** Works on requirements docs, PRDs, meeting notes, specs — any structured document.
+**Important:** For requirements documents (`Feature-Requirements-*`, `Client-Requirements-*`), use `validate-requirements` instead — it now includes both semantic and structural checks in a single pass. `document-audit` remains the right tool for PRDs, meeting notes, design specs, and other non-requirements documents.
 
-**Distinct from `validate-requirements`:** This skill checks structural integrity. `validate-requirements` checks semantic accuracy.
+**Domain-agnostic:** Works on PRDs, meeting notes, specs — any structured document except requirements docs.
 
 **Inputs:**
 | Input | Required | Notes |
@@ -282,11 +297,12 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 | Document to audit | Yes | Any structured markdown document |
 
 **Outputs:**
-- Audit report with HIGH / MEDIUM / LOW confidence findings
+- Audit report with HIGH / MEDIUM / LOW confidence findings saved to a `reports/` folder
 - HIGH-confidence fixes applied automatically
 - MEDIUM-confidence findings presented for user decision
+- Chat summary: file path, total count by category, top 3 findings
 
-**Related skills:** `requirements-pipeline` (calls this), `validate-requirements` (semantic counterpart), `review-findings` (processes this skill's report), `update-documents`
+**Related skills:** `validate-requirements` (use for requirements docs instead), `review-findings` (processes this skill's report), `update-documents` (calls this in verify step for non-requirements docs)
 
 ---
 
@@ -325,7 +341,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Mode:** Post-Pipeline
 
-**Purpose:** Propagates a verified change (factual correction, terminology update, scope change, new information) across multiple related documents simultaneously. Shows a change manifest for user approval before touching any file.
+**Purpose:** Propagates a verified change (factual correction, terminology update, scope change, new information) across multiple related documents simultaneously. Uses subagent-based execution for all document edits. Shows a change manifest for user approval before touching any file.
 
 **When to use:**
 - A fact or assumption was wrong and multiple documents reference it
@@ -349,16 +365,25 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Outputs:**
 - Change manifest (presented for user approval before any edits)
-- Updated documents (edits preserve each doc's format and tone)
-- `document-audit` run as a final consistency check
+- Updated documents (edits via subagents, preserve each doc's format and tone)
+- Verification: `validate-requirements` for requirements docs, `document-audit` for all others
 
-**Mandatory checkpoints:** Change verification (Step 2) and change manifest approval (Phase 2)
+**Run artifacts (saved to `update-workspace/`):**
+- `Input-Inventory-*.md` — available/missing inputs, candidate targets
+- `ChangeSet-*.md` — structured change set
+- `Manifest-*.md` — full change manifest
+- `RunState-*.json` — execution state for resumability
 
-**Additional behaviors:**
-- **Client-ready doc detection:** Automatically scans for a corresponding `Client-Requirements-*.md` alongside any `Feature-Requirements-*.md` in scope and adds it as the last downstream document in the change chain.
-- **Intra-document consistency sweep:** When any Functional Requirement is added, modified, or removed, runs a mandatory sweep across all derived sections in the same document (User Flows, Visual States, Error Handling, Executive Summary, Assumptions, Open Questions, Dependencies, Risk Analysis) and checks Stage 4/6 artifacts if in scope.
+**Mandatory checkpoints:** Change set confirmation (Step 2), registry confirmation (Step 3), change manifest approval (Step 5)
 
-**Related skills:** `review-findings` (produces structured decisions as input), `document-audit` (runs as final step)
+**Execution model:**
+- **Subagent-only edits:** All target document edits are performed by subagents, never by the main agent
+- **Silent execution:** No progress narration between subagent launch and completion
+- **Parallel discovery:** For 3+ documents, discovery runs via parallel read-only subagents
+- **Batch execution:** Documents partitioned into dependency-ordered batches for parallel editing
+- **RunState tracking:** Mandatory `T0`–`T7` todo control loop with explicit state transitions
+
+**Related skills:** `review-findings` (produces structured decisions as input), `validate-requirements` (runs in verify step for requirements docs), `document-audit` (runs in verify step for other docs)
 
 ---
 
@@ -407,5 +432,78 @@ A **Sources & Reference Materials** section at the end, listing all input docume
 **Core constraint:** Requirement statements are never changed — only citations and codes are stripped. `[TBD]` items are always preserved.
 
 **Related skills:** `validate-requirements` and `document-audit` (run before this skill to ensure the input is accurate); `update-documents` (run first to propagate any corrections); `generate-requirements` and `requirements-pipeline` (produce the input document)
+
+---
+
+### figjam-diagram-generator
+
+**Mode:** Post-Pipeline
+
+**Purpose:** Generates Mermaid.js diagrams in FigJam from requirements documents, user flows, state descriptions, or verbal input. Supports flowcharts, sequence diagrams, state diagrams, and gantt charts via the Figma MCP `generate_diagram` tool.
+
+**When to use:**
+- You want to visualize user flows, system interactions, or state machines from a requirements document
+- You need a quick flowchart or sequence diagram in FigJam
+- You want to turn a verbal description into a Mermaid diagram
+
+**Supported diagram types:**
+| Type | Best For |
+|------|----------|
+| Flowchart | User flows, decision trees, process flows |
+| Sequence diagram | System-to-system interactions, API call sequences |
+| State diagram | Component or feature state machines |
+| Gantt chart | Timeline visualization, phased rollouts |
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Requirements doc, user flow doc, or verbal description | At least one required | Any combination works |
+| FigJam file URL | Optional | If provided, uses `get_figjam` for existing context |
+
+**Outputs:**
+- Mermaid.js diagram generated in FigJam via `generate_diagram` MCP tool
+
+**Verification:** Runs a 6-priority verification gate (accuracy, clarity, readability, completeness, conciseness, structure) before generating the diagram.
+
+**Related skills:** `requirements-pipeline` (produces user flows and requirements that can be visualized), `generate-requirements` (produces requirements docs)
+
+---
+
+### securitas-client-ready-requirements
+
+**Mode:** Post-Pipeline / Client-Specific
+
+**Purpose:** Transforms an internal feature requirements document into a streamlined Securitas client-ready version. Produces a focused 7-8 section document by removing redundant context sections, merging scattered constraint/risk information, and stripping internal process scaffolding.
+
+**When to use:**
+- After the internal requirements document is complete and validated
+- When preparing requirements for Securitas/Lauren stakeholder review
+- When a focused, review-friendly version is needed for a client who already knows the context
+
+**What it produces:**
+| Section | Content |
+|---------|---------|
+| 1. Scope | In-scope / Out-of-scope tables |
+| 2. What's Changing | Before/after comparison (existing features only) |
+| 3. Flows | User flows with appendix callouts |
+| 4. Functional Requirements | FR body copied verbatim, citations stripped |
+| 5. Constraints & Risks | Consolidated from multiple internal sections |
+| 6. Open Questions | Cleaned, resolved items removed |
+| 7. References | External links, sister features |
+| 8. Appendix | Visual states, error handling tables |
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Internal requirements document | Yes | `Feature-Requirements-[Feature].md` |
+
+**Output:**
+| File | Description |
+|------|-------------|
+| `Client-Requirements-[Feature].md` | Streamlined version in same folder as input |
+
+**Core constraint:** FR statements are copied verbatim — only citations and internal codes are stripped. No paraphrasing.
+
+**Related skills:** `client-ready-requirements` (generic version for all stakeholders), `validate-requirements` and `document-audit` (run before this to ensure input accuracy)
 
 

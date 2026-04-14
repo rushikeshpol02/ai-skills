@@ -1,25 +1,48 @@
 ---
 name: validate-requirements
-description: "Validates requirements documents for semantic accuracy using 11 checks across 4 dimensions: truth (source accuracy, inference detection, over-generalization, actor capability), purity (requirement vs solution vs design), actionability (testability, ambiguity), and completeness (assumption dependencies, negative paths, scope boundaries, intra-document section consistency). Produces a dual output: concise chat summary + full markdown report file. Use after generating requirements, before sharing with stakeholders, when suspecting inaccuracies, or as a periodic quality sweep."
+description: "Validates requirements documents using 15 checks across 2 dimensions: semantic accuracy (11 checks — source truth, inference detection, requirement purity, over-generalization, scope boundaries, testability, ambiguity, assumption dependencies, negative paths, actor capability, intra-document consistency) and structural integrity (4 checks — staleness, contradictions, cross-references, completeness). Supports incremental mode: when a prior validation report is provided, only re-runs checks whose inputs have changed, carries forward findings that remain valid, and detects resolved findings — cutting re-validation effort by 40-60%. Produces a unified report with clear Semantic vs Structural grouping. Use after generating requirements, before sharing with stakeholders, when suspecting inaccuracies, or as a periodic quality sweep."
 ---
 
-# Validate Requirements — Semantic Accuracy Skill
+# Validate Requirements — Semantic + Structural Review
+
+## NON-NEGOTIABLE (read first)
+1. Never skip a check. Mark unavailable checks as SKIPPED with reason.
+2. Show evidence for every finding — problematic text + source quote.
+3. Don't fix — flag. This skill identifies issues, never modifies the document.
+4. Dual output is mandatory: chat summary + saved report file + next steps.
+5. Incremental mode: when in doubt, RE-RUN. Stale carry-forward is worse than a redundant re-run.
 
 ## Purpose
 
-Catches semantic inaccuracies in requirements documents — things that are factually wrong, unsourced, over-generalized, solution-prescriptive, or untestable. Complements `document-audit` (which checks structural integrity) with semantic checks.
+Catches both **semantic inaccuracies** (factually wrong, unsourced, over-generalized, solution-prescriptive, untestable content) and **structural issues** (stale placeholders, contradictions, broken cross-references, completeness gaps) in a single pass.
 
-**Key distinction:**
-- `document-audit` = **structural integrity** — stale markers, broken cross-refs, contradictions between sections, completeness gaps
-- `validate-requirements` = **semantic accuracy** — is the content true, pure, actionable, and complete?
+This skill replaces the need to run `validate-requirements` and `document-audit` separately on requirements documents. The standalone `document-audit` skill remains available for non-requirements documents (PRDs, meeting notes, design specs).
+
+## Critical Rules
+
+1. **Never skip a check.** If inputs are missing for a check, mark it SKIPPED with an explanation — do not silently omit it. In incremental mode, CARRY FORWARD is not "skipped" — the check ran in the prior report and its results are being reused because inputs haven't changed.
+2. **Show evidence, not just verdicts.** For every finding, show the problematic text and (for source checks) what the source actually says.
+3. **Severity matters.** Group findings by severity in the report, not by check number. A single finding may fail multiple checks — list it once under its highest severity with all applicable check numbers.
+4. **Dual output + next steps are mandatory.** Always produce the chat summary, the full report file, and prioritized next steps. The chat summary is for quick triage; the report file is for persistent reference; the next steps tell the user exactly what to do next and in what order.
+5. **Be conservative with PASS.** A check PASSes only if zero findings — including carried-forward findings. A carried-forward finding still counts.
+6. **Don't fix — flag.** This skill identifies issues; it does not modify the requirements document. Fixes are applied separately (by the user or by the pipeline).
+7. **Type column is mandatory.** Every finding row must include the Type column (Semantic / Structural) so findings from both dimensions are clearly distinguished in severity-sorted tables.
+8. **Read the FULL document.** Structural checks are only effective when cross-referencing the entire document. Never audit from a partial read. In incremental mode, the full document is still read in Phase 1 — only source documents may be skipped if unchanged.
+9. **Never invent answers.** If a `[PENDING]` marker exists and the answer is NOT in the document or conversation, leave it as-is. Report it as "unresolved — still needs input."
+10. **Incremental mode: when in doubt, re-run.** If it is unclear whether a change affects a check, classify it as RE-RUN. The cost of re-running an unnecessary check is low; the cost of carrying forward a stale finding is high.
+11. **Incremental mode: Check 11 and S1–S4 always re-run.** These are the consistency safety net. Any edit — even one that fixes a finding — can introduce new contradictions, stale references, or consistency gaps in other sections. Never carry these checks forward.
+12. **Incremental mode: tag carried-forward findings.** Every finding reused from a prior report must include `(carried from [date])` in its Finding cell. The user must be able to distinguish new discoveries from surviving prior findings at a glance.
+13. **Checklist is mandatory.** Every run must maintain the six-item control loop (`T0 Gather`, `T1 Understand`, `T2 Analyze`, `T3 Plan`, `T4 Execute`, `T5 Verify`) with explicit status transitions. Do not skip directly from analysis to output.
+
+---
 
 ## When to Use
 
-- After generating requirements (as part of the pipeline at Stage 9a, or standalone)
+- After generating requirements (as part of the pipeline at Stage 9, or standalone)
 - When reviewing an existing requirements doc before sharing with stakeholders
 - When the user suspects inaccuracies, over-prescription, or unsourced claims
 - As a periodic quality sweep across a set of feature docs
-- After `update-documents` propagates changes (in the verify step, alongside `document-audit`)
+- After `update-documents` propagates changes (in the verify step)
 
 ## Inputs
 
@@ -28,376 +51,139 @@ Gather these before starting:
 1. **Requirements document** — the file to validate (REQUIRED)
 2. **Source documents folder** — meeting summaries, client docs, design descriptions, transcripts (REQUIRED for Checks 1, 2, 4, 10)
 3. **Sibling requirements docs** — other feature requirement docs in the same folder (OPTIONAL — needed for Check 5: Scope Boundary)
-4. **Stage User Flows artifact** — `Stage6_User_Flows.md` or equivalent stage artifact (OPTIONAL — needed for Check 9, item 5: User Flows cross-check). If not provided, scan for it in the project's Artifacts or stage folders. If found, use it. If not found, note it as unavailable and skip item 5 only.
+4. **Stage User Flows artifact** — `Stage6_User_Flows.md` or equivalent stage artifact (OPTIONAL — needed for Check 11 cross-check). If not provided, scan for it in the project's Artifacts or stage folders. If found, use it. If not found, note it as unavailable and skip that sub-check only.
+5. **Prior validation report** — a previous `Validation-Report-*.md` or `Stage9-Validation-Report.md` file (OPTIONAL). When provided, the skill enters **incremental mode** — only re-running checks whose inputs have changed since the prior report. When absent or when the user says "run full", the skill runs all 15 checks from scratch (full mode).
 
 If source documents are not available, Checks 1 (Source Accuracy) and 4 (Over-Generalization) will be marked SKIPPED with a note explaining why.
 
 ---
 
-## The 10 Checks
+## Mode Selection
 
-### Check 1: Source Accuracy Audit
+Before beginning, determine which mode to use:
 
-**Dimension: Is it true?**
-
-For every `(Source: SRC-N)` citation in the document:
-
-1. Read the cited source
-2. Verify the source actually contains the claimed information
-3. Classify each citation:
-
-| Verdict | Meaning |
-|---|---|
-| **ACCURATE** | Source directly states the claimed fact |
-| **PARTIALLY ACCURATE** | Source says something related but the doc generalizes or reinterprets |
-| **INACCURATE** | Source does not contain the claimed information |
-| **UNVERIFIABLE** | Source is not available or cannot be checked |
-
-For PARTIALLY ACCURATE and INACCURATE findings: show what the source actually says vs. what the doc claims.
-
-For statements tagged `(Source: Implicit)`: flag for user validation — implicit means no source backs it. Determine if it is a valid logical derivation or a gap-fill that should be `[TBD]`.
-
----
-
-### Check 2: Inference Detection
-
-**Dimension: Is it true?**
-
-Scan for statements that appear factual but are actually inferred:
-
-- Statements about "current state" or "currently" — verify against a confirmed current-state source (design description, existing Figma, user confirmation)
-- Pain points that assume a user experience not described in any source
-- Field lists or data attributes not traceable to any source
-- Behavior descriptions with no source citation (especially in user flows and business rules)
-- "Confident-sounding" language: definitive statements without `[TBD]` that have no source
-
-For each finding, classify:
-
-| Verdict | Meaning |
-|---|---|
-| **CONFIRMED** | Inference is backed by a source (may just be missing the citation) |
-| **PLAUSIBLE** | Inference is reasonable but not sourced — needs user confirmation |
-| **FABRICATED** | No basis in any source — must be removed or tagged `[TBD]` |
-
----
-
-### Check 3: Requirement Purity Classification
-
-**Dimension: Is it a requirement?**
-
-For each Functional Requirement and its business rules, classify:
-
-| Classification | Definition | Action |
+| Condition | Mode | Behavior |
 |---|---|---|
-| **REQUIREMENT** | Describes a capability or constraint from the user's perspective. Observable, testable, solution-free. | Keep |
-| **SOLUTION** | Prescribes an implementation approach (e.g., "cache locally", "use delta API", "batch hourly", "retry with exponential backoff") | Flag for reframing as the underlying need + "Implementation Note" |
-| **DESIGN** | Prescribes a UI pattern, layout, or navigation structure (e.g., "organized as tabs", "show as Past/This Week/Future", "swipe left/right to navigate") | Flag for reframing as the underlying need + "Open Question / Design Decision" |
-
-**Also check these sections** (solutions and design prescriptions often hide outside the FRs):
-- Executive Summary
-- UX Context
-- User Flows
-- Visual States
-- Error Handling
+| No prior report provided | **Full** | Run all 15 checks from scratch |
+| Prior report provided | **Incremental** | Detect changes, selectively re-run checks, carry forward valid prior findings |
+| User says "run full" or "full validation" | **Full** | Ignore any prior report, run all 15 checks from scratch |
+| First run in the pipeline (Stage 9) | **Full** | No prior report exists yet |
+| Re-run after fixes or `update-documents` | **Incremental** (if prior report available) | Typical incremental use case |
 
 ---
 
-### Check 4: Over-Generalization Detection
+## Mandatory Todo / Checklist Control Loop
 
-**Dimension: Is it true?**
+This skill must run with a mandatory checklist that enforces:
+**Gather → Understand → Analyze → Plan → Execute → Verify**.
 
-For each sourced statement, check scope alignment:
+Before Phase 0/1 begins, create and maintain a todo list. This is not optional.
 
-- Does the source say "X in context A" but the doc says "X in all contexts"?
-- Does the source describe a field for one view type but the doc applies it to all views?
-- Does the source describe a rule for one actor but the doc applies it to all actors?
-- Does the source describe behavior for one scenario but the doc states it as a universal rule?
+### Required checklist items
 
-**Pattern:** Find the source → check its scope → compare to the doc's scope → flag if broader.
+1. `T0 Gather` — Build input inventory (requirements doc, source folder/docs, sibling docs, stage artifacts, prior report if any); list missing inputs and availability
+2. `T1 Understand` — Confirm validation objective and mode selection basis (Full vs Incremental)
+3. `T2 Analyze` — Gather evidence (document read, sources, sibling docs, stage artifacts, change detection in incremental mode)
+4. `T3 Plan` — Build check execution plan (which checks run, scoped re-runs, carried-forward findings)
+5. `T4 Execute` — Run semantic + structural checks and capture findings with evidence
+6. `T5 Verify` — Validate output quality and completeness, save report, publish summary + next steps
 
----
+### Checklist status rules
 
-### Check 5: Scope Boundary Check (Cross-Document)
-
-**Dimension: Is it complete and safe?**
-
-*Skip if no sibling requirements docs are available. Mark as SKIPPED.*
-
-If sibling requirements docs exist in the same folder:
-
-- Identify overlapping FRs — the same user experience documented in two places
-- Identify contradictory rules — different thresholds, different behaviors for the same scenario
-- Identify unclear boundaries — where one feature ends and another begins is ambiguous
-- Flag for consolidation or cross-referencing
-
----
-
-### Check 6: Testability
-
-**Dimension: Is it actionable?**
-
-For each FR and its business rules, check if it can be verified with a pass/fail test:
-
-- **Vague outcomes:** "user-friendly", "fast", "intuitive", "seamless", "easy to use"
-- **Missing specifics:** "within a reasonable time" (what time?), "large number of" (how many?), "appropriate error message" (what message?)
-- **Undefined conditions:** "if available", "when applicable", "as needed"
-- **Unmeasurable qualities:** "improved experience", "better performance", "enhanced security"
-
-Each business rule should be specific enough that a QA engineer could write an acceptance test without asking clarifying questions.
-
----
-
-### Check 7: Ambiguity Detection
-
-**Dimension: Is it actionable?**
-
-Scan for language that weakens requirements or defers decisions to developers:
-
-| Pattern | Examples | Recommendation |
-|---|---|---|
-| **Weak modals** | "should", "may", "could", "might" | Replace with "must" or remove |
-| **Vague quantifiers** | "some", "many", "few", "quickly", "periodically", "regularly" | Assign specific values or mark `[TBD]` |
-| **Escape hatches** | "appropriate", "relevant", "as needed", "etc.", "and so on", "similar" | Make precise or enumerate explicitly |
-| **Passive voice hiding actor** | "the data is processed", "notifications are sent" | Specify which system/actor performs the action |
-
-Each finding gets a recommendation: make it precise, assign a specific value, or explicitly mark as `[TBD]`.
-
----
-
-### Check 8: Assumption-Requirement Dependency
-
-**Dimension: Is it complete and safe?**
-
-For each assumption in the Assumptions table (especially unconfirmed or contradicted ones):
-
-1. Trace which FRs depend on that assumption being true
-2. Check if the FR acknowledges the dependency (e.g., "depends on H2" or "blocked by H1")
-3. Flag FRs that silently depend on unconfirmed assumptions without acknowledging the risk
-4. For contradicted assumptions: are the dependent FRs flagged as blocked or at-risk?
-
-Example: If Assumption H2 (data warehouse availability) is unconfirmed, every FR that needs historical data should acknowledge the blocker.
-
----
-
-### Check 9: Negative Path Coverage
-
-**Dimension: Is it complete and safe?**
-
-For every happy path described in user flows or FRs:
-
-1. Check if corresponding error/edge cases are covered in Error Handling, Alternative Paths, or business rules
-2. Cross-reference the Scenario Matrix (if available) against the FRs — are all scenarios covered by at least one requirement?
-3. Flag gaps: "UF-1 has 3 alternative paths, but the Error Handling table only covers 2 of them"
-4. Check for missing failure modes:
-   - Network failure mid-action
-   - Partial data / incomplete responses
-   - User abandons the flow
-   - Concurrent/conflicting actions
-   - Timeout / service unavailability
-5. **Intra-document consistency** — see Check 11, which covers all derivative sections (User Flows, Visual States, Error Handling, Assumptions, Open Questions, Dependencies, Executive Summary, Risk Analysis) and cross-document stage artifacts (Stage4, Stage6) in a single sweep.
-
----
-
-### Check 10: Actor Capability Verification
-
-**Dimension: Is it true?**
-
-For each actor referenced in the document:
-
-1. Verify their described capabilities match confirmed reality (from current-state sources, design descriptions, or user confirmation)
-2. Flag actions assigned to actors who cannot perform them (e.g., "officer checks WFM" when officers don't have WFM access)
-3. Flag assumptions about actor access, tools, or permissions that are not sourced
-4. Cross-reference the actor's capabilities with what's described in the Persona section — are they consistent?
-
----
-
-### Check 11: Intra-Document Section Consistency
-
-**Dimension: Is it complete and safe?**
-
-A requirements document is not a collection of independent sections — every section is a view of the same feature and must tell a consistent story. This check verifies that all derivative and upstream sections within the document are consistent with the Functional Requirements.
-
-**Run this check after any FR addition, modification, or removal is identified in Checks 1–10. Also run it as a standalone sweep.**
-
-For each section present in the document, check consistency against the FRs:
-
-| Section | Relationship | What to check |
-|---------|-------------|---------------|
-| **User Flows / UX Flows** | DERIVED | Does it describe every behavior defined in the FRs? Does it omit any? Are all alternative paths and error paths present in the FRs represented here (even if summarised)? |
-| **Visual States** | DERIVED | Does it have an entry for every distinct state implied by the FRs? Are any states now obsolete due to removed FRs? |
-| **Error Handling** | DERIVED | Does it cover the failure mode of every FR? Are any rows left over from removed FRs? |
-| **Executive Summary** | DERIVED | Does it still accurately describe the scope of the feature as defined by the FRs? Did the scope grow or shrink without the summary being updated? |
-| **Assumptions** | UPSTREAM / BIDIRECTIONAL | Does each FR have a traceable assumption if it depends on an unconfirmed premise? Are any assumptions now resolved or invalidated by current FR content? |
-| **Open Questions** | UPSTREAM / BIDIRECTIONAL | Are any `[TBD]` markers in the FRs already answered elsewhere in the document? Are there new unresolved decisions introduced by the FRs that are not captured as OQs? |
-| **Dependencies** | UPSTREAM / BIDIRECTIONAL | Does every external system, team, or data source referenced in the FRs appear in the Dependencies section? Are any listed dependencies now unreferenced? |
-| **Risk Analysis / Known Risks** | DERIVED | Does the risk profile reflect the current FR set? Are risks from removed FRs still present? Are new risks from added FRs missing? |
-
-**Also check stage artifacts** (if available in the project):
-- **Stage4 Scenario Matrix** — does every FR have at least one test scenario? Are scenarios present for removed FRs?
-- **Stage6 User Flows** — the canonical user flow artifact. Does it reflect the latest FR content? If Stage6 is more detailed than the FR doc's User Flows summary, flag the FR doc as a DERIVED gap. If they contradict each other, flag as Critical.
-
-For each gap found: record the section, the specific inconsistency, and classify as:
-- **Gap** — the section is missing coverage of an existing FR
-- **Should Fix** — the section is stale or inconsistent but not factually misleading
-- **Critical** — the section actively contradicts the FRs
+- Exactly one item is `in_progress` at a time.
+- Every item must transition `pending` → `in_progress` → `completed` (or `cancelled` if truly not applicable).
+- Never start `T1 Understand` until `T0 Gather` is `completed`.
+- Never start `T4 Execute` until `T3 Plan` is `completed`.
+- Never publish final output until `T5 Verify` is `completed`.
+- If interrupted, keep the active item `in_progress` and explicitly resume from it.
 
 ---
 
 ## Execution Workflow
 
+**Checklist bootstrap (mandatory):** Before Phase 0/1, set `T0 Gather` to `in_progress`, collect and inventory all provided/discovered inputs, mark `T0 Gather` `completed`, then set `T1 Understand` to `in_progress`. Mark `T1 Understand` `completed` only after mode (Full vs Incremental) is explicitly justified from gathered inputs.
+
+### Phase 0: Change Detection (incremental mode only)
+
+*Skip this phase entirely in full mode — proceed directly to Phase 1.*
+
+Read the file:
+
+    incremental-detection.md
+
+Follow that file's instructions completely. When Phase 0 is complete, return here and proceed to Phase 1.
+
 ### Phase 1: Setup
 
-1. Read the requirements document
-2. Identify and read all source documents (from the provided folder path)
+1. Read the requirements document end-to-end. Do not skim.
+2. Identify and read all source documents (from the provided folder path). **Incremental mode optimization:** if Phase 0.3 determined sources are unchanged AND only CARRY FORWARD checks need them, skip re-reading source files — they are only needed for checks that are actually running.
 3. Identify sibling requirements docs (if any, in the same folder)
-4. Build a source index: map each SRC-N to its file and key content
-5. Locate stage artifacts: scan for `Stage4_Scenario_Matrix.md` and `Stage6_User_Flows.md` (or equivalent) in the project's Artifacts or stage folders. Note whether each is found or unavailable — Check 11 will use them.
+4. Build a source index: map each SRC-N to its file and key content. **Incremental mode:** build only for sources referenced by checks that are RE-RUN or RE-RUN (scoped).
+5. Locate stage artifacts: scan for `Stage4_Scenario_Matrix.md` and `Stage6_User_Flows.md` (or equivalent) in the project's Artifacts or stage folders. Note whether each is found or unavailable.
 
-### Phase 2: Run Checks
+**Checklist update:** In full mode (where Phase 0 is skipped), set `T2 Analyze` to `in_progress` at Phase 1 start and mark `completed` after setup evidence collection is finished. Then set `T3 Plan` to `in_progress` and `completed` once the check run plan is explicit (all checks in full mode; selective plan in incremental mode).
 
-Run all 11 checks in order. For each check:
-- Record each finding with: location in doc (section + line), the problematic text, the verdict, and the recommendation
-- Classify severity:
-  - **Critical** — factually wrong or misleading (must fix before sharing)
-  - **Should Fix** — reframe, relocate, or make precise (improves quality)
-  - **Verify** — needs user confirmation (may be correct, can't determine automatically)
-  - **Gap** — missing coverage (negative paths, uncovered scenarios)
+### Phase 2a: Semantic Checks (content accuracy)
+
+Read and follow:
+
+    checks/semantic-checks.md
+
+**Full mode:** Run all 11 checks (1–11) in order.
+
+**Incremental mode:** For each check, consult the execution plan from Phase 0.4:
+- **RE-RUN** — run the check fully, as in full mode
+- **RE-RUN (scoped)** — run the check only on changed FRs/sections; merge results with SURVIVING findings carried from the prior report for unchanged FRs/sections
+- **CARRY FORWARD** — do not run the check; use SURVIVING findings from Phase 0.5 as the check's results
+
+For each finding (whether new or carried forward), record:
+- Location in doc (section + line)
+- The problematic text
+- The verdict
+- The recommendation
+
+Classify severity:
+- **Critical** — factually wrong or misleading (must fix before sharing)
+- **Should Fix** — reframe, relocate, or make precise (improves quality)
+- **Verify** — needs user confirmation (may be correct, can't determine automatically)
+- **Gap** — missing coverage (negative paths, uncovered scenarios)
+
+**Checklist update:** Set `T4 Execute` to `in_progress` before running Check 1 and keep it active through Phase 2b.
+
+### Phase 2b: Structural Checks (document integrity)
+
+Read and follow:
+
+    checks/structural-checks.md
+
+Run all 4 checks (S1–S4) in order. **Structural checks always run in both full and incremental mode** — they are cheap, operate on the document alone, and catch editing artifacts that are invisible to the change manifest. Use the same severity classifications as Phase 2a.
 
 ### Phase 3: Generate Output
 
-Produce two outputs:
+Produce two outputs: a chat summary and a full report file.
 
-#### Output 1: Chat Summary (displayed to user)
+**Checklist update:** Set `T5 Verify` to `in_progress` before composing outputs. Verify that:
+- all required checks are represented as PASS/FAIL/SKIPPED with rationale,
+- severity tables include required columns (including Type),
+- carried-forward findings are tagged (incremental mode),
+- output file path rules were followed.
 
-Brief — finding counts per check, top 3-5 critical issues, overall assessment.
+Mark `T5 Verify` as `completed` only after report is saved and chat summary is published.
 
-Format:
-```
-## Requirements Accuracy Review — [Feature Name]
+Read the file:
 
-**Document:** [filename]
-**Sources checked:** [N]
-**Findings:** [N] total ([N] Critical, [N] Should Fix, [N] Verify, [N] Gaps)
+    output-templates.md
 
-| Check | Findings | Status |
-|-------|----------|--------|
-| 1. Source Accuracy | [N] | PASS / FAIL |
-| 2. Inference Detection | [N] | PASS / FAIL |
-| 3. Requirement Purity | [N] | PASS / FAIL |
-| 4. Over-Generalization | [N] | PASS / FAIL |
-| 5. Scope Boundary | [N] | PASS / FAIL / SKIPPED |
-| 6. Testability | [N] | PASS / FAIL |
-| 7. Ambiguity | [N] | PASS / FAIL |
-| 8. Assumption-Req Dependency | [N] | PASS / FAIL |
-| 9. Negative Path Coverage | [N] | PASS / FAIL |
-| 10. Actor Capability | [N] | PASS / FAIL |
-| 11. Intra-Document Consistency | [N] | PASS / FAIL |
-
-### Top Issues
-1. [Most critical finding — brief description]
-2. [Second most critical finding]
-3. [Third most critical finding]
-
-**Full report saved to:** [filepath]
-
-### Recommended Next Steps
-
-1. **Review findings interactively** — use `review-findings` skill with this report to walk through each finding, collect your decisions, and produce a resolution summary.
-2. **Or resolve manually** — work through findings by category:
-   a. Resolve Verify items first (quick yes/no confirmations)
-   b. Batch-approve Should Fix items
-   c. Fill Gaps (add to doc or convert to Open Questions)
-   d. Fix Critical items immediately
-3. **Apply fixes** — use `update-documents` with the resolution summary to apply all approved changes in one pass.
-
-Would you like to use `review-findings` to walk through these interactively?
-```
-
-#### Output 2: Full Report File
-
-Save as `Validation-Report-[Feature].md` in the same directory as the requirements document.
-
-Format:
-```markdown
-# Requirements Accuracy Review
-
-**Document:** [filename]
-**Validated on:** [date]
-**Sources checked:** [N] source documents
-**Checks run:** 11
-
-| Check | Findings | Status |
-|-------|----------|--------|
-| 1. Source Accuracy | [N] | PASS / FAIL |
-| 2. Inference Detection | [N] | PASS / FAIL |
-| 3. Requirement Purity | [N] | PASS / FAIL |
-| 4. Over-Generalization | [N] | PASS / FAIL |
-| 5. Scope Boundary | [N] | PASS / FAIL / SKIPPED |
-| 6. Testability | [N] | PASS / FAIL |
-| 7. Ambiguity | [N] | PASS / FAIL |
-| 8. Assumption-Req Dependency | [N] | PASS / FAIL |
-| 9. Negative Path Coverage | [N] | PASS / FAIL |
-| 10. Actor Capability | [N] | PASS / FAIL |
-| 11. Intra-Document Consistency | [N] | PASS / FAIL |
-
----
-
-## Critical (MUST FIX — factually wrong or misleading)
-
-| # | Location | Check | Finding | Source Says | Doc Claims | Recommendation |
-|---|----------|-------|---------|-------------|------------|----------------|
-| 1 | [Section, line] | [Check #] | [Description] | [What source actually says] | [What doc claims] | [Fix] |
-
-## Should Fix (reframe, relocate, or make precise)
-
-| # | Location | Check | Finding | Recommendation |
-|---|----------|-------|---------|----------------|
-| 1 | [Section, line] | [Check #] | [Description] | [Fix] |
-
-## Verify (needs user confirmation)
-
-| # | Location | Check | Finding | Question for User |
-|---|----------|-------|---------|-------------------|
-| 1 | [Section, line] | [Check #] | [Description] | [What to confirm] |
-
-## Gaps (missing coverage)
-
-| # | Location | Check | Finding | Suggested Addition |
-|---|----------|-------|---------|-------------------|
-| 1 | [Section, line] | [Check #] | [Description] | [What to add] |
-
-## Clean (no issues found)
-
-[List checks that passed with 0 findings and a brief note on what was verified]
-
----
-
-## Recommended Next Steps
-
-1. **Review findings interactively** — Use the `review-findings` skill with this report file to walk through each finding, collect decisions, and produce a resolution summary.
-2. **Or resolve manually** — Work through findings by category: Verify items first, then Should Fix, then Gaps, then Critical.
-3. **Apply fixes** — Use `update-documents` with the resolution summary (from `review-findings`) or apply changes directly.
-4. **Re-run validation** — After fixes are applied, re-run `validate-requirements` to confirm findings are resolved.
-```
+Follow that file's instructions to produce both the chat summary and the full report file.
 
 ---
 
 ## Integration with Other Skills
 
-| Context | How it's called |
-|---|---|
-| **Standalone** | Run against any requirements doc + its source folder |
-| **Pipeline (Stage 9a)** | Called by `requirements-pipeline` before `document-audit` (Stage 9b) |
-| **After updates** | Can be called by `update-documents` in its Phase 3 verify step (alongside `document-audit`) |
-| **Interactive resolution** | After report is generated, user invokes `review-findings` with the report file to walk through findings and collect decisions |
-
----
-
-## Critical Rules
-
-1. **Never skip a check.** If inputs are missing for a check, mark it SKIPPED with an explanation — do not silently omit it.
-2. **Show evidence, not just verdicts.** For every finding, show the problematic text and (for source checks) what the source actually says.
-3. **Severity matters.** Group findings by severity in the report, not by check number. A single finding may fail multiple checks — list it once under its highest severity with all applicable check numbers.
-4. **Dual output + next steps are mandatory.** Always produce the chat summary, the full report file, and prioritized next steps. The chat summary is for quick triage; the report file is for persistent reference; the next steps tell the user exactly what to do next and in what order.
-5. **Be conservative with PASS.** A check PASSes only if zero findings. Even one finding makes it FAIL or WARN.
-6. **Don't fix — flag.** This skill identifies issues; it does not modify the requirements document. Fixes are applied separately (by the user or by the pipeline).
+| Context | Mode | How it's called |
+|---|---|---|
+| **Standalone (first run)** | Full | Run against any requirements doc + its source folder. No prior report exists. |
+| **Standalone (re-run)** | Incremental | User provides the prior validation report. Skill detects changes and selectively re-runs. |
+| **Pipeline (Stage 9)** | Full | Called by `requirements-pipeline` as the combined accuracy + integrity review. No prior report exists at this stage. The report it produces becomes the prior report for future incremental runs. |
+| **After updates** | Incremental | Called by `update-documents` in its Phase 3 verify step. The pre-update validation report serves as the prior report. |
+| **Interactive resolution** | — | After report is generated, user invokes `review-findings` with the report file to walk through findings and collect decisions |

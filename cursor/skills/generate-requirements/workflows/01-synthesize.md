@@ -6,6 +6,24 @@
 
 > `[output-folder]` is the path provided by the user during SKILL.md intake. It is NOT a hardcoded path.
 
+## NON-NEGOTIABLE (read first)
+1. Track source for every extracted fact. Unsourced = (Source: Inferred).
+2. Save Context Summary to file before presenting. Chat is ephemeral.
+3. Never fabricate personas, metrics, or business rules. [TBD] is always better.
+4. Stop at 5+ RED gaps in Quick mode. Work through all RED gaps in Comprehensive.
+5. Wait for user approval before proceeding to Workflow 2.
+
+## Critical Rules
+
+| Do | Don't |
+|-------|---------|
+| Track source for every piece of info | Fabricate data, business rules, or field names |
+| Flag TBDs with stakeholder routing | Skip Step 0.5 when Swagger + modify keywords detected |
+| Save Context Summary to file | Just display in chat without saving |
+| Quick: Ask max 2 questions. Comprehensive: ask all RED gaps, grouped. | Ask all questions upfront in a long ungrouped list |
+| Quick: Stop if 5+ RED gaps unresolved. Comprehensive: work through all RED gaps with user. | Proceed with major unknown blockers |
+| Wait for user approval before proceeding | Auto-proceed to Workflow 2 |
+
 ---
 
 ## 🎯 Purpose
@@ -293,13 +311,6 @@ workflows/02-generate.md
 
 ---
 
-## 🚨 Critical Rules
+---
 
-| ✅ Do | ❌ Don't |
-|-------|---------|
-| Track source for every piece of info | Fabricate data, business rules, or field names |
-| Flag TBDs with stakeholder routing | Skip Step 0.5 when Swagger + modify keywords detected |
-| Save Context Summary to file | Just display in chat without saving |
-| Quick: Ask max 2 questions. Comprehensive: ask all RED gaps, grouped. | Ask all questions upfront in a long ungrouped list |
-| Quick: Stop if 5+ RED gaps unresolved. Comprehensive: work through all RED gaps with user. | Proceed with major unknown blockers |
-| Wait for user approval before proceeding | Auto-proceed to Workflow 2 |
+Workflow 1 complete. Return to `SKILL.md` workflow chain.

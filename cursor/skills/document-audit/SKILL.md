@@ -112,7 +112,22 @@ BROKEN REF: [Section — exact reference text]
 
 ## Step 6: Produce Audit Report
 
-Compile all findings into a summary:
+**Save the report first — then summarize in chat.**
+
+### Determine output path (in order of precedence)
+
+1. **Parent skill provided a path** (e.g., called from `/requirements-pipeline` Stage 9b with an established `[output]` folder): save inside that folder as `stage_output/Stage9b-Document-Audit.md`.
+
+2. **No parent path — check for existing reports folder:** Look in the same directory as the audited document for a folder named `report`, `Report`, `reports`, or `Reports` (case-insensitive). If found, use it.
+
+3. **No reports folder found:** Create a `reports/` folder in the same directory as the audited document (`mkdir -p`), then save there.
+
+**File name:** `Audit-Report-[DocumentName].md`
+(e.g., auditing `Feature-Requirements-TimeOff.md` → saves as `reports/Audit-Report-TimeOff.md`)
+
+**In chat, present only:** File path, total finding count by category, and the top 3 highest-priority findings. Do NOT dump the full report into chat.
+
+Report format:
 
 ```markdown
 # Document Audit Report
@@ -132,6 +147,10 @@ Compile all findings into a summary:
 ## Informational (LOW priority — minor consistency issues)
 
 [List minor findings]
+
+## Summary
+
+[Table: Category | Count | Findings — followed by recommended fix order]
 
 ## Summary of Changes Made
 

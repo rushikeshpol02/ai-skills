@@ -13,8 +13,8 @@ Walks users through findings from audit/validation reports, collects decisions v
 
 ## When to Use
 
-- After `validate-requirements` generates a validation report
-- After `document-audit` generates an audit report
+- After `validate-requirements` generates a validation report (includes both semantic and structural findings for requirements docs)
+- After `document-audit` generates an audit report (for non-requirements docs)
 - After any future skill that produces a structured findings file
 - When the user wants to systematically work through findings rather than handle them ad-hoc
 - When collecting decisions for later batch application via `update-documents`
@@ -38,7 +38,8 @@ Determine which skill produced the report by checking the heading:
 
 | Heading | Format | Producer |
 |---|---|---|
-| `# Requirements Accuracy Review` | validate-requirements | `validate-requirements` skill |
+| `# Requirements Review` | validate-requirements | `validate-requirements` skill (combined semantic + structural) |
+| `# Requirements Accuracy Review` | validate-requirements-legacy | `validate-requirements` skill (pre-merge format — treat same as above) |
 | `# Document Audit Report` | document-audit | `document-audit` skill |
 | Other | generic | Unknown — use fallback parsing |
 
@@ -48,12 +49,14 @@ Determine which skill produced the report by checking the heading:
 
 | Category | Severity | Table Columns |
 |---|---|---|
-| Critical | MUST FIX | #, Location, Check, Finding, Source Says, Doc Claims, Recommendation |
-| Should Fix | SHOULD FIX | #, Location, Check, Finding, Recommendation |
-| Verify | VERIFY | #, Location, Check, Finding, Question for User |
-| Gaps | GAP | #, Location, Check, Finding, Suggested Addition |
+| Critical | MUST FIX | #, Type, Location, Check, Finding, Source Says, Doc Claims, Recommendation |
+| Should Fix | SHOULD FIX | #, Type, Location, Check, Finding, Recommendation |
+| Verify | VERIFY | #, Type, Location, Check, Finding, Question for User |
+| Gaps | GAP | #, Type, Location, Check, Finding, Suggested Addition |
 
-Also parse the "Clean" section to know which checks passed.
+The Type column (Semantic / Structural) distinguishes which dimension each finding comes from. Use it when presenting findings to help the user understand the nature of the issue.
+
+Also parse the "Clean" section to know which checks passed. The summary table is split into two sub-tables: "Semantic Checks" (Checks 1–11) and "Structural Checks" (Checks S1–S4).
 
 **document-audit format — 3 categories:**
 
@@ -291,8 +294,8 @@ Format:
 
 | Context | How it's called |
 |---|---|
-| **After `validate-requirements`** | User runs validation → report generated → next steps suggest `review-findings` → user invokes it with the report path |
-| **After `document-audit`** | Same pattern — audit report generated → user invokes `review-findings` |
+| **After `validate-requirements`** | User runs validation → combined report generated (semantic + structural findings) → next steps suggest `review-findings` → user invokes it with the report path |
+| **After `document-audit`** | Same pattern for non-requirements docs — audit report generated → user invokes `review-findings` |
 | **With `update-documents`** | Resolution file from Phase 4 can be used as input to `update-documents` to apply all approved fixes in one pass |
 | **Standalone** | User points it at any findings report file |
 

@@ -15,11 +15,14 @@ Agent skills are instruction files (`SKILL.md`) stored in a skills folder the ag
 ```
 ai-skills/
 ├── cursor/
-│   └── skills/              10 production skills (Cursor + Claude Code compatible)
+│   └── skills/              12 production skills (Cursor + Claude Code compatible)
 │       ├── requirements-pipeline/
 │       │   └── stages/      Stage instruction files (e.g., 01-intake.md)
 │       ├── generate-requirements/
-│       │   └── workflows/   Workflow instruction files
+│       │   ├── workflows/   Workflow instruction files
+│       │   └── archive/     Archived templates (moved to dedicated skills)
+│       ├── validate-requirements/
+│       │   └── checks/      Semantic and structural check definitions
 │       └── ...
 ├── skill-eval/              Skill evaluation utilities
 └── docs/
@@ -28,7 +31,7 @@ ai-skills/
     └── invocation-guide.md  How to install and invoke each skill
 ```
 
-All 10 skills in `cursor/skills/` work with both Cursor and Claude Code — they share the same `SKILL.md` format.
+All 12 skills in `cursor/skills/` work with both Cursor and Claude Code — they share the same `SKILL.md` format.
 
 ---
 
@@ -101,21 +104,23 @@ done
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
-| [requirements-pipeline](cursor/skills/requirements-pipeline/SKILL.md) | 9-stage discovery and analysis pipeline from messy inputs to production-ready docs | Pipeline Orchestrator |
+| [requirements-pipeline](cursor/skills/requirements-pipeline/SKILL.md) | 9-stage discovery and analysis pipeline from messy inputs to production-ready docs; supports multi-feature decomposition | Pipeline Orchestrator |
 | [generate-requirements](cursor/skills/generate-requirements/SKILL.md) | Generate Feature Requirements from well-defined inputs; API contracts generated separately using `rest-api-contract-generator` | Pipeline Stage / Standalone |
 | [design-to-context](cursor/skills/design-to-context/SKILL.md) | Convert Figma URLs or design images into User Flow Docs, Design Descriptions, or Context Summaries | Pipeline Stage / Standalone |
 | [transcript-to-meeting-notes](cursor/skills/transcript-to-meeting-notes/SKILL.md) | Turn meeting transcripts (.vtt, .md, .docx, .txt) into structured discovery summaries | Pipeline Stage / Standalone |
 | [identify-assumptions](cursor/skills/identify-assumptions/SKILL.md) | Surface and structure risky assumptions using PM / Designer / Engineer perspectives | Pipeline Stage / Standalone |
-| [validate-requirements](cursor/skills/validate-requirements/SKILL.md) | Check requirements for semantic accuracy across 11 checks in 4 dimensions | Pipeline Stage / Standalone |
-| [document-audit](cursor/skills/document-audit/SKILL.md) | Scan any document for stale markers, contradictions, and broken cross-references | Pipeline Stage / Standalone |
+| [validate-requirements](cursor/skills/validate-requirements/SKILL.md) | Combined semantic + structural review with 15 checks; supports incremental mode for re-validation | Pipeline Stage / Standalone |
+| [document-audit](cursor/skills/document-audit/SKILL.md) | Scan any non-requirements document for stale markers, contradictions, and broken cross-references | Pipeline Stage / Standalone |
 
 ### Post-Pipeline Skills
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
 | [review-findings](cursor/skills/review-findings/SKILL.md) | Walk through audit or validation report findings interactively and collect decisions | Post-Pipeline |
-| [update-documents](cursor/skills/update-documents/SKILL.md) | Propagate a change (fact, scope, terminology) across multiple related documents | Post-Pipeline |
+| [update-documents](cursor/skills/update-documents/SKILL.md) | Propagate a change (fact, scope, terminology) across multiple related documents with subagent execution | Post-Pipeline |
 | [client-ready-requirements](cursor/skills/client-ready-requirements/SKILL.md) | Transform an internal requirements doc into a client-safe version for all stakeholder types | Post-Pipeline |
+| [figjam-diagram-generator](cursor/skills/figjam-diagram-generator/SKILL.md) | Generate Mermaid.js diagrams in FigJam from requirements, user flows, or verbal input via Figma MCP | Post-Pipeline |
+| [securitas-client-ready-requirements](cursor/skills/securitas-client-ready-requirements/SKILL.md) | Transform internal requirements into streamlined Securitas client-ready format | Post-Pipeline / Client-Specific |
 
 ---
 

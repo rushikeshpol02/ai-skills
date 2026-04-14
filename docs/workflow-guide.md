@@ -6,12 +6,12 @@ How the skills relate to each other, which ones form a pipeline, which are stand
 
 ## Skill Groups
 
-All 10 product skills fall into two groups:
+All 12 product skills fall into two groups:
 
 | Group | Skills | Description |
 |-------|--------|-------------|
 | **1 — Full Pipeline** | requirements-pipeline (orchestrator) + 6 called skills | End-to-end requirements generation from raw inputs |
-| **2 — Post-Pipeline** | review-findings, update-documents, client-ready-requirements | Review, propagate changes, and deliver client-ready output after docs are created |
+| **2 — Post-Pipeline** | review-findings, update-documents, client-ready-requirements, figjam-diagram-generator, securitas-client-ready-requirements | Review, propagate changes, visualize, and deliver client-ready output after docs are created |
 
 ---
 
@@ -36,20 +36,20 @@ flowchart TD
     subgraph orchestrator [requirements-pipeline]
         S2[Stage 2: Interpretation Checkpoint]
         S3[Stage 3: Variables and Constraints]
+        S35[Stage 3.5: Feature Decomposition]
         S4[Stage 4: Scenario Matrix]
         S5[Stage 5: Assumptions]
         S6[Stage 6: User Flows + Purity Filter]
         S7[Stage 7: Requirements Docs]
         S8[Stage 8: Risk Analysis]
-        S9a[Stage 9a: Semantic Accuracy]
-        S9b[Stage 9b: Structural Integrity]
+        S9[Stage 9: Validation - Dedup + Semantic + Structural]
+        S9c[Stage 9c: Post-Merge Reconciliation]
     end
 
     subgraph calledSkills [Skills Called by Orchestrator]
         IA[identify-assumptions]
         GR[generate-requirements]
         VR[validate-requirements]
-        DA[document-audit]
     end
 
     T --> TMN
@@ -59,17 +59,17 @@ flowchart TD
     P --> S2
     L --> S2
 
-    S2 --> S3 --> S4
+    S2 --> S3 --> S35
+    S35 --> S4
     S4 --> S5
     S5 --> IA
     IA --> S6
     S6 --> S7
     S7 --> GR
     GR --> S8
-    S8 --> S9a
-    S9a --> VR
-    VR --> S9b
-    S9b --> DA
+    S8 --> S9
+    S9 --> VR
+    VR --> S9c
 ```
 
 ### Stages and What They Produce
@@ -79,13 +79,14 @@ flowchart TD
 | 1 | Transcripts and designs are pre-processed into structured summaries | Meeting summary, User Flow Doc or Context Summary |
 | 2 | Interpretation checkpoint — STATED vs INFERRED facts, user confirms | Inference Register |
 | 3 | Variables, constraints, and actors mapped | Variables table |
+| 3.5 | Feature decomposition — cluster value streams, test independence, build Shared Registry | `Stage3.5-Feature-Decomposition.md` |
 | 4 | Scenario matrix — all combinations, edge cases, boundary conditions | `[Feature]-Scenarios-Matrix.md` |
 | 5 | Risky assumptions identified per perspective (PM / Designer / Engineer) | Assumptions register |
 | 6 | Step-by-step user flows per actor + purity filter (requirement vs solution vs design) | `[Feature]-User-Flows.md` |
 | 7 | Feature Requirements document generated (API contracts and system flows are separate, post-requirements skills) | `Feature-Requirements-[Feature].md` (saved to user-provided output folder) |
 | 8 | Pre-mortem risk analysis — Tigers / Paper Tigers / Elephants | Risks section merged into requirements doc |
-| 9a | Semantic accuracy review — 10 checks across truth, purity, actionability, completeness | `Validation-Report-[Feature].md` |
-| 9b | Structural integrity sweep — stale markers, contradictions, broken cross-refs | Audit report, fixes applied |
+| 9 | Combined validation — deduplication + 15-check semantic and structural review | `Stage9-Validation-Report.md` |
+| 9c | Post-merge reconciliation (multi-feature only) — cross-document dedup, conflict detection | `Stage9c-Reconciliation.md` |
 
 ### Two Entry Points for Requirements Generation
 
@@ -164,27 +165,30 @@ flowchart TD
         DTC[design-to-context\nFigma via subagent]
         IA[identify-assumptions]
         GR[generate-requirements]
-        VR[validate-requirements]
-        DA[document-audit]
+        VR[validate-requirements\nSemantic + Structural]
     end
 
     subgraph postpipeline [Post-Pipeline - Group 2]
         RF[review-findings]
         UD[update-documents]
         CRR[client-ready-requirements]
+        FDG[figjam-diagram-generator]
+        SCRR[securitas-client-ready-requirements]
+        DA[document-audit\nNon-requirements docs only]
     end
 
     GDR -->|"Stage 1"| TMN
     GDR -->|"Stage 1"| DTC
     GDR -->|"Stage 5"| IA
     GDR -->|"Stage 7"| GR
-    GDR -->|"Stage 9a"| VR
-    GDR -->|"Stage 9b"| DA
+    GDR -->|"Stage 9"| VR
 
     VR --> RF
     DA --> RF
     RF --> UD
     UD --> CRR
+    UD --> SCRR
+    CRR -.->|"optional"| FDG
 ```
 
 ---

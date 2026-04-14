@@ -5,6 +5,24 @@ description: "Generates Feature Requirements documentation from any combination 
 
 # Generate Requirements — Entry Orchestrator
 
+## NON-NEGOTIABLE (read first)
+1. Never fabricate data, business rules, or field names. Mark unknowns as [TBD].
+2. Save every output file before presenting in chat. Chat is ephemeral.
+3. Wait for user approval at every checkpoint. Never auto-proceed.
+4. Requirements describe WHAT, never HOW (solution) or WHAT IT LOOKS LIKE (design).
+5. Source traceability on every claim. Unsourced = flag as [TBD].
+
+## Critical Rules
+
+1. **Never skip steps** — The three workflows must run in order
+2. **Always save files** — Every output is saved to the workspace, not just shown in chat
+3. **Mark TBDs honestly** — Never invent business rules, performance targets, or field names
+4. **Wait at checkpoints** — After each workflow, STOP and wait for user approval before continuing
+5. **One skill at a time** — Complete each workflow file fully before reading the next
+6. **Respect existing patterns** — If Swagger is provided, follow its naming and error conventions
+
+---
+
 ## 🎯 Purpose
 
 This skill generates production-ready Agile requirements documentation from messy inputs.
@@ -256,17 +274,6 @@ workflows/01-synthesize.md
 ```
 
 Follow that file's instructions completely from start to finish.
-
----
-
-## 🚨 Critical Rules for This Skill
-
-1. **Never skip steps** — The three workflows must run in order
-2. **Always save files** — Every output is saved to the workspace, not just shown in chat
-3. **Mark TBDs honestly** — Never invent business rules, performance targets, or field names
-4. **Wait at checkpoints** — After each workflow, STOP and wait for user approval before continuing
-5. **One skill at a time** — Complete each workflow file fully before reading the next
-6. **Respect existing patterns** — If Swagger is provided, follow its naming and error conventions
 
 ---
 
