@@ -1,6 +1,55 @@
 # Changelog
 
-## [Unreleased] — 2026-04-14
+## [Unreleased] — 2026-04-20
+
+### New Skills (9) — Planning Plugin + Epics & Stories Plugin
+
+A new **Planning Plugin** (`cursor/skills/planning/`) adds 5 interconnected delivery lifecycle skills covering the full sprint cycle:
+
+- **release-sprint-planner** — Defines a release (goal, scope, timeline, team, constraints) and produces a formal Release Definition + multi-sprint plan. Assesses context across 6 dimensions, sizes features, maps dependencies, and assigns work to sprints.
+- **sprint-planning-session** — Takes a sprint's planned work (from a release plan, ticket board, or verbal list) and produces a structured Sprint Planning Session document with goal validation, grouped work areas, and "done" criteria.
+- **sprint-progress-tracker** — Creates a planned-vs-actual progress snapshot for mid-sprint check-ins or sprint close-out. Surfaces risks early and feeds data into sprint review.
+- **sprint-review-generator** — Produces a stakeholder-facing sprint review document. Answers: What did we build? Did we hit our goal? What did we learn? What's next? Serves both stakeholders (top sections) and team/PM (full detail).
+- **meeting-to-plan-integrator** — Applies decisions from any sprint demo, retro, or stakeholder call back to the release plan and related artifacts. The "decisions become actions" bridge.
+
+A new **Epics & Stories Plugin** (`cursor/skills/epics-and-user-stories/`) adds 4 story lifecycle skills:
+
+- **generate-epic** — Creates a structured epic document from a requirements doc or verbal description. Extracts business goals, success criteria, scope boundaries, and dependencies. Produces a single `Epic-[Feature].md` file ready for story decomposition.
+- **generate-user-stories** — Decomposes features into story concepts using the WAHZURT framework, then creates detailed INVEST-compliant user stories one-at-a-time with inline quality gates. Supports 4 modes: create (standard), create (quick/draft), modify existing stories, and decompose-only.
+- **validate-user-stories** — Audits existing user stories against 12 validation categories (9 per-story + 2 cross-story + 1 practitioner readability) and fixes failures. Always builds a fresh registry from actual story files — never trusts existing registries.
+- **generate-uat** — Generates a client-ready UAT test plan from GitHub issue files or a manual ticket list. Extracts Acceptance Criteria, deduplicates cross-platform (iOS/Android) scenarios, and produces a requirement-pure UAT document with a "Known Limitations" section and "Tickets Without ACs" appendix.
+
+### Structural Change — Category Plugin Layout
+
+The flat `cursor/skills/` structure has been refactored into category plugins:
+
+- **`cursor/skills/requirements/`** — 9 requirements and analysis skills reorganized here (previously at `cursor/skills/<skill>/`)
+- **`cursor/skills/planning/`** — 5 new planning skills organized here
+- **`cursor/skills/epics-and-user-stories/`** — 4 new story lifecycle skills organized here
+- **`cursor/skills/`** (root) — 3 standalone cross-cutting skills remain: `design-to-context`, `figjam-diagram-generator`, `transcript-to-meeting-notes`
+
+Each category folder contains its own `README.md` documenting the plugin structure, skill relationships, install instructions, and output folder layout.
+
+**Shared resources (planning plugin):**
+- `planning/shared/delivery-model.md` — Release lifecycle phases, sprint anatomy, document chain, commitment model
+- `planning/shared/execution-rules.md` — Shared NON-NEGOTIABLE rules, quality criteria, self-check structure, provenance model
+- `planning/shared/constraint-registry-template.md` — Template and rules for the shared constraint registry
+
+### Skill Enhancement — figjam-diagram-generator
+
+- Added mandatory **5-color standard palette** for all flowcharts. Every generated flowchart must now include the full `classDef` block and `class` assignments — no exceptions.
+- Color classes: `terminus` (start/end, green), `decision` (diamonds, amber), `action` (rectangles, blue), `notification` (reminders/alerts, orange), `errorPath` (offline/fallback/degraded, red)
+- Updated `SKILL.md` with full classification rules, `classDef` template, and new verification gate checklist item
+- Updated `mermaid-patterns.md` with a Standard Color Palette reference section, classification rules, and updated subgraph example showing all 5 classes applied
+- Removed the old opt-in "Color styling allowed if user requests it" rule — color is now always applied
+
+### Documentation Updates
+
+- **README.md** — Updated skill count from 12 to 21; restructured repository tree to show category plugin layout; added Planning Skills and Epics & Stories Skills tables; updated install instructions to use `find -mindepth 2 -maxdepth 3` to handle both flat and nested skill paths; updated Contributing section with category guidance
+
+---
+
+## [0.5.0] — 2026-04-14
 
 ### New Skills (2)
 
