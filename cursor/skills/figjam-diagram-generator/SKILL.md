@@ -103,6 +103,43 @@ Read [mermaid-patterns.md](mermaid-patterns.md) for shape mapping, edge patterns
 **Audit nodes:**
 - When the source mentions compliance data, add a cylinder listing stored fields
 
+### Standard Color Palette (flowcharts — always apply)
+
+Every user flow flowchart must include the following `classDef` block and `class` assignments. Do NOT skip this for any flowchart. No color styling in gantt/sequence diagrams.
+
+**Color legend:**
+
+| Class | Fill | Stroke | Text | Shape | Meaning |
+|---|---|---|---|---|---|
+| `terminus` | `#D4EDDA` | `#28A745` | `#1E4620` | Stadium `(["..."])` | Start / End of a flow |
+| `decision` | `#FFF3CD` | `#F59E0B` | `#664D03` | Diamond `{"..."}` | Decision / system check |
+| `action` | `#CFE2FF` | `#0D6EFD` | `#084298` | Rectangle `["..."]` | Action / screen / processing |
+| `notification` | `#FFE5CC` | `#FB923C` | `#7C2D12` | Rectangle `["..."]` | User-facing notification or in-app reminder |
+| `errorPath` | `#F8D7DA` | `#DC3545` | `#58151C` | Rectangle `["..."]` | Error / fallback / degraded path |
+
+**Classification rules:**
+- `terminus` — every stadium node (flow start and end)
+- `decision` — every diamond node
+- `notification` — rectangles that compose/send push notifications, display in-app reminders or alerts to the user
+- `errorPath` — rectangles that show offline banners, cached/stale data, fallback states, or paths where the normal flow cannot proceed
+- `action` — all remaining rectangles
+
+**Classdefs to append after all subgraphs and cross-subgraph edges:**
+
+```
+classDef terminus fill:#D4EDDA,stroke:#28A745,stroke-width:2px,color:#1E4620
+classDef decision fill:#FFF3CD,stroke:#F59E0B,stroke-width:2px,color:#664D03
+classDef action fill:#CFE2FF,stroke:#0D6EFD,stroke-width:2px,color:#084298
+classDef notification fill:#FFE5CC,stroke:#FB923C,stroke-width:2px,color:#7C2D12
+classDef errorPath fill:#F8D7DA,stroke:#DC3545,stroke-width:2px,color:#58151C
+
+class <terminus node IDs> terminus
+class <decision node IDs> decision
+class <action node IDs> action
+class <notification node IDs> notification
+class <errorPath node IDs> errorPath
+```
+
 ### MCP hard constraints
 
 - All text in double quotes for flowchart/graph
@@ -110,7 +147,6 @@ Read [mermaid-patterns.md](mermaid-patterns.md) for shape mapping, edge patterns
 - Subgraph IDs: camelCase or underscores, no spaces
 - No color styling in gantt/sequence; no notes in sequence
 - LR direction default for flowcharts
-- Color styling in flowcharts only if user requests it
 
 ---
 
@@ -192,8 +228,10 @@ Mermaid syntax is valid and shapes match conventions.
 - [ ] Correct shapes: stadium for start/end, diamond for decisions, rectangle for actions, cylinder for audit.
 - [ ] Subgraph titles follow `[Feature] - [Actor] [action] flow in [System]`.
 - [ ] Decision edge labels describe outcomes, not bare "Yes/No".
+- [ ] Standard color palette applied: all 5 `classDef` blocks present; every node ID assigned to exactly one class; no node left unclassified.
 
-**Fix:** Add missing quotes, remove emojis, rename reserved IDs, swap wrong shapes. All silent.
+**Fix:** Add missing quotes, remove emojis, rename reserved IDs, swap wrong shapes, add missing classDef/class assignments. All silent.
+
 
 **After all checks pass → proceed to Step 5.**
 

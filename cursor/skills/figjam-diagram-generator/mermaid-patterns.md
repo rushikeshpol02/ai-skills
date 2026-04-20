@@ -42,7 +42,7 @@ Always `flowchart LR`. Define the entry node first in the code — Mermaid place
 ### Flowchart Constraints
 
 - All node text and edge labels in double quotes
-- Color styling allowed but use sparingly — only if user requests it
+- Standard 5-color palette MUST be applied to every flowchart (see Standard Color Palette section below)
 - No back-links (edges from later to earlier nodes). Omit "return to" edges.
 
 ### Subgraph Pattern (multi-flow features)
@@ -82,7 +82,51 @@ flowchart LR
     end
 
     E -.->|"Handoff: exception created"| J
+
+    classDef terminus fill:#D4EDDA,stroke:#28A745,stroke-width:2px,color:#1E4620
+    classDef decision fill:#FFF3CD,stroke:#F59E0B,stroke-width:2px,color:#664D03
+    classDef action fill:#CFE2FF,stroke:#0D6EFD,stroke-width:2px,color:#084298
+    classDef notification fill:#FFE5CC,stroke:#FB923C,stroke-width:2px,color:#7C2D12
+    classDef errorPath fill:#F8D7DA,stroke:#DC3545,stroke-width:2px,color:#58151C
+
+    class A,G terminus
+    class B,L,P,R decision
+    class C,D,E,F,J,K,M,N,O,S,T,U action
+    class H,V action
 ```
+
+### Standard Color Palette
+
+Append after all subgraphs and cross-subgraph edges in every flowchart. Classify every node — no node left unclassified.
+
+| Class | Fill | Stroke | Text | Applies to |
+|---|---|---|---|---|
+| `terminus` | `#D4EDDA` | `#28A745` | `#1E4620` | All stadium nodes — flow start and end |
+| `decision` | `#FFF3CD` | `#F59E0B` | `#664D03` | All diamond nodes — decisions and system checks |
+| `action` | `#CFE2FF` | `#0D6EFD` | `#084298` | Rectangles — actions, screens, processing, routing |
+| `notification` | `#FFE5CC` | `#FB923C` | `#7C2D12` | Rectangles — push notifications, in-app reminders/alerts |
+| `errorPath` | `#F8D7DA` | `#DC3545` | `#58151C` | Rectangles — offline banners, cached/stale fallbacks, degraded paths |
+
+```
+classDef terminus fill:#D4EDDA,stroke:#28A745,stroke-width:2px,color:#1E4620
+classDef decision fill:#FFF3CD,stroke:#F59E0B,stroke-width:2px,color:#664D03
+classDef action fill:#CFE2FF,stroke:#0D6EFD,stroke-width:2px,color:#084298
+classDef notification fill:#FFE5CC,stroke:#FB923C,stroke-width:2px,color:#7C2D12
+classDef errorPath fill:#F8D7DA,stroke:#DC3545,stroke-width:2px,color:#58151C
+
+class <terminus node IDs> terminus
+class <decision node IDs> decision
+class <action node IDs> action
+class <notification node IDs> notification
+class <errorPath node IDs> errorPath
+```
+
+**Classification rules:**
+- `terminus` — every `(["..."])` stadium
+- `decision` — every `{"..."}` diamond
+- `notification` — rectangles that compose or send push notifications, or display in-app reminders/alerts to the user
+- `errorPath` — rectangles that show offline banners, stale/cached data, fallback states, or blocked paths
+- `action` — all remaining rectangles
 
 ### Key Patterns in the Example
 
