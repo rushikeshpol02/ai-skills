@@ -2,7 +2,9 @@
 
 ## [Unreleased] — 2026-04-20
 
-### New Skills (9) — Planning Plugin + Epics & Stories Plugin
+### New Skills (9) — Planning Plugin + Epics & Stories Plugin ⚠️ Work in Progress
+
+> Both new plugins are work in progress. Core functionality is in place but prompts, templates, and workflows are still being refined through active use.
 
 A new **Planning Plugin** (`cursor/skills/planning/`) adds 5 interconnected delivery lifecycle skills covering the full sprint cycle:
 

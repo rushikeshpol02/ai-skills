@@ -15,8 +15,8 @@ Agent skills are instruction files (`SKILL.md`) stored in a skills folder the ag
 ```
 ai-skills/
 ├── cursor/
-│   └── skills/              21 production skills across 3 category plugins + 3 standalone
-│       ├── planning/         Planning plugin — 5 delivery lifecycle skills
+│   └── skills/              21 skills — 12 production + 9 WIP across 3 category plugins + 3 standalone
+│       ├── planning/         Planning plugin — 5 delivery lifecycle skills  ⚠️ WIP
 │       │   ├── release-sprint-planner/
 │       │   ├── sprint-planning-session/
 │       │   ├── sprint-progress-tracker/
@@ -32,7 +32,7 @@ ai-skills/
 │       │   ├── validate-requirements/
 │       │   │   └── checks/   Semantic and structural check definitions
 │       │   └── ...
-│       ├── epics-and-user-stories/  Epics & Stories plugin — 4 story lifecycle skills
+│       ├── epics-and-user-stories/  Epics & Stories plugin — 4 story lifecycle skills  ⚠️ WIP
 │       │   ├── generate-epic/
 │       │   ├── generate-user-stories/
 │       │   ├── validate-user-stories/
@@ -47,7 +47,7 @@ ai-skills/
     └── invocation-guide.md  How to install and invoke each skill
 ```
 
-All 21 skills in `cursor/skills/` work with both Cursor and Claude Code — they share the same `SKILL.md` format.
+Skills marked **⚠️ WIP** are still being refined and may change. The 12 skills in `requirements/` and the 3 standalone skills are production-ready. All skills use the same `SKILL.md` format and work with both Cursor and Claude Code.
 
 ---
 
@@ -119,7 +119,9 @@ done
 
 ## Skills at a Glance
 
-### Epics & User Stories Skills
+### Epics & User Stories Skills ⚠️ Work in Progress
+
+> These skills are still being refined. Core functionality works but prompts, templates, and workflows are subject to change.
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
@@ -128,7 +130,9 @@ done
 | [validate-user-stories](cursor/skills/epics-and-user-stories/validate-user-stories/SKILL.md) | Audit existing user stories against 12 validation categories (9 per-story + 2 cross-story + 1 readability) and fix failures; always builds a fresh registry from actual files | Standalone |
 | [generate-uat](cursor/skills/epics-and-user-stories/generate-uat/SKILL.md) | Generate a client-ready UAT test plan from GitHub issue files or a ticket list; extracts ACs, deduplicates cross-platform scenarios, and produces a requirement-pure test document | Standalone |
 
-### Planning Skills
+### Planning Skills ⚠️ Work in Progress
+
+> These skills are still being refined. Core functionality works but prompts, templates, and workflows are subject to change.
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
