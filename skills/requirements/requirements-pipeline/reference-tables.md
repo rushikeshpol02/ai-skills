@@ -135,6 +135,121 @@ The test applies to consecutive bullets only. A sub-bullet must be directly link
 
 ---
 
+## FR Boundary Rule
+
+A separate FR is warranted only when a capability has an **independent user goal** — a goal that can be stated without referencing another FR.
+
+**FR Independence Test:** Before creating a new FR Plan entry, ask: "Can this capability's purpose be described without mentioning another FR?" If no — it belongs inside the other FR as bullets or a branch, not as its own FR.
+
+### Merge Patterns
+
+**Pattern 1 — Start/End of the same capability → one FR**
+When two flow steps represent entry and exit of the same user-initiated action, they share one user goal and belong in one FR. Start and End are sequential steps within the capability, not separate capabilities.
+
+❌ Two FRs: "FR-N: User starts a timer" / "FR-M: User stops a timer"
+✅ One FR: "Timer Recording: user starts and stops a timed activity." Start-step bullets first, end-step bullets follow.
+
+**Pattern 2 — Constraint with no independent goal → bullets inside the parent FR, not a new FR**
+When a behavior exists only to enforce a rule created by another FR — has no user goal of its own, and appears in the same flow context as the parent FR — it belongs as bullets inside the parent FR's content block, not as its own FR.
+
+Test: (a) Remove the parent FR. Does the constraint FR still make sense as a standalone requirement? If no — not independent. (b) Does the constraint appear on a different screen or in a different flow context from the parent FR? If yes — it may warrant its own FR even if it fails test (a). Both conditions must be evaluated.
+
+❌ Separate FR: "FR-N: Feature X is unavailable while action Y is active" — same flow, no independent goal
+✅ Bullet inside the action-Y FR: "Feature X is not available while action Y is active."
+
+Note: whether this bullet is a top-level peer or a sub-bullet is determined by the FR Bullet Hierarchy Rule at write time in 07b — not here. Do not force sub-bullet nesting during FR Plan construction.
+
+**Pattern 3 — Approve/Deny branches of one decision → one FR with conditional syntax**
+When an actor can take two opposing actions on the same object, both branches are the same capability. The user goal is one: act on a request. Write one FR; use conditional bullet syntax for diverging behaviors.
+
+❌ Two FRs: "FR-N: Reviewer approves the request" / "FR-M: Reviewer denies the request"
+✅ One FR: "Request Review: the reviewer can approve or deny. Denial requires a mandatory comment."
+
+**Branch label format:** When merging two branches into one FR, use bold labels to separate branch behavior — do not write them as a flat undifferentiated list.
+
+**[Branch A label]:**
+- [bullet specific to Branch A]
+- [bullet specific to Branch A]
+
+**[Branch B label]:**
+- [bullet specific to Branch B]
+- [bullet specific to Branch B]
+
+Labels are short and action-oriented: **Yes:** / **No:**, **Approve:** / **Deny:**, **Online:** / **Offline:**
+Bullets shared by both branches appear above the bold labels as a preamble — not inside either section.
+
+**Pattern 4 — Same implementation concern → one FR**
+When two behaviors are triggered by the same user action under different conditions, affect the same data object, and a QA engineer would test them in a single test scenario, they belong in one FR. The distinction between them is technical, not user-visible.
+
+Test: "Can a QA engineer test both behaviors in one test scenario by varying only the condition (e.g., online vs. offline, first submission vs. duplicate)?" If yes — one FR.
+
+❌ Two FRs: "FR-N: System retries on connectivity failure" / "FR-M: Duplicate submission is silently discarded"
+✅ One FR: "Submission Resilience: the feature handles connectivity failure and prevents duplicate records."
+
+### When to Create a Separate FR
+
+Split when all three are true:
+1. The capability produces a distinct record type or record destination that no other FR produces, OR involves a distinct human actor, OR produces a distinct user-visible state that no other FR produces
+2. The content results in 4–12 final bullets
+3. Adding the content as a bold-labeled section to the nearest candidate FR would push that FR over 12 bullets
+
+Additional split signals (any one of these is sufficient regardless of bullet count):
+4. The capability has a different entry point or trigger that is not a sub-path of an existing flow
+5. The capability involves distinct error handling or edge case behavior that warrants independent specification
+
+**Actor separation (Rule 5):** A different human actor is always a split signal, regardless of bullet count — overrides condition (2). Automated system actions (no human initiates them) are not a distinct actor. An FR that mixes one human actor's submission flow with a different human actor's review flow must be split even if the combined bullet count is under 12.
+
+### Branch Rules (Rule 4)
+
+A branch earns its own FR when either condition is true:
+- It has 5 or more bullets of its own behavior (not counting shared preamble), or
+- It has a distinct error state that differs from the other path
+
+Under both thresholds → bold label within the FR, not a separate FR.
+**Rule 5 override:** actor separation always wins over the bullet count threshold.
+
+### FR Size Bounds (Rules 2–3)
+
+**Minimum — under 4 bullets:** Not a standalone FR. Route content to:
+
+| Content type | Destination |
+|---|---|
+| Rule imposed by an external party | Section 9.1 Constraints |
+| Pending decision requiring resolution | Section 10 Open Questions |
+| Behavioral assumption accepted by the team | Section 9.3 Assumptions |
+| Implementation detail with no user-visible outcome | Implementation Note blockquote |
+| Behavior that extends the nearest FR | Bullets inside that FR |
+
+**Maximum — over 12 bullets:** Apply in order before splitting:
+
+Step 1 — Relocate. Move bullets to other sections using the table below. **Trim guard:** before removing a bullet, confirm the appendix covers the same state, same trigger condition, and same outcome — not merely the same general area. If not covered there, relocate using the table; do not delete.
+
+| Bullet type | Destination |
+|---|---|
+| Hard constraint with a named owner | Section 9.1 Constraints |
+| Pending decision or unresolved approval | Section 10 Open Questions |
+| Behavioral assumption | Section 9.3 Assumptions |
+| Implementation detail (how the system routes or stores) | Implementation Note blockquote |
+| Named screen state (one of 3+ in the same FR) | Appendix A Visual States |
+| Distinct error condition (one of 3+ in the same FR) | Appendix B Error Handling |
+
+*Note: Appendix Routing Rules fire proactively during FR generation. This relocation table fires reactively when a Save Gate bullet count violation is found. Both target the same destinations — they work in layers, not as duplicates.*
+
+Step 2 — Merge sequential bullets that share the same failure mode. Applies to consecutive bullets only. Merge A→B only when A and B cannot fail independently. Test: could a developer write a bug report where A succeeds and B fails? If yes — keep separate.
+
+Step 3 — Fold sub-bullets. A sub-bullet with one qualifying clause and no distinct failure mode becomes a sentence appended to the parent bullet, if it passes the One Idea Per Sentence test.
+
+Step 4 — Split, using When to Create a Separate FR. Document the split reason above the new FR heading. Split at a natural actor or state boundary, not at the lowest bullet count.
+
+### Implementation Note Cap (Rule 8)
+
+An Implementation Note blockquote is capped at 4 sentences. Longer content belongs in a separate technical spec.
+
+### FR Count Signal
+After building the FR Plan (Standard/Full mode only — skip when Stage 6 was not run), check: does the FR count exceed 2× the number of UF-N flows from Stage 6? If yes — scan the FR Plan for merge candidates using Patterns 1–4 before finalizing. This is a signal, not a hard cap. A high FR:flow ratio indicates over-splitting; investigate before proceeding.
+
+---
+
 ## Appendix Routing Rules
 
 | Route to Appendix | When |

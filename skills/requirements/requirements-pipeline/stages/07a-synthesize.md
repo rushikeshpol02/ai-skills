@@ -212,6 +212,26 @@ Constraint: [fact — source: SRC-N] | [fact — source: SRC-N] | ...
 
 ## Step 7: FR Plan and Coverage Check
 
+**Step 7 Pre-Build: FR Independence Check**
+
+Before writing any FR content block, identify all FR candidates from the source artifacts (Stage 2 STATED facts, Stage 3 NCs, Stage 4 scenarios, Stage 6 flow cards). For each candidate, apply the FR Independence Test and Merge Patterns from reference-tables.md:
+
+1. FR Independence Test: "Can this capability's purpose be described without referencing another FR?" If no — do not create a new entry; merge into the referenced FR.
+2. Scan Merge Patterns 1–4. If a candidate matches any pattern, apply the merge action:
+   - Pattern 1 (Start/End): combine into one FR entry. Start-step source bullets first, end-step bullets follow.
+   - Pattern 2 (Constraint-only, same flow context): remove the candidate entry; add its source content as additional source bullets in the parent FR's content block. The FR Bullet Hierarchy Rule in reference-tables.md governs whether they nest as sub-bullets at write time — do not force nesting here.
+   - Pattern 3 (Approve/Deny): combine into one FR entry. Group source bullets by branch using inline branch labels (e.g., `[Approve:]` / `[Deny:]` or `[Yes:]` / `[No:]`) as a prefix on each branch-specific source bullet. Shared preamble bullets carry no prefix. 07b converts these prefixes to bold labels when generating the FR — see branch label format in reference-tables.md.
+   - Pattern 4 (Same concern): combine into one FR entry with a title covering both concerns.
+3. After merges, finalize the ordered list of FR entries before proceeding to write content blocks.
+4. Count source bullets for each planned FR entry. Apply size bounds from reference-tables.md:
+   - Under 4 source bullets: not a standalone FR. Fold using the Under-4 routing table in reference-tables.md FR Size Bounds.
+   - 4–10 source bullets: correct size. (Ceiling of 10 source bullets — 07b may split compound bullets during generation; 10 source ≈ 12 final.)
+   - Over 10 source bullets: add flag `[SIZE: [N] source bullets — apply FR Size Management at 07b]` to the FR content block header. Warning for 07b — not a blocker for plan finalization.
+
+**FR count check:** After merges, count final FR entries. Compare to UF-N flow count from Stage 6 (Standard/Full mode only — skip for Express). If FR count > 2× UF-N count, re-scan for merge candidates before proceeding.
+
+Express mode: Stage 6 not run — no UF-N count available. Skip ratio check. Note in synthesis context: `FR count: [N] FRs | Express mode — UF-N comparison not applicable.`
+
 **Build the FR Plan.** This is the primary synthesis output for Section 7 — it embeds source content per FR so 07b writes bullets without reading any Stage 1–6 artifact directly. One content block per FR, ordered by user flow sequence.
 
 **FR content block format:**
@@ -275,6 +295,7 @@ Unverified claims: [N] — list each with tag or note resolution
 STATED fact coverage: [N] Covered | [N] Routed | [N] Uncovered
 Coverage gaps (HIGH/MEDIUM only): [none / COVERAGE GAP — S-N: description]
 Scope-FR alignment: [N] of [N] In Scope items covered by FR Plan. Gaps: [none / list]
+FR count: [N] FRs | [N] UF-N flows | ratio [N:N] — within bounds: YES / NO (Express: FR count [N] | UF-N comparison not applicable)
 
 Ready to generate: YES / NO (if NO, list what must be resolved first)
 ```

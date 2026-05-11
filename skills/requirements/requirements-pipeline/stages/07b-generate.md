@@ -35,8 +35,8 @@ Before writing any FR bullet, apply this test: **Can a PM verify this in a demo 
 | 3. User Goals | 7a §User Goals — transcribe directly. |
 | 4. Scope | 7a §Scope — transcribe In Scope and Out of Scope lists. Check Synthesis Context for any `[SCOPE GAP]` items and note them at the end of the section. |
 | 5. What's Changing | 7a §What's Changing Table — transcribe directly. Omit section entirely if block is absent (greenfield feature). |
-| 6. User Flows | 7a §User Flows — transcribe 4-column table directly. Add redirect line at section end: `*Visual states and error handling: see Appendix A and B.*` |
-| 7. FRs | 7a §FR Plan content blocks — one FR per block in order. Write one bullet per source line in the block. For each bullet: (1) split compound content using the period-replacement test first; (2) apply the property-vs-sequence test FIRST — "Does this bullet describe a property, content, or constraint OF the preceding outcome, or does it describe what happens NEXT after it?" If NEXT → flat peer, regardless of causal connection. (3) if the property-vs-sequence test says property/content, apply the parent-child test as a secondary check — "If the preceding bullet were removed, would this bullet stand alone as a meaningful requirement?" If no → sub-bullet. If yes → flat peer. Both tests must pass for a sub-bullet. Never nest a bullet that still contains two outcomes — split first, nest second. Max one level of nesting. Carry inline verification tags: bullets tagged `Stage 2 derivation — not re-verified` append `(Source: Stage 2 derivation — original not confirmed)`. Bullets written as `[TBD — source not confirmed]` in the block remain as `[TBD]` bullets in the document. Transcribe Implementation Notes directly from the block. Do not open Stage 1–6 artifacts. |
+| 6. User Flows | 7a §User Flows — transcribe 4-column table directly. After writing the table, apply the Appendix A and B routing check — scan every FR content block in the 7a artifact (already open): (A) Appendix A needed if any single FR has 3 or more distinct conditional interface states — bullets that each show a different combination of visible controls or labels based on a different condition. (B) Appendix B needed if any single flow has 3 or more distinct error conditions with different recovery paths. Then write the redirect line only if at least one check is YES: both needed → `*Visual states and error handling: see Appendix A and B.*` / only A → `*Visual states: see Appendix A.*` / only B → `*Error handling: see Appendix B.*` / neither → omit the line entirely. This check runs independently in Pass 1 (for the callout) and again in the appendix-writing pass (for content) — no flag state is carried between passes. |
+| 7. FRs | 7a §FR Plan content blocks — one FR per block in order. Write one bullet per source line in the block. For each bullet: (1) split compound content using the period-replacement test first; (2) apply the property-vs-sequence test FIRST — "Does this bullet describe a property, content, or constraint OF the preceding outcome, or does it describe what happens NEXT after it?" If NEXT → flat peer, regardless of causal connection. (3) if the property-vs-sequence test says property/content, apply the parent-child test as a secondary check — "If the preceding bullet were removed, would this bullet stand alone as a meaningful requirement?" If no → sub-bullet. If yes → flat peer. Both tests must pass for a sub-bullet. Never nest a bullet that still contains two outcomes — split first, nest second. Max one level of nesting. Carry inline verification tags: bullets tagged `Stage 2 derivation — not re-verified` append `(Source: Stage 2 derivation — original not confirmed)`. Bullets written as `[TBD — source not confirmed]` in the block remain as `[TBD]` bullets in the document. Transcribe Implementation Notes directly from the block. Do not open Stage 1–6 artifacts. For branch-structured FRs: when source bullets carry inline branch prefixes (e.g., `[Approve:]`, `[Deny:]`, `[Yes:]`, `[No:]`), convert those prefixes to bold labels using the branch label format in reference-tables.md. Group bullets under their matching bold label. Shared preamble bullets (no prefix) appear above the first bold label. Do not write branch bullets as a flat inline-prefixed list — the bold label format is the required output form. |
 | 8. Known Limitations | 7a §Known Limitations — transcribe sorted bullets directly. Append: `*Stage 8 Risk Analysis pending — update after Stage 8 completes.*` |
 | 9.1 Constraints | 7a §Reclassification routing table — write all rows marked Section 9.1 (HC and DEP rows). Add all NC items marked `added to 9.1` from 7a §NC Routing Phase B result. |
 | 9.2 Risks | Stage 8 not yet run at generation time. Write exactly one placeholder row: `Risk ID = "—" / Description = "Stage 8 Risk Analysis pending — update after Stage 8 completes." / all other cells = "—"` |
@@ -88,7 +88,22 @@ Read `pipeline_mode`, `Complexity`, and `Size` from the state file. Count `**FR-
 
 Generate all sections 1–11, Generation Summary Card, and appendices in one response. Source all sections per the reference table above. Apply Phase 2/3 Extraction inline after writing Section 7 if any FR is tagged `*(Phase 2/3)*`.
 
-**Gate:** Write the complete document first. Then run the full Save Gate (13 items) — word count check requires the complete document before it can be counted. Fix any NO before saving.
+**Gate:** Write all sections 1–11 and the Generation Summary Card. Then apply the Appendix A and B generation instruction below to determine and write appendix content. Then run the full Save Gate (17 items) — word count check requires the complete document before it can be counted. Fix any NO before saving.
+
+**Appendix A and B generation:**
+
+Re-apply the routing check from the Section 6 source table instruction — scan the FR content: use the 7a artifact FR content blocks (Strategy A single pass and Strategy B Pass 2 — the 7a artifact remains in context for these shorter strategies), or the written FR section from the file read-back at the start of this pass (Strategy C Pass 3 and C+batches Pass 3 — the file read-back contains Section 7 written in the prior pass):
+
+Appendix A: count distinct conditional interface states within each FR — bullets that each show a different combination of visible controls or labels based on a different condition. If any FR has 3 or more such states:
+- Write `**A — Visual States**` header
+- For each qualifying FR, write bold label `**From FR-N: [Title]**` above its table
+- Format: `| State | What officer sees | Notes |` — one row per distinct conditional state
+
+Appendix B: identify flows where 3 or more distinct error conditions appear, each with a different recovery path. If any flow qualifies:
+- Write `**B — Error Handling**` header
+- Format: `| Condition | What officer sees | Recovery |` — 3 columns only, no Cause column — one row per error condition
+
+If neither check fires: write no Appendix A or B content and no headers for either.
 
 ---
 
@@ -103,7 +118,7 @@ Sources: all from 7a pre-staged blocks (transcription only). Generate in order: 
 **Pass 1 mini gate (all YES before writing the file):**
 - [ ] No em dashes or semicolons in Sections 1–6 — YES/NO
 - [ ] Overview has 3–4 sentences structured as problem → feature → change → constraint, written as a continuous paragraph (no blank lines between sentences) — YES/NO
-- [ ] Section 6 table has 4 columns and ends with: `*Visual states and error handling: see Appendix A and B.*` — YES/NO
+- [ ] Section 6 routing check: re-apply the Appendix A and B routing check from the section source table row 6 instruction. If either appendix is needed, confirm the correct conditional callout is present citing only the applicable appendices. If neither is needed, confirm no callout is present — YES/NO
 - [ ] No compound bullets in Section 4 Scope — each bullet states one capability. Apply period-replacement test. — YES/NO
 
 Write file (create).
@@ -131,9 +146,24 @@ Source: Section 7 from 7a FR Plan content blocks; Sections 8–11 from 7a pre-st
 - [ ] Section 10: only Critical/High OQs — YES/NO
 - [ ] No compound or multi-part questions in Section 10 — each row has one primary question; related or conditional follow-ons are sub-bullets under the primary; a new row only when the topic is genuinely distinct. Apply period-replacement test to question cells. — YES/NO
 
+**Appendix A and B generation:**
+
+Re-apply the routing check from the Section 6 source table instruction — scan the FR content: use the 7a artifact FR content blocks (Strategy A single pass and Strategy B Pass 2 — the 7a artifact remains in context for these shorter strategies), or the written FR section from the file read-back at the start of this pass (Strategy C Pass 3 and C+batches Pass 3 — the file read-back contains Section 7 written in the prior pass):
+
+Appendix A: count distinct conditional interface states within each FR — bullets that each show a different combination of visible controls or labels based on a different condition. If any FR has 3 or more such states:
+- Write `**A — Visual States**` header
+- For each qualifying FR, write bold label `**From FR-N: [Title]**` above its table
+- Format: `| State | What officer sees | Notes |` — one row per distinct conditional state
+
+Appendix B: identify flows where 3 or more distinct error conditions appear, each with a different recovery path. If any flow qualifies:
+- Write `**B — Error Handling**` header
+- Format: `| Condition | What officer sees | Recovery |` — 3 columns only, no Cause column — one row per error condition
+
+If neither check fires: write no Appendix A or B content and no headers for either.
+
 Append to file.
 
-**Full Save Gate:** Use the Read tool to open the complete file. Run all 13 Save Gate items. Fix any NO before marking complete.
+**Full Save Gate:** Use the Read tool to open the complete file. Run all 17 Save Gate items. Fix any NO before marking complete.
 
 ---
 
@@ -183,9 +213,24 @@ Sources: 7a pre-staged blocks. Additionally: scan the written FR section for any
 - [ ] No compound sentences or bullets in Sections 8 and 9.1 — each item states one limitation or constraint. Apply period-replacement test. — YES/NO
 - [ ] No compound or multi-part questions in Section 10 — each row has one primary question; related or conditional follow-ons are sub-bullets under the primary; a new row only when the topic is genuinely distinct. Apply period-replacement test to question cells. — YES/NO
 
+**Appendix A and B generation:**
+
+Re-apply the routing check from the Section 6 source table instruction — scan the FR content: use the 7a artifact FR content blocks (Strategy A single pass and Strategy B Pass 2 — the 7a artifact remains in context for these shorter strategies), or the written FR section from the file read-back at the start of this pass (Strategy C Pass 3 and C+batches Pass 3 — the file read-back contains Section 7 written in the prior pass):
+
+Appendix A: count distinct conditional interface states within each FR — bullets that each show a different combination of visible controls or labels based on a different condition. If any FR has 3 or more such states:
+- Write `**A — Visual States**` header
+- For each qualifying FR, write bold label `**From FR-N: [Title]**` above its table
+- Format: `| State | What officer sees | Notes |` — one row per distinct conditional state
+
+Appendix B: identify flows where 3 or more distinct error conditions appear, each with a different recovery path. If any flow qualifies:
+- Write `**B — Error Handling**` header
+- Format: `| Condition | What officer sees | Recovery |` — 3 columns only, no Cause column — one row per error condition
+
+If neither check fires: write no Appendix A or B content and no headers for either.
+
 Append to file.
 
-**Full Save Gate:** Use the Read tool to open the complete file. Run all 13 Save Gate items. Fix any NO before marking complete.
+**Full Save Gate:** Use the Read tool to open the complete file. Run all 17 Save Gate items. Fix any NO before marking complete.
 
 ---
 
@@ -219,7 +264,7 @@ Append to file.
 
 **Pass 3 — Sections 8–11 + Appendices:** Identical to Strategy C Pass 3 — read complete file first.
 
-**Full Save Gate:** Use the Read tool to open the complete file. Run all 13 Save Gate items. Fix any NO before marking complete.
+**Full Save Gate:** Use the Read tool to open the complete file. Run all 17 Save Gate items. Fix any NO before marking complete.
 
 ---
 
@@ -263,8 +308,12 @@ TBD and Open Question counts come from the 7a Synthesis Context — do not re-co
 - [ ] No compound bullets or sentences anywhere in the document — one idea per bullet or sentence. Apply the period-replacement test from reference-tables.md Writing Rules. — YES/NO
 - [ ] FR bullets within each FR ordered by user flow sequence (matches Stage 6 flow order) — YES/NO
 - [ ] FR sub-bullets: for each sub-bullet, confirm both: (a) the immediately preceding top-level bullet is its parent and is required for the sub-bullet to be understood, AND (b) the sub-bullet describes a property, content, or constraint OF the parent outcome — not what happens next in sequence. State: "[N] sub-bullets. Each verified as property/content of parent — not a sequential next step." Do not mark YES without this statement. — YES/NO
+- [ ] FR proportionality: state "[N] FRs in document, [N] UF-N flows from Stage 7a synthesis context. Ratio: [N:N]. Within bounds (≤2×): YES / NO." Express mode: state FR count only — no UF-N comparison. If not Express and ratio exceeds 2×, identify merge candidates using the FR Boundary Rule in reference-tables.md and consolidate before saving. — YES/NO
+- [ ] FR bullet count: for every FR, state its final bullet count. Any FR with fewer than 4 or more than 12 bullets fails this gate. State: "FR-N: [N] bullets — within bounds: YES / NO." If any FR is over 12: apply the FR Size Management sequence from reference-tables.md before saving. — YES/NO
+- [ ] Implementation Notes: every Implementation Note blockquote has 4 sentences or fewer. State count for any note with more than 2 sentences. — YES/NO
 - [ ] State the document word count: "Sections 1–9 total: ~[N] words. Ceiling for [Complexity]/[Size]: [range] words. Within ceiling: YES / NO." Do not mark YES without stating the count.
 - [ ] Every item in Section 8 Known Limitations reflects confirmed feature scope — no items from stages where scope was narrowed. YES/NO
+- [ ] Appendix A/B consistency: re-apply the routing check one final time against the complete document. Confirm: (a) if the routing check fires for A, Appendix A header and at least one data row exist in the document AND the Section 6 callout references Appendix A; (b) if the routing check fires for B, Appendix B header and at least one data row exist AND the callout references B; (c) if the routing check does not fire for A, no Appendix A header appears anywhere in the document; (d) if the routing check does not fire for B, no Appendix B header appears. State each condition: "A routing fires: YES/NO. A content present: YES/NO. B routing fires: YES/NO. B content present: YES/NO." — Overall YES only if all four conditions are consistent.
 
 If any item is NO: fix before saving. Do not save the file with a NO item outstanding.
 

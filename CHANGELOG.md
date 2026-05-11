@@ -1,5 +1,56 @@
 # Changelog
 
+## [Unreleased] — 2026-05-11 (requirements-pipeline patch)
+
+### requirements-pipeline — FR over-splitting prevention
+
+Four files updated to address a systemic issue where Stage 7 was producing too many FRs by treating start/end steps, constraint-only behaviors, and approve/deny branches as separate FRs when they belong together.
+
+#### `reference-tables.md` — FR Boundary Rule (new section)
+
+Added a complete **FR Boundary Rule** section defining when to merge vs split:
+
+- **FR Independence Test** — before creating an FR entry, ask whether the capability can be described without referencing another FR. If no, merge.
+- **4 Merge Patterns** with ✅/❌ examples:
+  - Pattern 1 (Start/End): two steps of the same action → one FR
+  - Pattern 2 (Constraint-only, same flow context): no independent goal → bullets inside the parent FR
+  - Pattern 3 (Approve/Deny branches): two opposing actions on the same object → one FR with branch labels
+  - Pattern 4 (Same implementation concern): same trigger, same data object → one FR
+- **When to Create a Separate FR** — all three split conditions must be true (distinct record type/actor/state, 4–12 bullets, adding to existing FR would exceed 12); plus 2 additional split signals (distinct entry point, distinct error handling). Actor separation always overrides bullet count.
+- **Branch Rules (Rule 4)** — a branch earns its own FR only at 5+ bullets or a distinct error state; under both thresholds → bold label within one FR.
+- **FR Size Bounds (Rules 2–3)** — under 4 bullets: route to Constraints/OQs/Assumptions/Implementation Note/parent FR using a routing table. Over 12 bullets: 4-step size management sequence (relocate → merge consecutive → fold sub-bullets → split at actor/state boundary).
+- **Implementation Note Cap (Rule 8)** — capped at 4 sentences.
+- **FR Count Signal** — if FR count exceeds 2× the UF-N flow count from Stage 6, re-scan for merge candidates before finalizing.
+
+#### `stages/07a-synthesize.md` — Step 7 Pre-Build: FR Independence Check (new step)
+
+Added a mandatory pre-build step before the FR Plan is written:
+
+- Apply FR Independence Test and Merge Patterns 1–4 to all FR candidates identified from source artifacts.
+- Finalize the merged FR list before writing any content block.
+- Count source bullets per FR entry; apply size bounds: under 4 → route using the Under-4 table; 4–10 → correct size; over 10 → flag `[SIZE: N source bullets]` for 07b to handle.
+- After merges, compare FR count to UF-N flow count. If ratio exceeds 2×, re-scan before proceeding.
+- Added `FR count: [N] FRs | [N] UF-N flows | ratio [N:N]` line to the Synthesis Context block.
+
+#### `stages/07b-generate.md` — Appendix routing, branch labels, Save Gate expanded (13 → 17 items)
+
+- **Section 6 (User Flows):** The static `*Visual states and error handling: see Appendix A and B.*` callout is now conditional — a routing check runs after writing the table. Callout is written only if the check fires, and cites only the applicable appendices (A only / B only / both / neither → omit line).
+- **Section 7 (FRs):** Branch-structured FRs are now handled explicitly — when source bullets carry inline branch prefixes (e.g., `[Approve:]`, `[Deny:]`, `[Yes:]`, `[No:]`), 07b converts them to bold labels using the format from reference-tables.md. Shared preamble bullets appear above the first label.
+- **Appendix A and B generation:** Explicit generation instruction added to all three strategies (A single pass, B Pass 2/3, C Pass 3 and C+batches Pass 3). Appendix A fires when any FR has 3+ distinct conditional interface states; Appendix B fires when any flow has 3+ error conditions with different recovery paths. Neither appendix is written if the check does not fire.
+- **Save Gate expanded from 13 to 17 items** — four new checks added:
+  - FR proportionality: state FR count, UF-N count, ratio; re-scan if ratio > 2×
+  - FR bullet count: every FR must have 4–12 bullets; apply FR Size Management if over 12
+  - Implementation Notes: every blockquote ≤ 4 sentences
+  - Appendix A/B consistency: routing check, content presence, and Section 6 callout must all be consistent
+- **Pass 1 mini gate:** Section 6 check updated from static string match to the conditional routing check.
+
+#### `templates/feature-requirements-v2.md` — Appendix callout and headers updated
+
+- Section 6 callout updated: `*Visual states and error handling: see Appendix A and B.*` now carries a note that it should only be included if the routing rule fires.
+- Appendix A and B headers updated with `*(if applicable)*` conditions matching the routing thresholds (3+ named screen states / 3+ distinct error conditions).
+
+---
+
 ## [Unreleased] — 2026-05-11
 
 ### requirements-pipeline — major rewrite (v2)

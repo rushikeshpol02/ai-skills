@@ -43,7 +43,7 @@
 |---|---|---|---|
 | | | | |
 
-*Visual states and error handling: see Appendix A and B.*
+*Visual states and error handling: see Appendix A and B. (include only if Appendix A or B routing rule fires — see reference-tables.md)*
 
 ## 7. Functional Requirements
 
@@ -98,8 +98,8 @@
 
 ## Appendices
 
-**A — Visual States:** `| State | What officer sees | Notes |`
-**B — Error Handling:** `| Condition | What officer sees | Recovery |` *(3 columns only — no Cause column)*
+**A — Visual States** *(if applicable — 3+ named screen states with distinct user-visible differences in any FR)*: `| State | What officer sees | Notes |`
+**B — Error Handling** *(if applicable — 3+ distinct error conditions with different recovery paths in a single flow)*: `| Condition | What officer sees | Recovery |` *(3 columns only — no Cause column)*
 **C — Audit Trail Lifecycle** *(if applicable)*
 **D — Detailed User Flows** *(if applicable)*
 **E — Field-Level Specs** *(if applicable — label each group: **From FR-N: [FR Title]**; every FR-N here needs a callout in its body)*
