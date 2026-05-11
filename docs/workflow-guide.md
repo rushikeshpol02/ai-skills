@@ -13,7 +13,7 @@ All 20 skills fall into four groups:
 | **1 — Requirements Pipeline** | requirements-pipeline (orchestrator) + 6 supporting skills | End-to-end requirements generation from raw inputs |
 | **2 — Post-Pipeline** | review-findings, update-documents, client-ready-requirements, figjam-diagram-generator | Review, propagate changes, visualize, and deliver client-ready output |
 | **3 — Planning** ⚠️ WIP | release-sprint-planner, sprint-planning-session, sprint-progress-tracker, sprint-review-generator, meeting-to-plan-integrator | Full delivery lifecycle from release definition through sprint execution and review |
-| **4 — Epics & Stories** ⚠️ WIP | generate-epic, generate-user-stories, validate-user-stories, generate-uat | Story lifecycle from epic creation through UAT |
+| **4 — Epics & Stories** | generate-epic, generate-user-stories, validate-user-stories, generate-uat | Story lifecycle from epic creation through UAT |
 
 ---
 
@@ -183,7 +183,7 @@ flowchart LR
 
 ---
 
-## Group 4: Epics & Stories ⚠️ WIP
+## Group 4: Epics & Stories
 
 Four skills covering the story lifecycle — from epic creation through acceptance testing.
 
@@ -238,7 +238,7 @@ flowchart TD
         MPI[meeting-to-plan-integrator]
     end
 
-    subgraph stories [Epics & Stories - Group 4 ⚠️ WIP]
+    subgraph stories [Epics & Stories - Group 4]
         GE[generate-epic]
         GUS[generate-user-stories]
         VUS[validate-user-stories]

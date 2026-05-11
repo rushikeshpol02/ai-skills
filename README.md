@@ -14,7 +14,7 @@ Agent skills are instruction files (`SKILL.md`) stored in a skills folder the ag
 
 ```
 ai-skills/
-├── skills/                        19 skills — 10 production + 9 WIP across 3 category plugins + 3 standalone
+├── skills/                        19 skills — 14 production + 5 WIP across 3 category plugins + 3 standalone
 │   ├── requirements/              Requirements plugin — 10 discovery and analysis skills
 │   │   ├── requirements-pipeline/
 │   │   │   ├── stages/            Stage instruction files (01-intake.md … 09-validation.md)
@@ -36,7 +36,7 @@ ai-skills/
 │   │   ├── sprint-review-generator/
 │   │   ├── meeting-to-plan-integrator/
 │   │   └── shared/                Shared domain knowledge referenced by all planning skills
-│   ├── epics-and-user-stories/    Epics & Stories plugin — 4 story lifecycle skills  ⚠️ WIP
+│   ├── epics-and-user-stories/    Epics & Stories plugin — 4 story lifecycle skills
 │   │   ├── generate-epic/
 │   │   ├── generate-user-stories/
 │   │   ├── validate-user-stories/
@@ -50,7 +50,7 @@ ai-skills/
     └── invocation-guide.md        How to install and invoke each skill
 ```
 
-Skills marked **⚠️ WIP** are still being refined and may change. All skills use the same `SKILL.md` format and work with both Cursor and Claude Code. The `archive/` folder holds deprecated versions and is not symlinked during install.
+Planning skills marked **⚠️ WIP** are still being refined and may change. All skills use the same `SKILL.md` format and work with both Cursor and Claude Code. The `archive/` folder holds deprecated versions and is not symlinked during install.
 
 ---
 
@@ -109,9 +109,7 @@ ls ~/.claude/skills/    # Claude Code
 
 ## Skills at a Glance
 
-### Epics & User Stories Skills ⚠️ Work in Progress
-
-> These skills are still being refined. Core functionality works but prompts, templates, and workflows are subject to change.
+### Epics & User Stories Skills
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
@@ -179,4 +177,4 @@ To add a new skill:
 2. Add a `SKILL.md` — the agent reads this file at runtime
 3. Update [docs/skill-catalog.md](docs/skill-catalog.md) with the new entry
 
-Skills marked **⚠️ WIP** are still being refined. The requirements pipeline and standalone skills are production-ready. Work-in-progress or personal skills should live outside this repo (e.g., `~/personal-skills/wip/`) and be symlinked separately — this keeps the repo clean.
+Planning skills marked **⚠️ WIP** are still being refined. All other skills are production-ready. Work-in-progress or personal skills should live outside this repo (e.g., `~/personal-skills/wip/`) and be symlinked separately — this keeps the repo clean.

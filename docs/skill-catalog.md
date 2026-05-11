@@ -28,7 +28,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - [sprint-review-generator](#sprint-review-generator) — Standalone
 - [meeting-to-plan-integrator](#meeting-to-plan-integrator) — Standalone
 
-**Epics & Stories Skills (Group 4)** ⚠️ WIP
+**Epics & Stories Skills (Group 4)**
 - [generate-epic](#generate-epic) — Standalone
 - [generate-user-stories](#generate-user-stories) — Standalone
 - [validate-user-stories](#validate-user-stories) — Standalone
@@ -604,7 +604,7 @@ Point the agent to the run folder: `_runs/[run-name]/`. The pipeline reads `curr
 
 ---
 
-## Epics & Stories Skills (Group 4) ⚠️ WIP
+## Epics & Stories Skills (Group 4)
 
 > These skills are still being refined. Core functionality works but prompts, templates, and workflows are subject to change.
 
