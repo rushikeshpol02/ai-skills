@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # install.sh — Symlink ai-skills into Cursor and/or Claude Code skills folders.
-#              Also syncs skill files into Cowork plugins.
+#              Also syncs and packages Cowork plugins.
 #
 # Usage:
-#   bash install.sh                # prompts which agent to install for
-#   bash install.sh --cursor       # Cursor only
-#   bash install.sh --claude       # Claude Code only
-#   bash install.sh --both         # both at once
-#   bash install.sh --sync-cowork  # sync updated skills into Cowork plugins only
+#   bash install.sh                   # prompts which agent to install for
+#   bash install.sh --cursor          # Cursor only
+#   bash install.sh --claude          # Claude Code only
+#   bash install.sh --both            # both at once
+#   bash install.sh --sync-cowork     # sync updated skills into Cowork plugins only
+#   bash install.sh --package-cowork  # package Cowork plugins as .zip files for upload
 
 set -euo pipefail
 
@@ -133,6 +134,43 @@ sync_cowork_all() {
   done
 }
 
+# ── Helper: package all Cowork plugins as .zip files ────────────────────────
+package_cowork_all() {
+  local dist_dir="$PLUGINS_DIR/dist"
+  mkdir -p "$dist_dir"
+
+  echo "Packaging Cowork plugins into $dist_dir ..."
+  echo ""
+
+  for plugin in pm-requirements pm-planning pm-epics-stories pm-tools; do
+    local plugin_dir="$PLUGINS_DIR/$plugin"
+    local zip_path="$dist_dir/$plugin.zip"
+
+    if [ ! -d "$plugin_dir" ]; then
+      echo "  SKIPPED   $plugin  (folder not found)"
+      continue
+    fi
+
+    # Remove existing zip if present
+    rm -f "$zip_path"
+
+    # Zip from inside the plugins dir so the zip contains plugin-name/ at root
+    (cd "$PLUGINS_DIR" && zip -r "dist/$plugin.zip" "$plugin" \
+      --exclude "*.DS_Store" \
+      --exclude "*/__pycache__/*" \
+      --exclude "*/dist/*" \
+      -q)
+
+    local size
+    size=$(du -sh "$zip_path" | cut -f1)
+    echo "  packaged  $plugin.zip  ($size)"
+  done
+
+  echo ""
+  echo "Zip files are in: $dist_dir"
+  echo "Upload each .zip via Cowork → Customize → Personal plugins → +"
+}
+
 # ── Helper: install all skills into one target folder ───────────────────────
 install_all() {
   local target_dir="$1"
@@ -158,14 +196,16 @@ if [ -z "$MODE" ]; then
   echo "  2) Install for Claude Code"
   echo "  3) Install for both"
   echo "  4) Sync Cowork plugins only"
+  echo "  5) Package Cowork plugins as .zip files for upload"
   echo ""
-  read -rp "Enter 1, 2, 3, or 4: " choice
+  read -rp "Enter 1, 2, 3, 4, or 5: " choice
   case "$choice" in
     1) MODE="--cursor" ;;
     2) MODE="--claude" ;;
     3) MODE="--both"   ;;
     4) MODE="--sync-cowork" ;;
-    *) echo "Invalid choice. Run the script again and enter 1, 2, 3, or 4."; exit 1 ;;
+    5) MODE="--package-cowork" ;;
+    *) echo "Invalid choice. Run the script again and enter 1–5."; exit 1 ;;
   esac
 fi
 
@@ -205,9 +245,17 @@ case "$MODE" in
     echo "────────────────────────────────"
     exit 0
     ;;
+  --package-cowork)
+    sync_cowork_all
+    echo ""
+    package_cowork_all
+    echo ""
+    echo "────────────────────────────────"
+    exit 0
+    ;;
   *)
     echo "Unknown option: $MODE"
-    echo "Usage: bash install.sh [--cursor | --claude | --both | --sync-cowork]"
+    echo "Usage: bash install.sh [--cursor | --claude | --both | --sync-cowork | --package-cowork]"
     exit 1
     ;;
 esac
