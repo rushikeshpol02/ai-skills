@@ -481,6 +481,63 @@ Point the agent to the run folder: `_runs/[run-name]/`. The pipeline reads `curr
 
 > These skills are still being refined. Core functionality works but prompts, templates, and workflows are subject to change.
 
+### Skill Cycle
+
+```
+One-time at release start:
+  release-sprint-planner → Release-Definition.md + Release-Plan.md + Scope.md
+
+Every sprint (repeating):
+  sprint-planning-session    → Sprint-N-Planning.md
+  sprint-progress-tracker    → Sprint-N-Progress.md
+  sprint-review-generator    → Sprint-N-Review.md
+  meeting-to-plan-integrator → updates Release-Plan.md based on feedback
+```
+
+Each skill reads the prior skill's output file — no skill depends on chat context from another skill's run.
+
+### Output Folder Structure
+
+All artifacts live under a single release folder in your workspace:
+
+```
+[project]/
+  Product Artifacts/
+    Delivery Plan/
+      Releases/
+        [Release-Name]/
+          Release-Definition.md
+          Release-Plan.md
+          Scope.md
+          .meta/
+            constraint-registry.md
+            skill-state-*.json
+          Sprint-1/
+            Sprint-1-Planning.md
+            Sprint-1-Progress.md
+            Sprint-1-Review.md
+          Sprint-2/
+            ...
+```
+
+### Shared Resources
+
+The `planning/shared/` folder contains domain knowledge referenced by all 5 skills:
+
+- **`delivery-model.md`** — Release lifecycle phases, sprint anatomy, document chain, commitment model
+- **`execution-rules.md`** — Shared NON-NEGOTIABLE rules, quality criteria, self-check structure, provenance model
+- **`constraint-registry-template.md`** — Template and rules for the shared constraint registry
+
+### Build Order
+
+If starting from scratch, skills can be used immediately in this order — each is useful on its own and the next builds on it:
+
+1. `release-sprint-planner` — define the release first
+2. `sprint-planning-session` — needed for each sprint kickoff
+3. `sprint-progress-tracker` — useful from mid-sprint onward
+4. `sprint-review-generator` — needed at sprint end
+5. `meeting-to-plan-integrator` — needed after first sprint demo feedback
+
 ---
 
 ### release-sprint-planner
@@ -605,8 +662,6 @@ Point the agent to the run folder: `_runs/[run-name]/`. The pipeline reads `curr
 ---
 
 ## Epics & Stories Skills (Group 4)
-
-> These skills are still being refined. Core functionality works but prompts, templates, and workflows are subject to change.
 
 ---
 
