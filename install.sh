@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 # install.sh — Symlink ai-skills into Cursor and/or Claude Code skills folders.
+#              Also syncs skill files into Cowork plugins.
 #
 # Usage:
-#   bash install.sh           # prompts which agent to install for
-#   bash install.sh --cursor  # Cursor only
-#   bash install.sh --claude  # Claude Code only
-#   bash install.sh --both    # both at once
+#   bash install.sh                # prompts which agent to install for
+#   bash install.sh --cursor       # Cursor only
+#   bash install.sh --claude       # Claude Code only
+#   bash install.sh --both         # both at once
+#   bash install.sh --sync-cowork  # sync updated skills into Cowork plugins only
 
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKILLS_DIR="$REPO_DIR/skills"
+PLUGINS_DIR="$REPO_DIR/cowork-plugins"
 
 CURSOR_DIR="$HOME/.cursor/skills"
 CLAUDE_DIR="$HOME/.claude/skills"
@@ -58,6 +61,77 @@ install_skill() {
   linked=$((linked + 1))
 }
 
+# ── Helper: sync source skills into a Cowork plugin's skills/ folder ────────
+sync_plugin() {
+  local plugin="$1"          # e.g. pm-requirements
+  local plugin_dir="$PLUGINS_DIR/$plugin/skills"
+
+  if [ ! -d "$plugin_dir" ]; then
+    echo "  SKIPPED   $plugin  (plugin folder not found at $plugin_dir)"
+    return
+  fi
+
+  # Mapping: plugin name → source category folder
+  local src_dir
+  case "$plugin" in
+    pm-requirements)   src_dir="$SKILLS_DIR/requirements" ;;
+    pm-planning)       src_dir="$SKILLS_DIR/planning" ;;
+    pm-epics-stories)  src_dir="$SKILLS_DIR/epics-and-user-stories" ;;
+    *) echo "  SKIPPED   $plugin  (unknown plugin — no source mapping)"; return ;;
+  esac
+
+  local synced=0
+  local unchanged=0
+
+  # Sync each skill subfolder that already exists in the plugin
+  for skill_dest in "$plugin_dir"/*/; do
+    local skill_name
+    skill_name=$(basename "$skill_dest")
+
+    # shared/ is a special case — lives directly in planning source
+    local skill_src
+    if [ "$skill_name" = "shared" ]; then
+      skill_src="$src_dir/shared"
+    else
+      skill_src="$src_dir/$skill_name"
+    fi
+
+    if [ ! -d "$skill_src" ]; then
+      echo "  WARNING   $plugin/$skill_name — source not found at $skill_src, skipping"
+      continue
+    fi
+
+    local before after
+    before=$(find "$skill_dest" -type f | sort | xargs md5 -q 2>/dev/null | md5 -q 2>/dev/null || echo "")
+    rsync -a \
+      --exclude="archive/" \
+      --exclude="update-workspace/" \
+      --exclude="one-time-fix-prompt.md" \
+      --exclude="INSTALL.md" \
+      --exclude="Eval-Scenarios.md" \
+      "$skill_src/" "$skill_dest"
+    after=$(find "$skill_dest" -type f | sort | xargs md5 -q 2>/dev/null | md5 -q 2>/dev/null || echo "")
+
+    if [ "$before" != "$after" ]; then
+      echo "  updated   $plugin/$skill_name"
+      synced=$((synced + 1))
+    else
+      unchanged=$((unchanged + 1))
+    fi
+  done
+
+  echo "  ── $plugin: $synced updated, $unchanged unchanged"
+}
+
+# ── Helper: sync all Cowork plugins ─────────────────────────────────────────
+sync_cowork_all() {
+  echo "Syncing skill files into Cowork plugins ..."
+  echo ""
+  for plugin in pm-requirements pm-planning pm-epics-stories; do
+    sync_plugin "$plugin"
+  done
+}
+
 # ── Helper: install all skills into one target folder ───────────────────────
 install_all() {
   local target_dir="$1"
@@ -78,17 +152,19 @@ MODE="${1:-}"
 
 if [ -z "$MODE" ]; then
   echo ""
-  echo "Where do you want to install the skills?"
-  echo "  1) Cursor"
-  echo "  2) Claude Code"
-  echo "  3) Both"
+  echo "What would you like to do?"
+  echo "  1) Install for Cursor"
+  echo "  2) Install for Claude Code"
+  echo "  3) Install for both"
+  echo "  4) Sync Cowork plugins only"
   echo ""
-  read -rp "Enter 1, 2, or 3: " choice
+  read -rp "Enter 1, 2, 3, or 4: " choice
   case "$choice" in
     1) MODE="--cursor" ;;
     2) MODE="--claude" ;;
     3) MODE="--both"   ;;
-    *) echo "Invalid choice. Run the script again and enter 1, 2, or 3."; exit 1 ;;
+    4) MODE="--sync-cowork" ;;
+    *) echo "Invalid choice. Run the script again and enter 1, 2, 3, or 4."; exit 1 ;;
   esac
 fi
 
@@ -120,12 +196,24 @@ case "$MODE" in
     echo ""
     echo "Done. Restart Cursor and re-invoke Claude Code to pick up the new skills."
     ;;
+  --sync-cowork)
+    sync_cowork_all
+    echo ""
+    echo "Done. Reload the plugins in Cowork to pick up the changes."
+    echo ""
+    echo "────────────────────────────────"
+    exit 0
+    ;;
   *)
     echo "Unknown option: $MODE"
-    echo "Usage: bash install.sh [--cursor | --claude | --both]"
+    echo "Usage: bash install.sh [--cursor | --claude | --both | --sync-cowork]"
     exit 1
     ;;
 esac
+
+# ── Sync Cowork plugins after any agent install ──────────────────────────────
+echo ""
+sync_cowork_all
 
 # ── Summary ──────────────────────────────────────────────────────────────────
 echo ""
