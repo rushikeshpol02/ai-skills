@@ -44,6 +44,11 @@ ai-skills/
 │   ├── design-to-context/         Standalone
 │   ├── figjam-diagram-generator/  Standalone
 │   └── transcript-to-meeting-notes/  Standalone
+├── cowork-plugins/                Distributable plugins for Cowork
+│   ├── pm-requirements/           Requirements plugin — 10 skills
+│   ├── pm-planning/               Planning plugin — 5 skills  ⚠️ WIP
+│   ├── pm-epics-stories/          Epics & Stories plugin — 4 skills
+│   └── pm-tools/                  Standalone tools — 3 skills
 └── docs/
     ├── workflow-guide.md          How skills relate to each other + pipeline diagram
     ├── skill-catalog.md           Per-skill reference: inputs, outputs, mode, related skills
@@ -104,6 +109,44 @@ cd ~/ai-skills && git pull
 ls ~/.cursor/skills/    # Cursor
 ls ~/.claude/skills/    # Claude Code
 ```
+
+---
+
+## Cowork Plugins
+
+If you use [Cowork](https://cowork.anthropic.com), you can install skills as personal plugins instead of symlinking them. Plugins are distributed as `.zip` files and load directly into the Cowork sidebar.
+
+### Plugins
+
+| Plugin | Skills included | Status |
+|---|---|---|
+| `pm-requirements` | requirements-pipeline, generate-requirements, design-to-context, transcript-to-meeting-notes, identify-assumptions, validate-requirements, document-audit, review-findings, update-documents, client-ready-requirements | Production |
+| `pm-planning` | release-sprint-planner, sprint-planning-session, sprint-progress-tracker, sprint-review-generator, meeting-to-plan-integrator | ⚠️ WIP |
+| `pm-epics-stories` | generate-epic, generate-user-stories, validate-user-stories, generate-uat | Production |
+| `pm-tools` | design-to-context, figjam-diagram-generator, transcript-to-meeting-notes | Production |
+
+### Package the plugins
+
+```bash
+bash ~/ai-skills/install.sh --package-cowork
+```
+
+This syncs the latest skill files and creates a `.zip` for each plugin in `cowork-plugins/dist/`.
+
+### Install in Cowork
+
+1. Open Cowork → **Customize** → **Personal plugins** → **+**
+2. Upload each `.zip` from `cowork-plugins/dist/`
+3. Reload Cowork — the plugin's slash commands appear in the sidebar
+
+### Keeping plugins up to date
+
+```bash
+cd ~/ai-skills && git pull
+bash ~/ai-skills/install.sh --package-cowork
+```
+
+Then re-upload the `.zip` files for any plugins whose skills changed.
 
 ---
 
