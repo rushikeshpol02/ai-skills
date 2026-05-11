@@ -14,64 +14,82 @@ Agent skills are instruction files (`SKILL.md`) stored in a skills folder the ag
 
 ```
 ai-skills/
-├── cursor/
-│   └── skills/              21 skills — 12 production + 9 WIP across 3 category plugins + 3 standalone
-│       ├── planning/         Planning plugin — 5 delivery lifecycle skills  ⚠️ WIP
-│       │   ├── release-sprint-planner/
-│       │   ├── sprint-planning-session/
-│       │   ├── sprint-progress-tracker/
-│       │   ├── sprint-review-generator/
-│       │   ├── meeting-to-plan-integrator/
-│       │   └── shared/       Shared domain knowledge referenced by all planning skills
-│       ├── requirements/     Requirements plugin — 9 discovery and analysis skills
-│       │   ├── requirements-pipeline/
-│       │   │   └── stages/   Stage instruction files (e.g., 01-intake.md)
-│       │   ├── generate-requirements/
-│       │   │   ├── workflows/ Workflow instruction files
-│       │   │   └── archive/  Archived templates (moved to dedicated skills)
-│       │   ├── validate-requirements/
-│       │   │   └── checks/   Semantic and structural check definitions
-│       │   └── ...
-│       ├── epics-and-user-stories/  Epics & Stories plugin — 4 story lifecycle skills  ⚠️ WIP
-│       │   ├── generate-epic/
-│       │   ├── generate-user-stories/
-│       │   ├── validate-user-stories/
-│       │   └── generate-uat/
-│       ├── design-to-context/
-│       ├── figjam-diagram-generator/
-│       └── transcript-to-meeting-notes/
-├── skill-eval/              Skill evaluation utilities
+├── skills/                        19 skills — 10 production + 9 WIP across 3 category plugins + 3 standalone
+│   ├── requirements/              Requirements plugin — 10 discovery and analysis skills
+│   │   ├── requirements-pipeline/
+│   │   │   ├── stages/            Stage instruction files (01-intake.md … 09-validation.md)
+│   │   │   └── templates/
+│   │   ├── generate-requirements/
+│   │   │   ├── workflows/
+│   │   │   └── templates/
+│   │   ├── validate-requirements/
+│   │   │   └── checks/            Semantic and structural check definitions
+│   │   ├── client-ready-requirements/
+│   │   ├── document-audit/
+│   │   ├── review-findings/
+│   │   ├── update-documents/
+│   │   └── archive/               Archived versions (requirements-pipeline-v1, client-ready-requirements-generic)
+│   ├── planning/                  Planning plugin — 5 delivery lifecycle skills  ⚠️ WIP
+│   │   ├── release-sprint-planner/
+│   │   ├── sprint-planning-session/
+│   │   ├── sprint-progress-tracker/
+│   │   ├── sprint-review-generator/
+│   │   ├── meeting-to-plan-integrator/
+│   │   └── shared/                Shared domain knowledge referenced by all planning skills
+│   ├── epics-and-user-stories/    Epics & Stories plugin — 4 story lifecycle skills  ⚠️ WIP
+│   │   ├── generate-epic/
+│   │   ├── generate-user-stories/
+│   │   ├── validate-user-stories/
+│   │   └── generate-uat/
+│   ├── design-to-context/         Standalone
+│   ├── figjam-diagram-generator/  Standalone
+│   └── transcript-to-meeting-notes/  Standalone
 └── docs/
-    ├── workflow-guide.md    How skills relate to each other + pipeline diagram
-    ├── skill-catalog.md     Per-skill reference: inputs, outputs, mode, related skills
-    └── invocation-guide.md  How to install and invoke each skill
+    ├── workflow-guide.md          How skills relate to each other + pipeline diagram
+    ├── skill-catalog.md           Per-skill reference: inputs, outputs, mode, related skills
+    └── invocation-guide.md        How to install and invoke each skill
 ```
 
-Skills marked **⚠️ WIP** are still being refined and may change. The 12 skills in `requirements/` and the 3 standalone skills are production-ready. All skills use the same `SKILL.md` format and work with both Cursor and Claude Code.
+Skills marked **⚠️ WIP** are still being refined and may change. All skills use the same `SKILL.md` format and work with both Cursor and Claude Code. The `archive/` folder holds deprecated versions and is not symlinked during install.
+
+---
+
+## Prerequisites
+
+- Cursor or Claude Code installed and running
+- `git` available in your terminal (`git --version` to check)
+- macOS or Linux (or WSL on Windows)
 
 ---
 
 ## Installation
 
-### Cursor
-
-Skills live in `~/.cursor/skills/`. The recommended approach is to symlink each skill so that a `git pull` automatically picks up changes without re-linking.
+**Step 1 — Clone the repo**
 
 ```bash
-# Clone the repo (if you haven't already)
 git clone https://github.com/rushikeshpol02/ai-skills.git ~/ai-skills
-
-# Create the skills folder if it doesn't exist
-mkdir -p ~/.cursor/skills
-
-# Symlink each skill (handles flat and nested category structure)
-find ~/ai-skills/cursor/skills -mindepth 2 -maxdepth 3 -name "SKILL.md" | while read f; do
-  skill=$(dirname "$f")
-  ln -s "$skill" ~/.cursor/skills/$(basename "$skill")
-done
 ```
 
-Restart Cursor. Skills are loaded at agent startup — no other configuration required.
+**Step 2 — Run the install script**
+
+```bash
+bash ~/ai-skills/install.sh
+```
+
+The script will ask whether you want to install for Cursor, Claude Code, or both. It handles everything — creates the skills folders, symlinks each skill, and prints a summary of what was installed.
+
+You can also pass a flag to skip the prompt:
+
+```bash
+bash ~/ai-skills/install.sh --cursor   # Cursor only
+bash ~/ai-skills/install.sh --claude   # Claude Code only
+bash ~/ai-skills/install.sh --both     # both at once
+```
+
+**Step 3 — Restart your agent**
+
+- **Cursor**: close and reopen. Skills are loaded at startup.
+- **Claude Code**: skills are discovered automatically on next invocation.
 
 **Keeping skills up to date:**
 
@@ -80,39 +98,11 @@ cd ~/ai-skills && git pull
 # Symlinks pick up changes automatically — no re-linking needed
 ```
 
----
-
-### Claude Code
-
-Skills live in `~/.claude/skills/`. Same symlink approach:
+**Verify your install:**
 
 ```bash
-# Create the skills folder if it doesn't exist
-mkdir -p ~/.claude/skills
-
-# Symlink each skill (handles flat and nested category structure)
-find ~/ai-skills/cursor/skills -mindepth 2 -maxdepth 3 -name "SKILL.md" | while read f; do
-  skill=$(dirname "$f")
-  ln -s "$skill" ~/.claude/skills/$(basename "$skill")
-done
-```
-
-Skills are discovered automatically by Claude Code at startup.
-
----
-
-### Install for Both at Once
-
-```bash
-git clone https://github.com/rushikeshpol02/ai-skills.git ~/ai-skills
-mkdir -p ~/.cursor/skills ~/.claude/skills
-
-find ~/ai-skills/cursor/skills -mindepth 2 -maxdepth 3 -name "SKILL.md" | while read f; do
-  skill=$(dirname "$f")
-  name=$(basename "$skill")
-  ln -s "$skill" ~/.cursor/skills/"$name"
-  ln -s "$skill" ~/.claude/skills/"$name"
-done
+ls ~/.cursor/skills/    # Cursor
+ls ~/.claude/skills/    # Claude Code
 ```
 
 ---
@@ -125,10 +115,10 @@ done
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
-| [generate-epic](cursor/skills/epics-and-user-stories/generate-epic/SKILL.md) | Create a structured epic document from requirements or a verbal description; produces Epic-[Feature].md ready for story decomposition | Standalone |
-| [generate-user-stories](cursor/skills/epics-and-user-stories/generate-user-stories/SKILL.md) | Decompose features using WAHZURT framework and generate INVEST-compliant user stories one-at-a-time with quality gates; supports create, quick/draft, modify, and decompose-only modes | Standalone |
-| [validate-user-stories](cursor/skills/epics-and-user-stories/validate-user-stories/SKILL.md) | Audit existing user stories against 12 validation categories (9 per-story + 2 cross-story + 1 readability) and fix failures; always builds a fresh registry from actual files | Standalone |
-| [generate-uat](cursor/skills/epics-and-user-stories/generate-uat/SKILL.md) | Generate a client-ready UAT test plan from GitHub issue files or a ticket list; extracts ACs, deduplicates cross-platform scenarios, and produces a requirement-pure test document | Standalone |
+| [generate-epic](skills/epics-and-user-stories/generate-epic/SKILL.md) | Create a structured epic document from requirements or a verbal description; produces Epic-[Feature].md ready for story decomposition | Standalone |
+| [generate-user-stories](skills/epics-and-user-stories/generate-user-stories/SKILL.md) | Decompose features using WAHZURT framework and generate INVEST-compliant user stories one-at-a-time with quality gates; supports create, quick/draft, modify, and decompose-only modes | Standalone |
+| [validate-user-stories](skills/epics-and-user-stories/validate-user-stories/SKILL.md) | Audit existing user stories against 12 validation categories (9 per-story + 2 cross-story + 1 readability) and fix failures; always builds a fresh registry from actual files | Standalone |
+| [generate-uat](skills/epics-and-user-stories/generate-uat/SKILL.md) | Generate a client-ready UAT test plan from GitHub issue files or a ticket list; extracts ACs, deduplicates cross-platform scenarios, and produces a requirement-pure test document | Standalone |
 
 ### Planning Skills ⚠️ Work in Progress
 
@@ -136,33 +126,34 @@ done
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
-| [release-sprint-planner](cursor/skills/planning/release-sprint-planner/SKILL.md) | Define a release goal, scope, and timeline; produce a formal Release Definition and multi-sprint plan | Standalone |
-| [sprint-planning-session](cursor/skills/planning/sprint-planning-session/SKILL.md) | Turn a ticket list into a structured sprint planning document with goal, grouped work, and done criteria | Standalone |
-| [sprint-progress-tracker](cursor/skills/planning/sprint-progress-tracker/SKILL.md) | Generate a mid-sprint or close-out progress snapshot showing planned vs actual and surfacing risks | Standalone |
-| [sprint-review-generator](cursor/skills/planning/sprint-review-generator/SKILL.md) | Produce a stakeholder-facing sprint review document covering what was built, goal outcome, and next steps | Standalone |
-| [meeting-to-plan-integrator](cursor/skills/planning/meeting-to-plan-integrator/SKILL.md) | Apply decisions from a sprint demo, retro, or stakeholder call back to the release plan and artifacts | Standalone |
+| [release-sprint-planner](skills/planning/release-sprint-planner/SKILL.md) | Define a release goal, scope, and timeline; produce a formal Release Definition and multi-sprint plan | Standalone |
+| [sprint-planning-session](skills/planning/sprint-planning-session/SKILL.md) | Turn a ticket list into a structured sprint planning document with goal, grouped work, and done criteria | Standalone |
+| [sprint-progress-tracker](skills/planning/sprint-progress-tracker/SKILL.md) | Generate a mid-sprint or close-out progress snapshot showing planned vs actual and surfacing risks | Standalone |
+| [sprint-review-generator](skills/planning/sprint-review-generator/SKILL.md) | Produce a stakeholder-facing sprint review document covering what was built, goal outcome, and next steps | Standalone |
+| [meeting-to-plan-integrator](skills/planning/meeting-to-plan-integrator/SKILL.md) | Apply decisions from a sprint demo, retro, or stakeholder call back to the release plan and artifacts | Standalone |
 
 ### Requirements Pipeline Skills
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
-| [requirements-pipeline](cursor/skills/requirements/requirements-pipeline/SKILL.md) | 9-stage discovery and analysis pipeline from messy inputs to production-ready docs; supports multi-feature decomposition | Pipeline Orchestrator |
-| [generate-requirements](cursor/skills/requirements/generate-requirements/SKILL.md) | Generate Feature Requirements from well-defined inputs; API contracts generated separately using `rest-api-contract-generator` | Pipeline Stage / Standalone |
-| [design-to-context](cursor/skills/design-to-context/SKILL.md) | Convert Figma URLs or design images into User Flow Docs, Design Descriptions, or Context Summaries | Pipeline Stage / Standalone |
-| [transcript-to-meeting-notes](cursor/skills/transcript-to-meeting-notes/SKILL.md) | Turn meeting transcripts (.vtt, .md, .docx, .txt) into structured discovery summaries | Pipeline Stage / Standalone |
-| [identify-assumptions](cursor/skills/requirements/identify-assumptions/SKILL.md) | Surface and structure risky assumptions using PM / Designer / Engineer perspectives | Pipeline Stage / Standalone |
-| [validate-requirements](cursor/skills/requirements/validate-requirements/SKILL.md) | Combined semantic + structural review with 15 checks; supports incremental mode for re-validation | Pipeline Stage / Standalone |
-| [document-audit](cursor/skills/requirements/document-audit/SKILL.md) | Scan any non-requirements document for stale markers, contradictions, and broken cross-references | Pipeline Stage / Standalone |
+| [requirements-pipeline](skills/requirements/requirements-pipeline/SKILL.md) | Multi-stage discovery and analysis pipeline — Express / Standard / Full modes; resumable runs via state file; takes messy inputs to production-ready docs | Pipeline Orchestrator |
+| [generate-requirements](skills/requirements/generate-requirements/SKILL.md) | Generate Feature Requirements from well-defined inputs; API contracts generated separately using `rest-api-contract-generator` | Pipeline Stage / Standalone |
+| [design-to-context](skills/design-to-context/SKILL.md) | Convert Figma URLs or design images into User Flow Docs, Design Descriptions, or Context Summaries | Pipeline Stage / Standalone |
+| [transcript-to-meeting-notes](skills/transcript-to-meeting-notes/SKILL.md) | Turn meeting transcripts (.vtt, .md, .docx, .txt) into structured discovery summaries | Pipeline Stage / Standalone |
+| [identify-assumptions](skills/requirements/identify-assumptions/SKILL.md) | Surface and structure risky assumptions using PM / Designer / Engineer perspectives | Pipeline Stage / Standalone |
+| [validate-requirements](skills/requirements/validate-requirements/SKILL.md) | Combined semantic + structural review with 15 checks; supports incremental mode for re-validation | Pipeline Stage / Standalone |
+| [document-audit](skills/requirements/document-audit/SKILL.md) | Scan any non-requirements document for stale markers, contradictions, and broken cross-references | Pipeline Stage / Standalone |
 
 ### Post-Pipeline Skills
 
 | Skill | One-liner | Mode |
 |-------|-----------|------|
-| [review-findings](cursor/skills/requirements/review-findings/SKILL.md) | Walk through audit or validation report findings interactively and collect decisions | Post-Pipeline |
-| [update-documents](cursor/skills/requirements/update-documents/SKILL.md) | Propagate a change (fact, scope, terminology) across multiple related documents with subagent execution | Post-Pipeline |
-| [client-ready-requirements](cursor/skills/requirements/client-ready-requirements/SKILL.md) | Transform an internal requirements doc into a client-safe version for all stakeholder types | Post-Pipeline |
-| [figjam-diagram-generator](cursor/skills/figjam-diagram-generator/SKILL.md) | Generate Mermaid.js diagrams in FigJam from requirements, user flows, or verbal input via Figma MCP | Post-Pipeline |
-| [securitas-client-ready-requirements](cursor/skills/requirements/securitas-client-ready-requirements/SKILL.md) | Transform internal requirements into streamlined Securitas client-ready format | Post-Pipeline / Client-Specific |
+| [review-findings](skills/requirements/review-findings/SKILL.md) | Walk through audit or validation report findings interactively and collect decisions | Post-Pipeline |
+| [update-documents](skills/requirements/update-documents/SKILL.md) | Propagate a change (fact, scope, terminology) across multiple related documents with subagent execution | Post-Pipeline |
+| [client-ready-requirements](skills/requirements/client-ready-requirements/SKILL.md) | Transform an internal requirements doc into a structured client-ready format — 11-section output with VP filter, dedup, and appendix creation | Post-Pipeline |
+| [figjam-diagram-generator](skills/figjam-diagram-generator/SKILL.md) | Generate Mermaid.js diagrams in FigJam from requirements, user flows, or verbal input via Figma MCP | Post-Pipeline |
+
+> **Figma MCP required** — `design-to-context` and `figjam-diagram-generator` require the Figma MCP server to be connected. In Cursor: Settings → MCP → Add Figma. In Claude Code: configure in `~/.claude/mcp.json`. Without it, Figma URL inputs will not resolve.
 
 ---
 
@@ -178,14 +169,14 @@ done
 
 Skills are organized into category plugins:
 
-- **`cursor/skills/epics-and-user-stories/`** — story lifecycle skills (epics, user stories, UAT)
-- **`cursor/skills/planning/`** — delivery lifecycle skills (sprint planning, release planning, reviews)
-- **`cursor/skills/requirements/`** — requirements and analysis skills (pipeline, validation, transformation)
-- **`cursor/skills/`** (root) — standalone cross-cutting skills (`design-to-context`, `figjam-diagram-generator`, `transcript-to-meeting-notes`)
+- **`skills/epics-and-user-stories/`** — story lifecycle skills (epics, user stories, UAT)
+- **`skills/planning/`** — delivery lifecycle skills (sprint planning, release planning, reviews)
+- **`skills/requirements/`** — requirements and analysis skills (pipeline, validation, transformation)
+- **`skills/`** (root) — standalone cross-cutting skills (`design-to-context`, `figjam-diagram-generator`, `transcript-to-meeting-notes`)
 
 To add a new skill:
-1. Place it in the appropriate category folder: `cursor/skills/<category>/<skill-name>/`
+1. Place it in the appropriate category folder: `skills/<category>/<skill-name>/`
 2. Add a `SKILL.md` — the agent reads this file at runtime
 3. Update [docs/skill-catalog.md](docs/skill-catalog.md) with the new entry
 
-Skills in this repo are production-ready. Work-in-progress or personal skills should live outside this repo (e.g., `~/personal-skills/wip/`) and be symlinked separately — this keeps the repo clean and ensures only stable skills are published.
+Skills marked **⚠️ WIP** are still being refined. The requirements pipeline and standalone skills are production-ready. Work-in-progress or personal skills should live outside this repo (e.g., `~/personal-skills/wip/`) and be symlinked separately — this keeps the repo clean.

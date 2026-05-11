@@ -6,18 +6,20 @@ How the skills relate to each other, which ones form a pipeline, which are stand
 
 ## Skill Groups
 
-All 12 product skills fall into two groups:
+All 20 skills fall into four groups:
 
 | Group | Skills | Description |
 |-------|--------|-------------|
-| **1 — Full Pipeline** | requirements-pipeline (orchestrator) + 6 called skills | End-to-end requirements generation from raw inputs |
-| **2 — Post-Pipeline** | review-findings, update-documents, client-ready-requirements, figjam-diagram-generator, securitas-client-ready-requirements | Review, propagate changes, visualize, and deliver client-ready output after docs are created |
+| **1 — Requirements Pipeline** | requirements-pipeline (orchestrator) + 6 supporting skills | End-to-end requirements generation from raw inputs |
+| **2 — Post-Pipeline** | review-findings, update-documents, client-ready-requirements, figjam-diagram-generator | Review, propagate changes, visualize, and deliver client-ready output |
+| **3 — Planning** ⚠️ WIP | release-sprint-planner, sprint-planning-session, sprint-progress-tracker, sprint-review-generator, meeting-to-plan-integrator | Full delivery lifecycle from release definition through sprint execution and review |
+| **4 — Epics & Stories** ⚠️ WIP | generate-epic, generate-user-stories, validate-user-stories, generate-uat | Story lifecycle from epic creation through UAT |
 
 ---
 
 ## Group 1: The Full Requirements Pipeline
 
-`requirements-pipeline` is the master orchestrator. It runs a 9-stage pipeline and calls six other skills at specific stages. Each of those skills can also be run independently.
+`requirements-pipeline` is the master orchestrator. It runs a multi-stage pipeline with three modes (Express / Standard / Full) and produces a resumable state file. Only two external skills are called — all other logic is inlined in stage files.
 
 ```mermaid
 flowchart TD
@@ -29,44 +31,40 @@ flowchart TD
     end
 
     subgraph stage1 [Stage 1 - Input Processing]
-        TMN[transcript-to-meeting-notes]
-        DTC[design-to-context]
+        TMN[transcript-to-meeting-notes\nexternal call]
+        S1b[Stage 1b: Quality Gate]
     end
 
     subgraph orchestrator [requirements-pipeline]
-        S2[Stage 2: Interpretation Checkpoint]
-        S3[Stage 3: Variables and Constraints]
-        S35[Stage 3.5: Feature Decomposition]
-        S4[Stage 4: Scenario Matrix]
-        S5[Stage 5: Assumptions]
-        S6[Stage 6: User Flows + Purity Filter]
-        S7[Stage 7: Requirements Docs]
+        S2[Stage 2: Interpretation Checkpoint\ngate: stage2_confirmed]
+        S3[Stage 3: Brainstorm]
+        S35[Stage 3.5: Mode + Registry\ngate: stage35_confirmed]
+        S4[Stage 4: Scenario Matrix\nExpress: skipped]
+        S5[Stage 5: Assumptions\ngate: stage5_confirmed]
+        S6[Stage 6: User Flows\nExpress: skipped]
+        S7[Stage 7a+7b: Synthesize + Generate\nlogic inlined]
         S8[Stage 8: Risk Analysis]
-        S9[Stage 9: Validation - Dedup + Semantic + Structural]
-        S9c[Stage 9c: Post-Merge Reconciliation]
+        S9[Stage 9: Validation\ngate: stage9_confirmed]
+        S9c[Stage 9c: Reconciliation\nsplit only]
     end
 
-    subgraph calledSkills [Skills Called by Orchestrator]
-        IA[identify-assumptions]
-        GR[generate-requirements]
+    subgraph calledSkills [External Skills Called]
         VR[validate-requirements]
     end
 
     T --> TMN
-    D --> DTC
-    TMN --> S2
-    DTC --> S2
+    D --> S1b
+    TMN --> S1b
+    S1b --> S2
     P --> S2
     L --> S2
 
     S2 --> S3 --> S35
     S35 --> S4
     S4 --> S5
-    S5 --> IA
-    IA --> S6
+    S5 --> S6
     S6 --> S7
-    S7 --> GR
-    GR --> S8
+    S7 --> S8
     S8 --> S9
     S9 --> VR
     VR --> S9c
@@ -74,19 +72,23 @@ flowchart TD
 
 ### Stages and What They Produce
 
-| Stage | What Happens | Output Artifact |
-|-------|-------------|-----------------|
-| 1 | Transcripts and designs are pre-processed into structured summaries | Meeting summary, User Flow Doc or Context Summary |
-| 2 | Interpretation checkpoint — STATED vs INFERRED facts, user confirms | Inference Register |
-| 3 | Variables, constraints, and actors mapped | Variables table |
-| 3.5 | Feature decomposition — cluster value streams, test independence, build Shared Registry | `Stage3.5-Feature-Decomposition.md` |
-| 4 | Scenario matrix — all combinations, edge cases, boundary conditions | `[Feature]-Scenarios-Matrix.md` |
-| 5 | Risky assumptions identified per perspective (PM / Designer / Engineer) | Assumptions register |
-| 6 | Step-by-step user flows per actor + purity filter (requirement vs solution vs design) | `[Feature]-User-Flows.md` |
-| 7 | Feature Requirements document generated (API contracts and system flows are separate, post-requirements skills) | `Feature-Requirements-[Feature].md` (saved to user-provided output folder) |
-| 8 | Pre-mortem risk analysis — Tigers / Paper Tigers / Elephants | Risks section merged into requirements doc |
-| 9 | Combined validation — deduplication + 15-check semantic and structural review | `Stage9-Validation-Report.md` |
-| 9c | Post-merge reconciliation (multi-feature only) — cross-document dedup, conflict detection | `Stage9c-Reconciliation.md` |
+| Stage | What Happens | Output Artifact | Mode |
+|-------|-------------|-----------------|------|
+| 1a | Input scoping — three-tier gate locks input set, assigns SRC-IDs; transcripts routed to `transcript-to-meeting-notes` | `source_summaries/` files | All |
+| 1b | Quality gate — input quality rated, pipeline mode pre-assessed | Stage 1b notes in state file | All |
+| 2 | Interpretation checkpoint — STATED vs INFERRED facts, user confirms | Inference register; `stage2_confirmed` gate | All |
+| 3 | Brainstorm — constraints, new rules, actor interaction map | Stage 3 artifact | All |
+| 3.5a | Split analysis — tests whether multi-feature decomposition is needed | Split signal | All |
+| 3.5b | Mode + registry — mode locked (Express/Standard/Full), Shared Registry built | `03.5b-mode-registry.md`; `stage35_confirmed` gate | All |
+| 3.5c | Execution model — staggered-parallel plan for split runs | Execution plan | Split only |
+| 4 | Scenario matrix — combinations, edge cases, boundary conditions | `04-scenarios.md` | Standard / Full |
+| 5 | Assumptions — risky assumptions by priority (PM / Designer / Engineer perspectives, inlined) | Assumptions register; `stage5_confirmed` gate | All |
+| 6 | User flows per actor + purity filter (requirement vs solution vs design) | `06-user-flows.md` | Standard / Full |
+| 7a | Synthesis — reads all stage artifacts, prepares context for generation | Synthesis notes | All |
+| 7b | Generation — writes Feature Requirements document (logic inlined) | `07b-feature-requirements.md` | All |
+| 8 | Risk analysis — pre-mortem (Tigers / Paper Tigers / Elephants) | Risk section in requirements doc | All |
+| 9 | Validation — calls `validate-requirements`; combined semantic + structural review | `09-validation-report.md`; `stage9_confirmed` gate | All |
+| 9c | Post-merge reconciliation — cross-document dedup, conflict detection | `09c-reconciliation.md` | Split only |
 
 ### Two Entry Points for Requirements Generation
 
@@ -95,12 +97,11 @@ flowchart LR
     A[Messy inputs:\ntranscripts, rough ideas,\ndesigns, hypotheses]
     B[Well-defined inputs:\nPRD, Swagger spec,\nconfirmed designs]
 
-    GDR[requirements-pipeline\nFull 9-stage pipeline\nStages 2-6 are manual checkpoints]
+    GDR[requirements-pipeline\nExpress / Standard / Full modes\nResumable via state file\nStages 2, 3.5b, 5, 9 are gates]
     GR[generate-requirements\n3-workflow sub-chain\nFeature Requirements only\nAPI contracts generated separately]
 
     A --> GDR
     B --> GR
-    GDR -->|"Stage 7 calls\n(skips intake)"| GR
 ```
 
 **Use `requirements-pipeline` when:**
@@ -109,6 +110,7 @@ flowchart LR
 - You want scenario matrices and assumptions analysis before writing requirements
 - The feature is complex enough to warrant stage-by-stage confirmation
 - You have a `project-context.md` and want it automatically applied across all stages
+- You need to resume a prior run after a session ends (Express mode for quick turnarounds)
 
 **Use `generate-requirements` directly when:**
 - You already have a clear PRD, Figma designs, and/or Swagger spec
@@ -150,7 +152,59 @@ flowchart LR
 
 **`update-documents`** — Use this when a confirmed change (corrected fact, scope cut, renamed concept, new decision) needs to be reflected across multiple related documents simultaneously. It shows you a change manifest for approval before touching any file.
 
-**`client-ready-requirements`** — Use this when the internal requirements document is complete and validated and you need to share it with the client. It strips all internal metadata (SRC codes, pipeline stage markers, assumption codes) without changing any requirement content, and adds a formatted Sources & Reference Materials section.
+**`client-ready-requirements`** — Use this when the internal requirements document is complete and validated and you need to share it with the client. Produces an 11-section VP/Director-ready document with VP filter applied, deduplication, and overflow content moved to appendices. FR statements are copied verbatim — no paraphrasing.
+
+---
+
+## Group 3: Planning ⚠️ WIP
+
+Five interconnected skills covering the full delivery lifecycle. Skills read each other's output files — no skill depends on chat context from another skill's run.
+
+```mermaid
+flowchart LR
+    RSP[release-sprint-planner\nRelease Definition\n+ multi-sprint plan]
+    SPS[sprint-planning-session\nSprint Planning doc]
+    SPT[sprint-progress-tracker\nProgress snapshot\nplanned vs actual]
+    SRG[sprint-review-generator\nSprint Review doc\nstakeholder-facing]
+    MPI[meeting-to-plan-integrator\nApplies meeting decisions\nback to release plan]
+
+    RSP --> SPS --> SPT --> SRG --> MPI --> RSP
+```
+
+| Skill | Input | Output |
+|-------|-------|--------|
+| **release-sprint-planner** | Feature list, team, timeline, constraints | `Release-Definition.md`, `Release-Plan.md`, `Scope.md` |
+| **sprint-planning-session** | Release plan or ticket list | `Sprint-N-Planning.md` |
+| **sprint-progress-tracker** | Sprint planning doc + status updates | `Sprint-N-Progress.md` |
+| **sprint-review-generator** | Sprint progress doc | `Sprint-N-Review.md` |
+| **meeting-to-plan-integrator** | Meeting notes / sprint review | Updated `Release-Plan.md` and related artifacts |
+
+**Use `release-sprint-planner` once per release** to define the goal, scope, and sprint breakdown. Then run the remaining four skills each sprint in sequence.
+
+---
+
+## Group 4: Epics & Stories ⚠️ WIP
+
+Four skills covering the story lifecycle — from epic creation through acceptance testing.
+
+```mermaid
+flowchart LR
+    FRD[Feature-Requirements-*.md\nfrom requirements-pipeline\nor generate-requirements]
+    GE[generate-epic\nEpic-*.md]
+    GUS[generate-user-stories\nStory files\nINVEST-compliant]
+    VUS[validate-user-stories\nValidation report\n+ fixes]
+    GUAT[generate-uat\nUAT test plan]
+
+    FRD --> GE --> GUS --> VUS
+    GUS --> GUAT
+```
+
+| Skill | Purpose |
+|-------|---------|
+| **generate-epic** | Creates a structured epic from requirements or a verbal description — extracts goals, success criteria, scope, dependencies |
+| **generate-user-stories** | Decomposes an epic into INVEST-compliant stories using WAHZURT framework; 4 modes: create, quick/draft, modify, decompose-only |
+| **validate-user-stories** | Audits stories against 12 categories; fixes failures; always rebuilds registry from actual files |
+| **generate-uat** | Generates a client-ready UAT test plan from GitHub issue files or a ticket list |
 
 ---
 
@@ -160,12 +214,12 @@ flowchart LR
 ```mermaid
 flowchart TD
     subgraph pipeline [Requirements Pipeline - Group 1]
-        GDR[requirements-pipeline\nOrchestrator\nstages/01-intake.md]
-        TMN[transcript-to-meeting-notes]
-        DTC[design-to-context\nFigma via subagent]
-        IA[identify-assumptions]
-        GR[generate-requirements]
-        VR[validate-requirements\nSemantic + Structural]
+        GDR[requirements-pipeline\nOrchestrator\nExpress / Standard / Full]
+        TMN[transcript-to-meeting-notes\nStage 1a external call]
+        DTC[design-to-context\nStandalone]
+        GR[generate-requirements\nStandalone]
+        IA[identify-assumptions\nStandalone]
+        VR[validate-requirements\nStage 9 external call]
     end
 
     subgraph postpipeline [Post-Pipeline - Group 2]
@@ -173,22 +227,37 @@ flowchart TD
         UD[update-documents]
         CRR[client-ready-requirements]
         FDG[figjam-diagram-generator]
-        SCRR[securitas-client-ready-requirements]
-        DA[document-audit\nNon-requirements docs only]
+        DA[document-audit]
     end
 
-    GDR -->|"Stage 1"| TMN
-    GDR -->|"Stage 1"| DTC
-    GDR -->|"Stage 5"| IA
-    GDR -->|"Stage 7"| GR
+    subgraph planning [Planning - Group 3 ⚠️ WIP]
+        RSP[release-sprint-planner]
+        SPS[sprint-planning-session]
+        SPT[sprint-progress-tracker]
+        SRG[sprint-review-generator]
+        MPI[meeting-to-plan-integrator]
+    end
+
+    subgraph stories [Epics & Stories - Group 4 ⚠️ WIP]
+        GE[generate-epic]
+        GUS[generate-user-stories]
+        VUS[validate-user-stories]
+        GUAT[generate-uat]
+    end
+
+    GDR -->|"Stage 1a"| TMN
     GDR -->|"Stage 9"| VR
 
     VR --> RF
     DA --> RF
     RF --> UD
     UD --> CRR
-    UD --> SCRR
     CRR -.->|"optional"| FDG
+
+    RSP --> SPS --> SPT --> SRG --> MPI
+
+    GR --> GE --> GUS --> VUS
+    GUS -.->|"optional"| GUAT
 ```
 
 ---
@@ -198,9 +267,20 @@ flowchart TD
 | Situation | Start Here |
 |-----------|-----------|
 | "I have a meeting transcript and some rough ideas for a feature" | `requirements-pipeline` |
-| "I have a Figma link and a PRD, I need requirements" | `generate-requirements` (Feature Requirements only; API contracts generated separately after) |
+| "I have a Figma link and a PRD, I need requirements" | `generate-requirements` |
 | "I have a design with no other context" | `design-to-context` first, then `generate-requirements` |
-| "I have a transcript from a discovery call" | `transcript-to-meeting-notes` first, then feed output to `generate-requirements` |
+| "I have a transcript from a discovery call" | `transcript-to-meeting-notes` first, then `generate-requirements` |
 | "I need to validate an existing requirements doc" | `validate-requirements` → `review-findings` |
-| "A decision changed and I need to update 4 docs" | `update-documents` |
-| "Internal requirements are done — I need a clean version for the client" | `client-ready-requirements` |
+| "A decision changed and I need to update multiple docs" | `update-documents` |
+| "Internal requirements are done — I need a client version" | `client-ready-requirements` |
+| "I want to visualize a user flow or requirements doc" | `figjam-diagram-generator` |
+| "I need to stress-test the assumptions behind a feature" | `identify-assumptions` |
+| "I need to plan a release and break it into sprints" | `release-sprint-planner` |
+| "I need to plan the upcoming sprint" | `sprint-planning-session` |
+| "I want a mid-sprint status snapshot" | `sprint-progress-tracker` |
+| "I need to prepare the sprint review doc" | `sprint-review-generator` |
+| "Meeting decisions need to go back into the release plan" | `meeting-to-plan-integrator` |
+| "I need to write an epic from requirements" | `generate-epic` |
+| "I need to create user stories for an epic" | `generate-user-stories` |
+| "I need to validate or fix existing user stories" | `validate-user-stories` |
+| "I need a UAT test plan from our tickets" | `generate-uat` |

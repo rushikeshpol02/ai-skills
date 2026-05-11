@@ -20,7 +20,8 @@ git clone https://github.com/rushikeshpol02/ai-skills.git ~/ai-skills
 
 ```bash
 mkdir -p ~/.cursor/skills
-for skill in ~/ai-skills/cursor/skills/*/; do
+find ~/ai-skills/skills -mindepth 2 -maxdepth 3 -name "SKILL.md" | while read f; do
+  skill=$(dirname "$f")
   ln -s "$skill" ~/.cursor/skills/$(basename "$skill")
 done
 ```
@@ -29,7 +30,8 @@ done
 
 ```bash
 mkdir -p ~/.claude/skills
-for skill in ~/ai-skills/cursor/skills/*/; do
+find ~/ai-skills/skills -mindepth 2 -maxdepth 3 -name "SKILL.md" | while read f; do
+  skill=$(dirname "$f")
   ln -s "$skill" ~/.claude/skills/$(basename "$skill")
 done
 ```
@@ -38,7 +40,8 @@ done
 
 ```bash
 mkdir -p ~/.cursor/skills ~/.claude/skills
-for skill in ~/ai-skills/cursor/skills/*/; do
+find ~/ai-skills/skills -mindepth 2 -maxdepth 3 -name "SKILL.md" | while read f; do
+  skill=$(dirname "$f")
   name=$(basename "$skill")
   ln -s "$skill" ~/.cursor/skills/"$name"
   ln -s "$skill" ~/.claude/skills/"$name"
@@ -118,7 +121,17 @@ Cursor auto-detects skills from the content of your message. You do not need to 
 | "Audit this document for stale markers and contradictions" | `document-audit` |
 | "Walk me through the findings in this validation report" | `review-findings` |
 | "A decision changed — update all the docs" | `update-documents` |
-| "Prepare this requirements doc for the client / strip internal references" | `client-ready-requirements` |
+| "Prepare this requirements doc for the client" | `client-ready-requirements` |
+| "Create a diagram of this user flow in FigJam" | `figjam-diagram-generator` |
+| "Plan this release and break it into sprints" | `release-sprint-planner` |
+| "Create a sprint planning doc for this sprint" | `sprint-planning-session` |
+| "What's the sprint status / how are we tracking?" | `sprint-progress-tracker` |
+| "Prepare the sprint review doc" | `sprint-review-generator` |
+| "Apply the decisions from today's meeting to the release plan" | `meeting-to-plan-integrator` |
+| "Write an epic for this feature" | `generate-epic` |
+| "Create user stories for this epic" | `generate-user-stories` |
+| "Validate / fix these user stories" | `validate-user-stories` |
+| "Create a UAT test plan from these tickets" | `generate-uat` |
 
 ---
 
@@ -271,17 +284,14 @@ Propagate it across: [list docs].
 
 ```
 Use client-ready-requirements on [path to Feature-Requirements-*.md].
-Stage 1 intake is at [path to Stage1_Intake_Classification.md].
 ```
 
 ```
 Prepare [requirements file path] for client review.
-Strip internal references and add a sources section.
-Stage 1 file: [path]
 ```
 
 ```
-Run client-ready-requirements on all requirement docs in [folder path].
+Create a client-ready version of [requirements file path] for stakeholder review.
 ```
 
 ### figjam-diagram-generator
@@ -298,18 +308,117 @@ Generate a flowchart in FigJam from the requirements at [file path].
 Build a sequence diagram in FigJam for [describe the interaction].
 ```
 
-### securitas-client-ready-requirements
+### release-sprint-planner
 
 ```
-Use securitas-client-ready-requirements on [path to Feature-Requirements-*.md].
-```
-
-```
-Prepare [requirements file path] for Securitas/Lauren review.
+Plan this release. Feature list: [paste or point to file]
+Team: [size / velocity]. Deadline: [date].
 ```
 
 ```
-Create a streamlined client version of [requirements file path] for Securitas.
+Define the release for [Feature Name]. I'll walk you through it.
+```
+
+```
+Break this feature list into sprints: [paste list]
+Timeline: [N] sprints of [N] weeks.
+```
+
+### sprint-planning-session
+
+```
+Create a sprint planning doc for Sprint [N].
+Tickets: [paste list or point to release plan]
+```
+
+```
+Sprint planning for Sprint [N]. Goal: [paste goal].
+Here are the tickets: [list]
+```
+
+### sprint-progress-tracker
+
+```
+Sprint progress check for Sprint [N].
+Planning doc: [file path]
+Status: [paste verbal update or ticket statuses]
+```
+
+```
+Close out Sprint [N]. Planning doc: [path]. Here's what's done: [summary]
+```
+
+### sprint-review-generator
+
+```
+Create the sprint review doc for Sprint [N].
+Progress doc: [file path]
+```
+
+```
+Prepare the sprint demo doc for Sprint [N]: [progress doc path]
+```
+
+### meeting-to-plan-integrator
+
+```
+Apply today's meeting decisions to the release plan.
+Meeting notes: [file path or paste summary]
+Release plan: [file path]
+```
+
+```
+We just finished the Sprint [N] retro. Here are the decisions: [paste]
+Update the release plan at [file path].
+```
+
+### generate-epic
+
+```
+Write an epic for [Feature Name].
+Requirements doc: [file path]
+```
+
+```
+Create an epic from this description: [paste feature description]
+```
+
+### generate-user-stories
+
+```
+Generate user stories for [Epic Name].
+Epic: [file path]
+```
+
+```
+Decompose [Epic Name] into story concepts first, then write full stories.
+Epic: [file path]
+```
+
+```
+Modify this story: [file path]
+Change: [describe what needs to change]
+```
+
+### validate-user-stories
+
+```
+Validate the user stories in [folder path].
+```
+
+```
+Check and fix the stories in [folder path] — run all 12 validation categories.
+```
+
+### generate-uat
+
+```
+Generate a UAT test plan from these tickets: [folder path or list]
+```
+
+```
+Create a UAT plan for the [Feature Name] release.
+Tickets are in: [folder path]
 ```
 
 ---
@@ -318,7 +427,7 @@ Create a streamlined client version of [requirements file path] for Securitas.
 
 ### Option A: Start from scratch with requirements-pipeline
 
-This runs all 9 stages in one session. Expect multiple checkpoints where the agent will pause and ask for your input.
+This runs a multi-stage pipeline in one session. Expect mandatory checkpoints at Stages 2, 3.5b, 5, and 9 where the agent pauses for your confirmation.
 
 ```
 I want to build requirements for [Feature Name] from scratch.
@@ -331,19 +440,18 @@ Run requirements-pipeline.
 ```
 
 The agent will:
-1. Load `project-context.md` if present, then pre-process the transcript and design (Stage 1)
-2. Verify all inputs were processed (Stage 1.4.1 — processing verification gate)
-3. Present its understanding for your confirmation (Stage 2 — STOP)
-4. Map variables, constraints, actors (Stage 3)
-5. Decompose features, build Shared Registry if multi-feature (Stage 3.5 — STOP)
-6. Build a scenario matrix with priorities (Stage 4)
-7. Run assumption analysis and present for confirmation (Stage 5 — STOP)
-8. Draft user flows with purity filter (Stage 6)
-9. Generate Feature Requirements document (Stage 7 — calls `generate-requirements`, skipping its intake)
-10. Run risk analysis (Stage 8)
-11. Combined validation — dedup + semantic + structural review (Stage 9 — STOP)
-12. Post-merge reconciliation if multi-feature (Stage 9c)
-13. Offer to create or update `project-context.md` from what was learned
+1. Lock the input set with a three-tier scoping gate, assign SRC-IDs (Stage 1a)
+2. Route transcripts to `transcript-to-meeting-notes`, rate input quality (Stage 1b)
+3. Present STATED vs INFERRED interpretation for confirmation — **STOP** (Stage 2)
+4. Brainstorm constraints, actors, rules (Stage 3)
+5. Determine if the feature needs to be split across multiple runs; lock pipeline mode (Express / Standard / Full) — **STOP** (Stage 3.5b)
+6. Build scenario matrix — combinations, edge cases, boundary conditions (Stage 4 — Standard/Full only)
+7. Surface risky assumptions by priority — **STOP** (Stage 5)
+8. Draft user flows per actor with purity filter (Stage 6 — Standard/Full only)
+9. Synthesize all stage artifacts, then generate Feature Requirements document (Stages 7a + 7b)
+10. Run pre-mortem risk analysis (Stage 8)
+11. Call `validate-requirements` for combined semantic + structural review — **STOP** (Stage 9)
+12. Post-merge reconciliation if multi-feature split (Stage 9c)
 
 ### Option B: Pre-process inputs first, then generate
 
@@ -370,8 +478,7 @@ Step 6 — Apply fixes:
 "Update the requirements doc at [path] based on these decisions: [summary of decisions]"
 
 Step 7 — Produce client-ready version:
-"Run client-ready-requirements on [requirements file path].
-Stage 1 intake: [path]"
+"Run client-ready-requirements on [requirements file path]."
 ```
 
 ### Option C: Quick turnaround (well-defined inputs)

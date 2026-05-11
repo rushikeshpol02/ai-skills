@@ -20,7 +20,19 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - [update-documents](#update-documents) — Post-Pipeline
 - [client-ready-requirements](#client-ready-requirements) — Post-Pipeline
 - [figjam-diagram-generator](#figjam-diagram-generator) — Post-Pipeline
-- [securitas-client-ready-requirements](#securitas-client-ready-requirements) — Post-Pipeline / Client-Specific
+
+**Planning Skills (Group 3)** ⚠️ WIP
+- [release-sprint-planner](#release-sprint-planner) — Standalone
+- [sprint-planning-session](#sprint-planning-session) — Standalone
+- [sprint-progress-tracker](#sprint-progress-tracker) — Standalone
+- [sprint-review-generator](#sprint-review-generator) — Standalone
+- [meeting-to-plan-integrator](#meeting-to-plan-integrator) — Standalone
+
+**Epics & Stories Skills (Group 4)** ⚠️ WIP
+- [generate-epic](#generate-epic) — Standalone
+- [generate-user-stories](#generate-user-stories) — Standalone
+- [validate-user-stories](#validate-user-stories) — Standalone
+- [generate-uat](#generate-uat) — Standalone
 
 
 ---
@@ -33,50 +45,57 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Mode:** Pipeline Orchestrator
 
-**Purpose:** End-to-end requirements pipeline from messy, early-stage inputs to a production-ready Feature Requirements document. Orchestrates 9 stages, calling other skills at each quality gate. Handles inputs that are too raw or contradictory for `generate-requirements` to process directly.
+**Purpose:** End-to-end requirements pipeline from messy, early-stage inputs to a production-ready Feature Requirements document. Supports three modes (Express / Standard / Full), resumable runs via a state file, and inlines all sub-skill logic except two external calls. Handles inputs that are too raw or contradictory for `generate-requirements` to process directly.
 
 **When to use:**
 - Starting from rough ideas, brainstorm notes, or meeting transcripts
 - Inputs are incomplete, contradictory, or need clarification
 - You want a scenario matrix and multi-perspective assumption analysis before writing requirements
 - The feature is complex enough to warrant stage-by-stage confirmation
+- You need to resume a prior run after a session ends
+
+**Pipeline modes:**
+| Mode | Stages skipped | Use when |
+|------|---------------|----------|
+| Express | Stage 4 (Scenarios), Stage 6 (User Flows) | Simple feature, well-understood problem space, time-constrained |
+| Standard | None | Most features — full analysis without extended exploration |
+| Full | None + extended brainstorm | Complex, high-risk, or poorly-understood problem space |
+
+Mode is determined and locked at Stage 3.5b based on complexity and size signals.
 
 **Inputs:**
 | Input | Required | Notes |
 |-------|----------|-------|
-| Meeting transcripts (`.vtt`, `.md`, `.txt`, `.docx`) | Optional | Automatically routed to `transcript-to-meeting-notes` |
-| Design files or Figma URLs | Optional | Automatically routed to `design-to-context` |
+| Meeting transcripts (`.vtt`, `.md`, `.txt`, `.docx`) | Optional | Routed to `transcript-to-meeting-notes` at Stage 1a |
+| Design files or Figma URLs | Optional | Read directly at Stage 1a; design-to-context logic inlined |
 | PRD, feature description, or verbal idea | At least one required | Any combination works |
 | Legal / policy documents | Optional | Extracted for rules and constraints |
-| Existing requirements doc (for iterative update) | Optional | Used as baseline for delta updates |
-| Swagger / OpenAPI spec | Optional | Read and extract integration points, data models, constraints. API contracts are generated separately after requirements are finalized using `rest-api-contract-generator`. |
-| `project-context.md` (workspace root) | Optional | Pre-loads tech stack, personas, API conventions, systems, constraints, and glossary if present |
+| Swagger / OpenAPI spec | Optional | Integration points, data models, constraints. API contracts generated separately after requirements. |
+| `project-context.md` (workspace root) | Optional | Pre-loads tech stack, personas, API conventions, systems, constraints, and glossary |
 
-**Outputs (saved to workspace):**
+**Outputs (saved to `_runs/[feature-slug]-[YYYYMMDD]/stage_output/`):**
 | File | Stage | Description |
 |------|-------|-------------|
-| `Stage3.5-Feature-Decomposition.md` | Stage 3.5 | Feature decomposition with Shared Registry (always produced, may say "no split needed") |
-| `[Feature]-Scenarios-Matrix.md` | Stage 4 | All scenario combinations, edge cases, boundary conditions (with priority column) |
-| `[Feature]-User-Flows.md` | Stage 6 | Step-by-step user flows per actor (with purity filter applied) |
-| `Feature-Requirements-[Feature].md` | Stage 7 | Feature Requirements document (saved to user-provided output folder) |
-| `Stage9-Validation-Report.md` | Stage 9 | Combined semantic + structural review findings |
-| `Stage9c-Reconciliation.md` | Stage 9c | Post-merge reconciliation report (multi-feature only) |
+| `stage_output/03.5b-mode-registry.md` | Stage 3.5b | Feature decomposition, mode selection, Shared Registry |
+| `stage_output/04-scenarios.md` | Stage 4 | Scenario matrix — combinations, edge cases, boundary conditions *(Standard / Full only)* |
+| `stage_output/06-user-flows.md` | Stage 6 | Step-by-step user flows per actor, purity-filtered *(Standard / Full only)* |
+| `stage_output/07b-feature-requirements.md` | Stage 7b | Feature Requirements document |
+| `stage_output/09-validation-report.md` | Stage 9 | Combined semantic + structural validation report |
+| `stage_output/09c-reconciliation.md` | Stage 9c | Post-merge reconciliation report *(multi-feature split only)* |
+| `.meta/pipeline-state.json` | All | State file — tracks current task, completed stages, gate passage, run metadata |
 
-**Mandatory checkpoints (STOP and wait for user):** Stages 2, 3.5, 5, and 9
+**Mandatory gates (pipeline pauses and waits for confirmation):** Stages 2, 3.5b, 5, and 9
 
-**Key pipeline enhancements (vs standalone `generate-requirements`):**
-- **Stage 1.1:** Loads `project-context.md` if present — pre-populates personas, systems, constraints, and terminology across all stages
-- **Stage 1.4.1:** Mandatory processing verification gate — ensures every input routed to a skill has a saved output file before proceeding (prevents unverifiable source citations)
-- **Stage 7:** Skips `generate-requirements` intake (Steps 1-3) and passes all pipeline context directly to Workflow 1
-- **After Stage 9b:** Offers to create or update `project-context.md` to capture project-level knowledge for future sessions
-
-**Skills called:**
-- Stage 1: `transcript-to-meeting-notes`, `design-to-context`
-- Stage 5: `identify-assumptions`
-- Stage 7: `generate-requirements` (skips intake, enters at Workflow 1)
+**External skills called:**
+- Stage 1a: `transcript-to-meeting-notes` (transcript inputs only)
 - Stage 9: `validate-requirements` (combined semantic + structural review)
 
-**Related skills:** All pipeline skills — `generate-requirements`, `design-to-context`, `transcript-to-meeting-notes`, `identify-assumptions`, `validate-requirements`, `document-audit`.
+All other sub-skill logic (`identify-assumptions`, `generate-requirements`) is inlined in stage files — no external calls.
+
+**Resuming an interrupted run:**
+Point the agent to the run folder: `_runs/[run-name]/`. The pipeline reads `current_task` from the state file and continues from the last completed task.
+
+**Related skills:** `generate-requirements` (standalone alternative for well-defined inputs), `validate-requirements` (called at Stage 9), `transcript-to-meeting-notes` (called at Stage 1a), `design-to-context` (standalone alternative for design pre-processing), `review-findings`, `update-documents`.
 
 ---
 
@@ -90,7 +109,6 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 - Inputs are well-defined: clear PRD, confirmed Figma designs, and/or Swagger spec
 - You need requirements generated quickly (Quick Mode: ~15 min)
 - You're creating the final requirements document from already-analyzed inputs
-- Called by `requirements-pipeline` at Stage 7 (skips intake, enters at Workflow 1)
 
 **Modes:**
 | Mode | Analysis Depth | Use When | Timing |
@@ -115,11 +133,9 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 | `Feature-Requirements-[Feature].md` | `[output-folder]/Generated/Internal/` | Always generated |
 | `Validation-Report-[Feature].md` | `[output-folder]/Generated/Report/` | Quality gate report |
 
-**Pipeline-aware entry point:** When called from `requirements-pipeline` (Stage 7), Steps 1-3 (workspace scan, project context loading, intake) are skipped entirely. The pipeline passes all context directly, and the skill enters at Workflow 1 (`01-synthesize.md`).
-
 **Workflow sub-chain:** `01-synthesize.md` → `02-generate.md` → `03-validate.md`
 
-**Related skills:** `requirements-pipeline` (calls this), `design-to-context`, `transcript-to-meeting-notes`, `validate-requirements`.
+**Related skills:** `requirements-pipeline` (use for messy/early-stage inputs), `design-to-context`, `transcript-to-meeting-notes`, `validate-requirements`.
 
 ---
 
@@ -130,9 +146,8 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 **Purpose:** Converts Figma URLs or design image files into structured design context documents. Supports three output formats depending on the input and intent.
 
 **When to use:**
-- You have Figma screens or design mockups and need to document them
-- You want to feed design context into a requirements pipeline
-- Called by `requirements-pipeline` at Stage 1 for design inputs
+- You have Figma screens or design mockups and need to document them before generating requirements
+- You want to feed design context into `requirements-pipeline` or `generate-requirements`
 
 **Output formats:**
 | Format | Use When | File Produced |
@@ -164,7 +179,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 **When to use:**
 - You have a meeting transcript and need a structured summary
 - You want to extract decisions, assumptions, and open questions from a call
-- Called by `requirements-pipeline` at Stage 1 for transcript inputs
+- Called by `requirements-pipeline` at Stage 1a for transcript inputs (only external call for transcripts)
 
 **Meeting types:**
 | Type | Indicators | Topic Internal Structure |
@@ -194,7 +209,7 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 **When to use:**
 - Stress-testing a feature idea before writing requirements
 - Preparing for stakeholder review
-- Called by `requirements-pipeline` at Stage 5
+- Standalone use or as a pre-requirements step alongside `requirements-pipeline` (assumption logic is inlined in v2)
 
 **Risk areas:**
 | Area | What It Covers |
@@ -391,47 +406,40 @@ Deep-dive reference for every skill. Each entry covers: purpose, inputs, outputs
 
 **Mode:** Post-Pipeline
 
-**Purpose:** Transforms an internal feature requirements document (produced by the requirements pipeline) into a client-safe version for all stakeholder types — business, product, UX, technology, and executive — in a single shared document. Strips internal scaffolding without changing any functional requirement content.
+**Purpose:** Transforms an internal feature requirements document into a structured VP/Director-ready client requirements document. Produces an 11-section output (10 sections for net-new features without a What's Changing section) with VP filter applied, deduplication across sections, and overflow content relocated to appendices.
 
 **When to use:**
-- After the internal requirements document is complete and validated (`validate-requirements` + `document-audit` have been run)
-- Before sharing a requirements document with a client or external stakeholder
-- When preparing for a stakeholder review across mixed audiences (business, product, UX, technology, executive)
+- After the internal requirements document is complete and validated
+- When preparing requirements for client or senior stakeholder review
+- When a focused, review-friendly version is needed that strips internal scaffolding without losing requirement fidelity
 
-**What it removes or transforms:**
-
-| Internal Content | Transformation |
-|-----------------|----------------|
-| `(Source: SRC-N)` citations | Removed |
-| `(Source: Implicit)` markers | Removed; uncertain statements converted to [TBD] |
-| Internal assumption/constraint codes (H1, D14, C9, etc.) | Removed from body text |
-| Pipeline process metadata in header | Removed; Audience field updated |
-| Stage artifact references in body | Removed |
-| Figma node IDs | Replaced with "current app design" |
-| Struck-through resolved OQ rows | Removed |
-| "Contradicted" / "BLOCKER" language | Reframed as plain risk language |
-| Implementation notes inside requirements | Wrapped in `> Engineering Note:` callout |
-| Change history — internal validation details | Stripped to clean version table |
-| Related Documents — internal stage files | Removed; external links and sister features kept |
-
-**What it adds:**
-
-A **Sources & Reference Materials** section at the end, listing all input documents used. Format per entry: `Display Name (Type, Day Month Year)` e.g. `(Meeting Record, January 7, 2026)` — falling back to name + type (no date) or name + date (no type) when full info is unavailable. Figma design links are placed in Related Documents, not Sources. Grouped by: Meeting Records → Discovery Sessions → Client Documents → Related Feature Documents.
+**What it produces:**
+| Section | Content |
+|---------|---------|
+| 1. Scope | In-scope / Out-of-scope tables |
+| 2. Personas | Carried from internal doc |
+| 3. User Goals | Carried from internal doc |
+| 4. What's Changing | Before/after comparison (existing features only) |
+| 5. Flows | User flows with appendix callouts for overflow |
+| 6. Functional Requirements | FR body copied verbatim, citations stripped |
+| 7. Constraints & Risks | Consolidated, VP-filtered |
+| 8. Open Questions | Cleaned, resolved items removed |
+| 9. References | External links, sister features |
+| 10–11. Appendices | Visual states, error handling tables, overflow flows |
 
 **Inputs:**
 | Input | Required | Notes |
 |-------|----------|-------|
 | Internal requirements document | Yes | `Feature-Requirements-[Feature].md` |
-| Stage 1 intake file | Yes | Maps SRC codes to readable document names and dates |
 
 **Output:**
 | File | Description |
 |------|-------------|
-| `Client-Requirements-[Feature].md` | Saved in same folder as input; identical structure, internal metadata removed |
+| `Client-Requirements-[Feature].md` | Streamlined version saved in same folder as input |
 
-**Core constraint:** Requirement statements are never changed — only citations and codes are stripped. `[TBD]` items are always preserved.
+**Core constraint:** FR statements are copied verbatim — no paraphrasing. Only citations and internal codes are stripped.
 
-**Related skills:** `validate-requirements` and `document-audit` (run before this skill to ensure the input is accurate); `update-documents` (run first to propagate any corrections); `generate-requirements` and `requirements-pipeline` (produce the input document)
+**Related skills:** `validate-requirements` and `document-audit` (run before this to ensure input accuracy); `update-documents` (run first to propagate any corrections); `requirements-pipeline` and `generate-requirements` (produce the input document)
 
 ---
 
@@ -469,41 +477,244 @@ A **Sources & Reference Materials** section at the end, listing all input docume
 
 ---
 
-### securitas-client-ready-requirements
+## Planning Skills (Group 3) ⚠️ WIP
 
-**Mode:** Post-Pipeline / Client-Specific
+> These skills are still being refined. Core functionality works but prompts, templates, and workflows are subject to change.
 
-**Purpose:** Transforms an internal feature requirements document into a streamlined Securitas client-ready version. Produces a focused 7-8 section document by removing redundant context sections, merging scattered constraint/risk information, and stripping internal process scaffolding.
+---
+
+### release-sprint-planner
+
+**Mode:** Standalone
+
+**Purpose:** Defines a release — its goal, scope, timeline, team, and constraints — then produces a formal Release Definition and multi-sprint plan. Assesses context across six dimensions, collaboratively builds each section, sizes features, maps dependencies, and assigns work to sprints.
 
 **When to use:**
-- After the internal requirements document is complete and validated
-- When preparing requirements for Securitas/Lauren stakeholder review
-- When a focused, review-friendly version is needed for a client who already knows the context
-
-**What it produces:**
-| Section | Content |
-|---------|---------|
-| 1. Scope | In-scope / Out-of-scope tables |
-| 2. What's Changing | Before/after comparison (existing features only) |
-| 3. Flows | User flows with appendix callouts |
-| 4. Functional Requirements | FR body copied verbatim, citations stripped |
-| 5. Constraints & Risks | Consolidated from multiple internal sections |
-| 6. Open Questions | Cleaned, resolved items removed |
-| 7. References | External links, sister features |
-| 8. Appendix | Visual states, error handling tables |
+- Starting a new release or major feature initiative
+- You need to break a feature list into sprints with a clear goal and timeline
+- You want a formal artifact the team and stakeholders can align on
 
 **Inputs:**
 | Input | Required | Notes |
 |-------|----------|-------|
-| Internal requirements document | Yes | `Feature-Requirements-[Feature].md` |
+| Feature list or backlog | Yes | Tickets, requirements docs, or verbal description |
+| Team size and velocity | Optional | Used for sprint sizing |
+| Timeline or deadline | Optional | Constrains sprint count |
+| Constraints (known risks, dependencies) | Optional | |
 
-**Output:**
-| File | Description |
-|------|-------------|
-| `Client-Requirements-[Feature].md` | Streamlined version in same folder as input |
+**Outputs:**
+- `Release-Definition.md` — goal, scope, team, timeline, constraints
+- `Release-Plan.md` — multi-sprint breakdown with feature assignments
+- `Scope.md` — in/out of scope table
 
-**Core constraint:** FR statements are copied verbatim — only citations and internal codes are stripped. No paraphrasing.
+**Related skills:** `sprint-planning-session` (next step after release plan), `meeting-to-plan-integrator` (updates the release plan from meeting decisions)
 
-**Related skills:** `client-ready-requirements` (generic version for all stakeholders), `validate-requirements` and `document-audit` (run before this to ensure input accuracy)
+---
 
+### sprint-planning-session
+
+**Mode:** Standalone
+
+**Purpose:** Takes a sprint's planned work (from a release plan, ticket board, or verbal list) and produces a structured Sprint Planning Session document. Groups work into logical areas, validates against the sprint goal, and defines what "done" looks like.
+
+**When to use:**
+- At the start of each sprint
+- You have a ticket list and need a planning doc the team can work from
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Ticket list or release plan | Yes | Any format — normalized by the skill |
+| Sprint goal | Optional | Derived if not provided |
+
+**Outputs:**
+- `Sprint-N-Planning.md` — grouped work areas, sprint goal, done criteria
+
+**Related skills:** `release-sprint-planner` (produces the release plan used as input), `sprint-progress-tracker` (next step)
+
+---
+
+### sprint-progress-tracker
+
+**Mode:** Standalone
+
+**Purpose:** Creates a planned-vs-actual progress snapshot for mid-sprint check-ins or sprint close-out. Surfaces risks early and feeds data into sprint review.
+
+**When to use:**
+- Mid-sprint check-in
+- Sprint close-out before the review
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Sprint planning doc | Yes | `Sprint-N-Planning.md` |
+| Status updates | Yes | Verbal or ticket status |
+
+**Outputs:**
+- `Sprint-N-Progress.md` — planned vs actual, risks, blockers, completion percentage
+
+**Related skills:** `sprint-planning-session` (produces input), `sprint-review-generator` (consumes output)
+
+---
+
+### sprint-review-generator
+
+**Mode:** Standalone
+
+**Purpose:** Produces a stakeholder-facing sprint review document. Answers: What did we build? Did we hit our goal? What did we learn? What's next? Serves two audiences: stakeholders (top sections) and team/PM (full detail).
+
+**When to use:**
+- After sprint close-out, before the sprint demo
+- You need a shareable artifact for stakeholders
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Sprint progress doc | Yes | `Sprint-N-Progress.md` |
+| Sprint planning doc | Optional | For goal comparison |
+
+**Outputs:**
+- `Sprint-N-Review.md` — what shipped, goal outcome, learnings, next steps
+
+**Related skills:** `sprint-progress-tracker` (produces input), `meeting-to-plan-integrator` (applies decisions from the review back to the release plan)
+
+---
+
+### meeting-to-plan-integrator
+
+**Mode:** Standalone
+
+**Purpose:** Takes decisions from a meeting (sprint demo, retro, stakeholder call, team sync) and applies them to the release plan and related artifacts. The "decisions become actions" bridge.
+
+**When to use:**
+- After any meeting where decisions affect the release plan, sprint scope, or team priorities
+- When feedback from a sprint review needs to cascade into the next sprint plan
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Meeting notes or summary | Yes | Any format |
+| Release plan | Yes | `Release-Plan.md` |
+| Related artifacts | Optional | Sprint planning docs, scope doc |
+
+**Outputs:**
+- Updated `Release-Plan.md` and related artifacts reflecting the meeting decisions
+
+**Related skills:** `sprint-review-generator` (produces meeting input), `release-sprint-planner` (produces the release plan being updated)
+
+---
+
+## Epics & Stories Skills (Group 4) ⚠️ WIP
+
+> These skills are still being refined. Core functionality works but prompts, templates, and workflows are subject to change.
+
+---
+
+### generate-epic
+
+**Mode:** Standalone
+
+**Purpose:** Creates a structured epic document from a requirements document or verbal description. Extracts business goals, success criteria, scope boundaries, and dependencies. Produces a single `Epic-[Feature].md` file ready for story decomposition.
+
+**When to use:**
+- After requirements are finalized and you're ready to move to delivery planning
+- You need a single artifact that captures the business case and scope before writing stories
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Requirements document or verbal description | Yes | |
+| Sprint plan or timeline | Optional | Used for milestone mapping |
+
+**Outputs:**
+- `Epic-[Feature].md` — business goal, success criteria, scope, dependencies, milestones
+
+**Related skills:** `generate-requirements` / `requirements-pipeline` (produce the input), `generate-user-stories` (next step)
+
+---
+
+### generate-user-stories
+
+**Mode:** Standalone
+
+**Purpose:** Decomposes features into story concepts using the WAHZURT framework, then creates detailed INVEST-compliant user stories one-at-a-time with inline quality gates.
+
+**Modes:**
+| Mode | Use When |
+|------|----------|
+| Create (standard) | Writing stories from scratch with full INVEST validation |
+| Create (quick/draft) | Fast story generation for low-stakes or exploratory work |
+| Modify | Updating or improving existing stories |
+| Decompose-only | Breaking down an epic into story concepts without writing full stories |
+
+**When to use:**
+- After an epic is defined and you're ready to write stories
+- When you need to update or split existing stories
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Epic document or feature description | Yes | |
+| Existing stories (for modify mode) | Conditional | Required for modify mode |
+
+**Outputs:**
+- Individual story files per story (format matches team convention)
+- Story registry updated
+
+**Related skills:** `generate-epic` (produces input), `validate-user-stories` (next step)
+
+---
+
+### validate-user-stories
+
+**Mode:** Standalone
+
+**Purpose:** Audits existing user stories against 12 validation categories (9 per-story + 2 cross-story + 1 practitioner readability) and fixes failures. Always builds a fresh registry from actual story files — never trusts existing registries.
+
+**The 12 categories:**
+- Per-story (9): Independent, Negotiable, Valuable, Estimable, Small, Testable, Well-formed title, Acceptance criteria present, No implementation detail in ACs
+- Cross-story (2): No duplicate stories, No overlapping ACs across stories
+- Readability (1): Practitioner-readable without domain expertise
+
+**When to use:**
+- After writing or importing a batch of stories
+- Before sprint planning to catch quality issues early
+- As a periodic story health check
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Story files (folder or list) | Yes | Any story format |
+
+**Outputs:**
+- Validation report with per-story findings
+- Fixed story files for stories with resolvable failures
+- Updated story registry built from actual files
+
+**Related skills:** `generate-user-stories` (produces stories to validate), `generate-epic` (provides context for cross-story checks)
+
+---
+
+### generate-uat
+
+**Mode:** Standalone
+
+**Purpose:** Generates a client-ready UAT test plan from a release summary or ticket list. Reads GitHub issue files, extracts Acceptance Criteria, deduplicates cross-platform scenarios, and produces a requirement-pure UAT document in table format.
+
+**When to use:**
+- Before client UAT begins
+- You have a set of tickets with ACs and need a structured test plan
+
+**Inputs:**
+| Input | Required | Notes |
+|-------|----------|-------|
+| Release summary or ticket list | Yes | GitHub issue files or manual list |
+| GitHub issue folder | Optional | Local issue files extracted from GitHub |
+
+**Outputs:**
+- UAT test plan in table format — Feature, Scenario, Steps, Expected Result, Pass/Fail
+- "Known Limitations" section
+- "Tickets Without ACs" appendix
+
+**Related skills:** `generate-user-stories` / `validate-user-stories` (produce the stories/ACs used as source)
 

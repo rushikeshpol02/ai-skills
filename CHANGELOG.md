@@ -1,12 +1,33 @@
 # Changelog
 
+## [Unreleased] — 2026-05-11
+
+### requirements-pipeline — major rewrite (v2)
+
+`requirements-pipeline` has been rewritten. The previous version is archived at `skills/requirements/archive/requirements-pipeline-v1/`. Key changes:
+
+- **3 pipeline modes** — Express (skip scenarios + user flows), Standard, Full. Mode is locked at Stage 3.5b based on complexity.
+- **Resumable runs** — every run produces a state file at `_runs/[run-name]/.meta/pipeline-state.json`. If a session is interrupted, resume by pointing to the run folder — the pipeline reads `current_task` and continues from where it left off.
+- **Run folder structure** — all artifacts organized under `_runs/[feature-slug]-[YYYYMMDD]/` (`.meta/`, `source_summaries/`, `stage_output/`).
+- **Inlined sub-skill logic** — `identify-assumptions` and `generate-requirements` logic is now inlined in stage files. Only two external skill calls remain: `transcript-to-meeting-notes` (Stage 1a) and `validate-requirements` (Stage 9).
+- **More granular stages** — Stage 1 split into 1a (scoping) + 1b (quality gate); Stage 3.5 split into 3.5a/b/c; Stage 7 split into 7a (synthesis) + 7b (generation).
+- **4 mandatory gates** — Stages 2, 3.5b, 5, 9 (state file tracks gate passage).
+
+`requirements-pipeline` (v1) remains in the repo and will be archived once confidence in v2 is established.
+
+### Structural Change — `cursor/` folder renamed to `skills/`
+
+The `cursor/skills/` folder has been renamed to `skills/` — all skills are platform-neutral and work with both Cursor and Claude Code. The `claude/` folder (zip-format skill archives) has been removed; both platforms use the same `SKILL.md` files from `skills/`. Install scripts in README and docs updated accordingly.
+
+---
+
 ## [Unreleased] — 2026-04-20
 
 ### New Skills (9) — Planning Plugin + Epics & Stories Plugin ⚠️ Work in Progress
 
 > Both new plugins are work in progress. Core functionality is in place but prompts, templates, and workflows are still being refined through active use.
 
-A new **Planning Plugin** (`cursor/skills/planning/`) adds 5 interconnected delivery lifecycle skills covering the full sprint cycle:
+A new **Planning Plugin** (`skills/planning/`) adds 5 interconnected delivery lifecycle skills covering the full sprint cycle:
 
 - **release-sprint-planner** — Defines a release (goal, scope, timeline, team, constraints) and produces a formal Release Definition + multi-sprint plan. Assesses context across 6 dimensions, sizes features, maps dependencies, and assigns work to sprints.
 - **sprint-planning-session** — Takes a sprint's planned work (from a release plan, ticket board, or verbal list) and produces a structured Sprint Planning Session document with goal validation, grouped work areas, and "done" criteria.
@@ -14,7 +35,7 @@ A new **Planning Plugin** (`cursor/skills/planning/`) adds 5 interconnected deli
 - **sprint-review-generator** — Produces a stakeholder-facing sprint review document. Answers: What did we build? Did we hit our goal? What did we learn? What's next? Serves both stakeholders (top sections) and team/PM (full detail).
 - **meeting-to-plan-integrator** — Applies decisions from any sprint demo, retro, or stakeholder call back to the release plan and related artifacts. The "decisions become actions" bridge.
 
-A new **Epics & Stories Plugin** (`cursor/skills/epics-and-user-stories/`) adds 4 story lifecycle skills:
+A new **Epics & Stories Plugin** (`skills/epics-and-user-stories/`) adds 4 story lifecycle skills:
 
 - **generate-epic** — Creates a structured epic document from a requirements doc or verbal description. Extracts business goals, success criteria, scope boundaries, and dependencies. Produces a single `Epic-[Feature].md` file ready for story decomposition.
 - **generate-user-stories** — Decomposes features into story concepts using the WAHZURT framework, then creates detailed INVEST-compliant user stories one-at-a-time with inline quality gates. Supports 4 modes: create (standard), create (quick/draft), modify existing stories, and decompose-only.
@@ -23,12 +44,12 @@ A new **Epics & Stories Plugin** (`cursor/skills/epics-and-user-stories/`) adds 
 
 ### Structural Change — Category Plugin Layout
 
-The flat `cursor/skills/` structure has been refactored into category plugins:
+The flat `skills/` structure has been refactored into category plugins:
 
-- **`cursor/skills/requirements/`** — 9 requirements and analysis skills reorganized here (previously at `cursor/skills/<skill>/`)
-- **`cursor/skills/planning/`** — 5 new planning skills organized here
-- **`cursor/skills/epics-and-user-stories/`** — 4 new story lifecycle skills organized here
-- **`cursor/skills/`** (root) — 3 standalone cross-cutting skills remain: `design-to-context`, `figjam-diagram-generator`, `transcript-to-meeting-notes`
+- **`skills/requirements/`** — 9 requirements and analysis skills reorganized here (previously at `skills/<skill>/`)
+- **`skills/planning/`** — 5 new planning skills organized here
+- **`skills/epics-and-user-stories/`** — 4 new story lifecycle skills organized here
+- **`skills/`** (root) — 3 standalone cross-cutting skills remain: `design-to-context`, `figjam-diagram-generator`, `transcript-to-meeting-notes`
 
 Each category folder contains its own `README.md` documenting the plugin structure, skill relationships, install instructions, and output folder layout.
 
