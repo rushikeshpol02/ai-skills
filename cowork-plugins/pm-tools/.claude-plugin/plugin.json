@@ -1,0 +1,17 @@
+{
+  "name": "pm-tools",
+  "version": "1.0.0",
+  "description": "Utility skills for PMs: convert meeting transcripts to structured notes, analyze Figma designs, and generate diagrams in FigJam.",
+  "author": {
+    "name": "Rushi",
+    "url": "https://github.com/rushikeshpol02/ai-skills"
+  },
+  "keywords": [
+    "product-management",
+    "transcripts",
+    "figma",
+    "diagrams",
+    "figjam"
+  ],
+  "license": "MIT"
+}

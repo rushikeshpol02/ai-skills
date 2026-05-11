@@ -77,6 +77,7 @@ sync_plugin() {
     pm-requirements)   src_dir="$SKILLS_DIR/requirements" ;;
     pm-planning)       src_dir="$SKILLS_DIR/planning" ;;
     pm-epics-stories)  src_dir="$SKILLS_DIR/epics-and-user-stories" ;;
+    pm-tools)          src_dir="$SKILLS_DIR" ;;
     *) echo "  SKIPPED   $plugin  (unknown plugin — no source mapping)"; return ;;
   esac
 
@@ -127,7 +128,7 @@ sync_plugin() {
 sync_cowork_all() {
   echo "Syncing skill files into Cowork plugins ..."
   echo ""
-  for plugin in pm-requirements pm-planning pm-epics-stories; do
+  for plugin in pm-requirements pm-planning pm-epics-stories pm-tools; do
     sync_plugin "$plugin"
   done
 }
