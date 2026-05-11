@@ -1,0 +1,17 @@
+{
+  "name": "pm-planning",
+  "version": "1.0.0",
+  "description": "Delivery planning skills for PMs: release planning, sprint planning, progress tracking, sprint reviews, and meeting-to-plan integration.",
+  "author": {
+    "name": "Rushi",
+    "url": "https://github.com/rushikeshpol02/ai-skills"
+  },
+  "keywords": [
+    "product-management",
+    "sprint-planning",
+    "release-planning",
+    "delivery",
+    "agile"
+  ],
+  "license": "MIT"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "pm-requirements",
+  "version": "1.0.0",
+  "description": "Requirements engineering skills for PMs: multi-stage discovery pipeline, requirements generation, validation, and client-ready transformation.",
+  "author": {
+    "name": "Rushi",
+    "url": "https://github.com/rushikeshpol02/ai-skills"
+  },
+  "keywords": [
+    "product-management",
+    "requirements",
+    "discovery",
+    "validation",
+    "client-ready"
+  ],
+  "license": "MIT"
+}

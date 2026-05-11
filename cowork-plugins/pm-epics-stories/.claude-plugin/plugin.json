@@ -1,0 +1,17 @@
+{
+  "name": "pm-epics-stories",
+  "version": "1.0.0",
+  "description": "Story lifecycle skills for PMs: epic creation, user story generation, story validation, and UAT test plan generation.",
+  "author": {
+    "name": "Rushi",
+    "url": "https://github.com/rushikeshpol02/ai-skills"
+  },
+  "keywords": [
+    "product-management",
+    "epics",
+    "user-stories",
+    "uat",
+    "agile"
+  ],
+  "license": "MIT"
+}
