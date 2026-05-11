@@ -19,6 +19,51 @@
 
 The `cursor/skills/` folder has been renamed to `skills/` — all skills are platform-neutral and work with both Cursor and Claude Code. The `claude/` folder (zip-format skill archives) has been removed; both platforms use the same `SKILL.md` files from `skills/`. Install scripts in README and docs updated accordingly.
 
+### Skill Rename — `requirements-pipeline-v2` → `requirements-pipeline`
+
+`requirements-pipeline-v2` promoted to the canonical `requirements-pipeline` name. The previous v1 version is archived at `skills/requirements/archive/requirements-pipeline-v1/`. PMs invoking `/requirements-pipeline` now always get the v2 pipeline without needing to know a version-suffixed name.
+
+### Skill Consolidation — `client-ready-requirements`
+
+`securitas-client-ready-requirements` has been moved into `client-ready-requirements` (generic name retained, Securitas content kept). The old generic version is archived at `skills/requirements/archive/client-ready-requirements-generic/`. All references to `securitas-client-ready-requirements` updated across docs and skill files.
+
+### New — `install.sh`
+
+Added `install.sh` to the repo root — a one-command install script replacing the manual shell loop in the README. Features:
+- Interactive prompt (or `--cursor` / `--claude` / `--both` flags)
+- Excludes `skills/requirements/archive/` — deprecated skills are never symlinked
+- Handles re-runs safely: skips already-correct symlinks, replaces broken/stale ones, warns on non-symlink conflicts
+- Prints a summary: linked / already up to date / replaced (broken) / skipped (conflict)
+
+### README Overhaul
+
+- **Fixed broken install paths** — `~/.skills/` corrected to `~/.cursor/skills/` in Cursor and "Install for Both at Once" blocks
+- **Added Prerequisites section** — Cursor or Claude Code, `git`, macOS/Linux/WSL
+- **Replaced shell loop with `install.sh`** — three numbered steps replacing the manual find/symlink block
+- **Added verification steps** — `ls ~/.cursor/skills/` and `ls ~/.claude/skills/` with guidance if empty
+- **Added Figma MCP notice** — callout under Post-Pipeline skills table for `design-to-context` and `figjam-diagram-generator`
+- **Corrected repo tree** — removed `skill-eval/` (now gitignored), accurate skill count, `archive/` folder documented
+- **Updated WIP language** — Planning skills only; Epics & Stories promoted to production-ready
+
+### Epics & Stories — Promoted to Production-Ready
+
+Removed ⚠️ WIP markers from the Epics & Stories plugin (`generate-epic`, `generate-user-stories`, `validate-user-stories`, `generate-uat`) across README, workflow-guide, and skill-catalog. Planning plugin remains WIP.
+
+### `.gitignore` Updates
+
+Added patterns to prevent accidental commits of internal or generated content:
+- `skill-eval/` — internal evaluation tooling
+- `skills/requirements/archive/` — deprecated skill versions
+- `_runs/`, `update-workspace/`, `reports/`, `Generated/`, `RunState-*.json` — skill runtime output
+- `*.zip` — stale build artifacts
+
+### Documentation Updates
+
+Full pass across all three docs to reflect the current 20-skill set:
+- **workflow-guide.md** — Added Group 3 (Planning) and Group 4 (Epics & Stories) sections, mermaid diagrams, skills tables, and usage guidance; expanded "Choosing the Right Starting Point" from 7 to 18 rows
+- **skill-catalog.md** — Added complete Planning and Epics & Stories sections (9 new skill entries); updated `client-ready-requirements` to reflect 11-section VP-filter content; removed `securitas-client-ready-requirements` entry
+- **invocation-guide.md** — Expanded implicit invocation table from 10 to 21 rows; added trigger prompt sections for all 9 planning and epics/stories skills; updated pipeline walkthrough to v2 stage names and gate labels; updated install instructions to symlink-based approach
+
 ---
 
 ## [Unreleased] — 2026-04-20
