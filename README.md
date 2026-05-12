@@ -146,7 +146,7 @@ cd ~/ai-skills && git pull
 bash ~/ai-skills/install.sh --package-cowork
 ```
 
-Then re-upload the `.zip` files for any plugins whose skills changed.
+Re-upload the `.zip` files for any plugins whose skills changed. The zips are always built directly from `skills/` — there are no intermediate copies that can go stale.
 
 ---
 

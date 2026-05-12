@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 # install.sh — Symlink ai-skills into Cursor and/or Claude Code skills folders.
-#              Also syncs and packages Cowork plugins.
+#              Also packages Cowork plugins directly from source — no intermediate copies.
 #
 # Usage:
 #   bash install.sh                   # prompts which agent to install for
 #   bash install.sh --cursor          # Cursor only
 #   bash install.sh --claude          # Claude Code only
 #   bash install.sh --both            # both at once
-#   bash install.sh --sync-cowork     # sync updated skills into Cowork plugins only
 #   bash install.sh --package-cowork  # package Cowork plugins as .zip files for upload
 
 set -euo pipefail
@@ -15,6 +14,7 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 SKILLS_DIR="$REPO_DIR/skills"
 PLUGINS_DIR="$REPO_DIR/cowork-plugins"
+DIST_DIR="$PLUGINS_DIR/dist"
 
 CURSOR_DIR="$HOME/.cursor/skills"
 CLAUDE_DIR="$HOME/.claude/skills"
@@ -37,11 +37,9 @@ install_skill() {
     local current_target
     current_target=$(readlink "$link")
     if [ "$current_target" = "$skill_path" ] && [ -d "$skill_path" ]; then
-      # Already linked and valid
       already_ok=$((already_ok + 1))
       return
     else
-      # Broken or stale symlink — replace it
       rm "$link"
       ln -s "$skill_path" "$link"
       echo "  replaced  $name  (was pointing to: $current_target)"
@@ -51,7 +49,6 @@ install_skill() {
   fi
 
   if [ -e "$link" ]; then
-    # Real folder or file — do not overwrite
     echo "  SKIPPED   $name  (a non-symlink folder already exists at $link — remove it manually to re-link)"
     skipped_conflict=$((skipped_conflict + 1))
     return
@@ -60,115 +57,6 @@ install_skill() {
   ln -s "$skill_path" "$link"
   echo "  linked    $name"
   linked=$((linked + 1))
-}
-
-# ── Helper: sync source skills into a Cowork plugin's skills/ folder ────────
-sync_plugin() {
-  local plugin="$1"          # e.g. pm-requirements
-  local plugin_dir="$PLUGINS_DIR/$plugin/skills"
-
-  if [ ! -d "$plugin_dir" ]; then
-    echo "  SKIPPED   $plugin  (plugin folder not found at $plugin_dir)"
-    return
-  fi
-
-  # Mapping: plugin name → source category folder
-  local src_dir
-  case "$plugin" in
-    pm-requirements)   src_dir="$SKILLS_DIR/requirements" ;;
-    pm-planning)       src_dir="$SKILLS_DIR/planning" ;;
-    pm-epics-stories)  src_dir="$SKILLS_DIR/epics-and-user-stories" ;;
-    pm-tools)          src_dir="$SKILLS_DIR" ;;
-    *) echo "  SKIPPED   $plugin  (unknown plugin — no source mapping)"; return ;;
-  esac
-
-  local synced=0
-  local unchanged=0
-
-  # Sync each skill subfolder that already exists in the plugin
-  for skill_dest in "$plugin_dir"/*/; do
-    local skill_name
-    skill_name=$(basename "$skill_dest")
-
-    # shared/ is a special case — lives directly in planning source
-    local skill_src
-    if [ "$skill_name" = "shared" ]; then
-      skill_src="$src_dir/shared"
-    else
-      skill_src="$src_dir/$skill_name"
-    fi
-
-    if [ ! -d "$skill_src" ]; then
-      echo "  WARNING   $plugin/$skill_name — source not found at $skill_src, skipping"
-      continue
-    fi
-
-    local before after
-    before=$(find "$skill_dest" -type f | sort | xargs md5 -q 2>/dev/null | md5 -q 2>/dev/null || echo "")
-    rsync -a \
-      --exclude="archive/" \
-      --exclude="update-workspace/" \
-      --exclude="one-time-fix-prompt.md" \
-      --exclude="INSTALL.md" \
-      --exclude="Eval-Scenarios.md" \
-      "$skill_src/" "$skill_dest"
-    after=$(find "$skill_dest" -type f | sort | xargs md5 -q 2>/dev/null | md5 -q 2>/dev/null || echo "")
-
-    if [ "$before" != "$after" ]; then
-      echo "  updated   $plugin/$skill_name"
-      synced=$((synced + 1))
-    else
-      unchanged=$((unchanged + 1))
-    fi
-  done
-
-  echo "  ── $plugin: $synced updated, $unchanged unchanged"
-}
-
-# ── Helper: sync all Cowork plugins ─────────────────────────────────────────
-sync_cowork_all() {
-  echo "Syncing skill files into Cowork plugins ..."
-  echo ""
-  for plugin in pm-requirements pm-planning pm-epics-stories pm-tools; do
-    sync_plugin "$plugin"
-  done
-}
-
-# ── Helper: package all Cowork plugins as .zip files ────────────────────────
-package_cowork_all() {
-  local dist_dir="$PLUGINS_DIR/dist"
-  mkdir -p "$dist_dir"
-
-  echo "Packaging Cowork plugins into $dist_dir ..."
-  echo ""
-
-  for plugin in pm-requirements pm-planning pm-epics-stories pm-tools; do
-    local plugin_dir="$PLUGINS_DIR/$plugin"
-    local zip_path="$dist_dir/$plugin.zip"
-
-    if [ ! -d "$plugin_dir" ]; then
-      echo "  SKIPPED   $plugin  (folder not found)"
-      continue
-    fi
-
-    # Remove existing zip if present
-    rm -f "$zip_path"
-
-    # Zip from inside the plugins dir so the zip contains plugin-name/ at root
-    (cd "$PLUGINS_DIR" && zip -r "dist/$plugin.zip" "$plugin" \
-      --exclude "*.DS_Store" \
-      --exclude "*/__pycache__/*" \
-      --exclude "*/dist/*" \
-      -q)
-
-    local size
-    size=$(du -sh "$zip_path" | cut -f1)
-    echo "  packaged  $plugin.zip  ($size)"
-  done
-
-  echo ""
-  echo "Zip files are in: $dist_dir"
-  echo "Upload each .zip via Cowork → Customize → Personal plugins → +"
 }
 
 # ── Helper: install all skills into one target folder ───────────────────────
@@ -186,6 +74,87 @@ install_all() {
     -name "SKILL.md")
 }
 
+# ── Rsync excludes applied to every skill copy ──────────────────────────────
+RSYNC_EXCLUDES=(
+  --exclude="archive/"
+  --exclude="update-workspace/"
+  --exclude="one-time-fix-prompt.md"
+  --exclude="INSTALL.md"
+  --exclude="Eval-Scenarios.md"
+)
+
+# ── Helper: package one Cowork plugin as a .zip directly from skills/ ───────
+package_plugin() {
+  local plugin="$1"
+  local manifest_dir="$PLUGINS_DIR/$plugin"
+  local zip_path="$DIST_DIR/$plugin.zip"
+  local tmp_dir
+  tmp_dir=$(mktemp -d)
+  local plugin_tmp="$tmp_dir/$plugin"
+
+  mkdir -p "$plugin_tmp/skills"
+
+  # Copy plugin manifest and README
+  cp -r "$manifest_dir/.claude-plugin" "$plugin_tmp/.claude-plugin"
+  [ -f "$manifest_dir/README.md" ] && cp "$manifest_dir/README.md" "$plugin_tmp/README.md"
+
+  # Copy skills directly from source — no intermediate copies
+  case "$plugin" in
+    pm-requirements)
+      rsync -a "${RSYNC_EXCLUDES[@]}" "$SKILLS_DIR/requirements/" "$plugin_tmp/skills/"
+      ;;
+    pm-planning)
+      rsync -a "${RSYNC_EXCLUDES[@]}" "$SKILLS_DIR/planning/" "$plugin_tmp/skills/"
+      ;;
+    pm-epics-stories)
+      rsync -a "${RSYNC_EXCLUDES[@]}" "$SKILLS_DIR/epics-and-user-stories/" "$plugin_tmp/skills/"
+      ;;
+    pm-tools)
+      for skill in design-to-context figjam-diagram-generator transcript-to-meeting-notes; do
+        if [ -d "$SKILLS_DIR/$skill" ]; then
+          rsync -a "${RSYNC_EXCLUDES[@]}" "$SKILLS_DIR/$skill/" "$plugin_tmp/skills/$skill/"
+        else
+          echo "  WARNING   $plugin/$skill — source not found at $SKILLS_DIR/$skill, skipping"
+        fi
+      done
+      ;;
+    *)
+      echo "  SKIPPED   $plugin  (unknown plugin — no source mapping)"
+      rm -rf "$tmp_dir"
+      return
+      ;;
+  esac
+
+  # Create zip
+  rm -f "$zip_path"
+  (cd "$tmp_dir" && zip -r "$zip_path" "$plugin" \
+    --exclude "*.DS_Store" \
+    --exclude "*/__pycache__/*" \
+    -q)
+
+  rm -rf "$tmp_dir"
+
+  local size
+  size=$(du -sh "$zip_path" | cut -f1)
+  echo "  packaged  $plugin.zip  ($size)"
+}
+
+# ── Helper: package all Cowork plugins ──────────────────────────────────────
+package_cowork_all() {
+  mkdir -p "$DIST_DIR"
+
+  echo "Packaging Cowork plugins from source ..."
+  echo ""
+
+  for plugin in pm-requirements pm-planning pm-epics-stories pm-tools; do
+    package_plugin "$plugin"
+  done
+
+  echo ""
+  echo "Zip files are in: $DIST_DIR"
+  echo "Upload each .zip via Cowork → Customize → Personal plugins → +"
+}
+
 # ── Argument parsing / prompt ────────────────────────────────────────────────
 MODE="${1:-}"
 
@@ -195,17 +164,15 @@ if [ -z "$MODE" ]; then
   echo "  1) Install for Cursor"
   echo "  2) Install for Claude Code"
   echo "  3) Install for both"
-  echo "  4) Sync Cowork plugins only"
-  echo "  5) Package Cowork plugins as .zip files for upload"
+  echo "  4) Package Cowork plugins as .zip files for upload"
   echo ""
-  read -rp "Enter 1, 2, 3, 4, or 5: " choice
+  read -rp "Enter 1, 2, 3, or 4: " choice
   case "$choice" in
     1) MODE="--cursor" ;;
     2) MODE="--claude" ;;
     3) MODE="--both"   ;;
-    4) MODE="--sync-cowork" ;;
-    5) MODE="--package-cowork" ;;
-    *) echo "Invalid choice. Run the script again and enter 1–5."; exit 1 ;;
+    4) MODE="--package-cowork" ;;
+    *) echo "Invalid choice. Run the script again and enter 1–4."; exit 1 ;;
   esac
 fi
 
@@ -237,17 +204,7 @@ case "$MODE" in
     echo ""
     echo "Done. Restart Cursor and re-invoke Claude Code to pick up the new skills."
     ;;
-  --sync-cowork)
-    sync_cowork_all
-    echo ""
-    echo "Done. Reload the plugins in Cowork to pick up the changes."
-    echo ""
-    echo "────────────────────────────────"
-    exit 0
-    ;;
   --package-cowork)
-    sync_cowork_all
-    echo ""
     package_cowork_all
     echo ""
     echo "────────────────────────────────"
@@ -255,19 +212,15 @@ case "$MODE" in
     ;;
   *)
     echo "Unknown option: $MODE"
-    echo "Usage: bash install.sh [--cursor | --claude | --both | --sync-cowork | --package-cowork]"
+    echo "Usage: bash install.sh [--cursor | --claude | --both | --package-cowork]"
     exit 1
     ;;
 esac
 
-# ── Sync Cowork plugins after any agent install ──────────────────────────────
-echo ""
-sync_cowork_all
-
 # ── Summary ──────────────────────────────────────────────────────────────────
 echo ""
 echo "────────────────────────────────"
-echo "  Linked:          $linked"
+echo "  Linked:             $linked"
 echo "  Already up to date: $already_ok"
 echo "  Replaced (broken):  $replaced_broken"
 if [ "$skipped_conflict" -gt 0 ]; then

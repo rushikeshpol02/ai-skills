@@ -1,5 +1,25 @@
 # Changelog
 
+## [Unreleased] — 2026-05-11 (install.sh + cowork-plugins restructure)
+
+### install.sh — Cowork plugins now built directly from source
+
+Removed the intermediate `skills/` copies inside each `cowork-plugins/pm-*/` folder. Zips are now assembled at package time directly from `skills/` via a temp directory, eliminating the drift problem where someone zipping manually would get stale skill files.
+
+**What changed in install.sh:**
+- Removed `sync_plugin()` and `sync_cowork_all()` — no intermediate copies to maintain
+- Removed `--sync-cowork` flag and menu option 4 — sync no longer has meaning as a standalone step
+- Rewrote `package_cowork_all()` to use `package_plugin()` — each plugin is assembled into a temp dir (manifest + README from `cowork-plugins/pm-*/`, skills from `skills/`) then zipped; temp dir is cleaned up after
+- Interactive menu renumbered: options 1–3 unchanged, option 4 is now Package Cowork plugins (was option 5)
+
+**What changed in cowork-plugins/:**
+- Deleted `skills/` subfolders from all 4 plugins (`pm-requirements`, `pm-planning`, `pm-epics-stories`, `pm-tools`) — ~90 files removed
+- Each plugin now contains only `.claude-plugin/plugin.json` and `README.md`
+
+**Effect:** `bash ~/ai-skills/install.sh --package-cowork` always reflects the current state of `skills/` — no sync step required before or after.
+
+---
+
 ## [Unreleased] — 2026-05-11 (requirements-pipeline patch)
 
 ### requirements-pipeline — FR over-splitting prevention
